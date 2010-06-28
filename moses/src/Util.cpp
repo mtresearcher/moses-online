@@ -39,7 +39,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 using namespace std;
 
 //global variable
-//Timer g_timer;
 
 string GetTempFolder()
 {	
@@ -137,17 +136,6 @@ const std::string Trim(const std::string& str, const std::string dropChars)
 	res.erase(str.find_last_not_of(dropChars)+1);
 	return res.erase(0, res.find_first_not_of(dropChars));
 }
-/*
-void ResetUserTime()
-{
-  g_timer.start();
-}
-
-void PrintUserTime(const std::string &message)
-{ 
-	g_timer.check(message.c_str());
-}
- */
 
 std::map<std::string, std::string> ProcessAndStripSGML(std::string &line)
 {

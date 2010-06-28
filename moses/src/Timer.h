@@ -10,7 +10,9 @@ class Timer
 {
  friend std::ostream& operator<<(std::ostream& os, Timer& t);
 
- private:
+private:
+	static Timer									s_instance;
+
   bool running;
   time_t start_time;
 
@@ -28,6 +30,11 @@ class Timer
 //  void restart(const char* msg = 0);
 //  void stop(const char* msg = 0);
   void check(const char* msg = 0);
+	
+	static const Timer& Instance() { return s_instance; }
+	static void ResetUserTime();
+	static void PrintUserTime(const std::string &message);
+
 
 };
 

@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 	{
 			// note: source is only valid within this while loop!
 		IFVERBOSE(1)
-			ResetUserTime();
+			Timer::Instance().ResetUserTime();
 			
     VERBOSE(2,"\nTRANSLATING(" << ++lineCount << "): " << *source);
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 													 staticData.GetReportSegmentation(),
 													 staticData.GetReportAllFactors()
 													 );
-			IFVERBOSE(2) { PrintUserTime("Best Hypothesis Generation Time:"); }
+			IFVERBOSE(2) { Timer::Instance().PrintUserTime("Best Hypothesis Generation Time:"); }
 			
 			// n-best
 			size_t nBestSize = staticData.GetNBestSize();
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 					ioStream->OutputNBestList(nBestList, source->GetTranslationId());
 					//RemoveAllInColl(nBestList);
 
-					IFVERBOSE(2) { PrintUserTime("N-Best Hypotheses Generation Time:"); }
+					IFVERBOSE(2) { Timer::Instance().PrintUserTime("N-Best Hypotheses Generation Time:"); }
 			}
 		}
 		else if (staticData.GetDecoderType() == MBR){
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 													 staticData.GetReportSegmentation(),
 													 staticData.GetReportAllFactors()
 													 );
-				IFVERBOSE(2) { PrintUserTime("N-Best Hypotheses Generation Time:"); }
+				IFVERBOSE(2) { Timer::Instance().PrintUserTime("N-Best Hypotheses Generation Time:"); }
 		  }
 			
 			
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 			TranslationAnalysis::PrintTranslationAnalysis(std::cerr, manager.GetBestHypothesis());
 		}
 
-		IFVERBOSE(2) { PrintUserTime("Sentence Decoding Time:"); }
+		IFVERBOSE(2) { Timer::Instance().PrintUserTime("Sentence Decoding Time:"); }
     
 		manager.CalcDecoderStatistics();    
 	}
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 	delete ioStream;
 
 	IFVERBOSE(1)
-		PrintUserTime("End.");
+		Timer::Instance().PrintUserTime("End.");
 
 	#ifdef HACK_EXIT
 	//This avoids that detructors are called (it can take a long time)
@@ -228,7 +228,7 @@ IOStream *GetIODevice(const StaticData &staticData)
 	ioStream->ResetTranslationId();
 
 	IFVERBOSE(1)
-		PrintUserTime("Created input-output object");
+		Timer::Instance().PrintUserTime("Created input-output object");
 
 	return ioStream;
 }

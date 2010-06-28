@@ -91,7 +91,7 @@ StaticData::StaticData()
 
 bool StaticData::LoadData(Parameter *parameter)
 {
-	ResetUserTime();
+	Timer::Instance().ResetUserTime();
 	m_parameter = parameter;
 	
 	// verbose level
@@ -551,7 +551,7 @@ bool StaticData::LoadLanguageModels()
 			    return false;
 			  }
 			IFVERBOSE(1)
-				PrintUserTime(string("Start loading LanguageModel ") + languageModelFile);
+				Timer::Instance().PrintUserTime(string("Start loading LanguageModel ") + languageModelFile);
 			
 			LanguageModel *lm = LanguageModelFactory::CreateLanguageModel(
 																									lmImplementation
@@ -573,7 +573,7 @@ bool StaticData::LoadLanguageModels()
   // since phrase table loading requires their presence
   m_fLMsLoaded = true;
 	IFVERBOSE(1)
-		PrintUserTime("Finished loading LanguageModels");
+		Timer::Instance().PrintUserTime("Finished loading LanguageModels");
   return true;
 }
 
@@ -707,7 +707,7 @@ bool StaticData::LoadPhraseTables()
 			std::copy(weight.begin(),weight.end(),std::back_inserter(m_allWeights));
 			
 			IFVERBOSE(1)
-				PrintUserTime(string("Start loading PhraseTable ") + filePath);
+				Timer::Instance().PrintUserTime(string("Start loading PhraseTable ") + filePath);
 			if (!FileExists(filePath+".binphr.idx"))
 			{	// memory phrase table
 				VERBOSE(2,"using standard phrase tables");
@@ -798,7 +798,7 @@ bool StaticData::LoadPhraseTables()
 	}
 	
 	IFVERBOSE(1)
-		PrintUserTime("Finished loading phrase tables");
+		Timer::Instance().PrintUserTime("Finished loading phrase tables");
 	return true;
 }
 

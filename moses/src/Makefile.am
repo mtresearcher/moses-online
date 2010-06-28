@@ -35,7 +35,6 @@ LMList.cpp \
 LVoc.cpp \
 Manager.cpp \
 md5.cpp \
-mempool.cpp \
 Parameter.cpp \
 PartialTranslOptColl.cpp \
 PCNTools.cpp \
@@ -58,6 +57,7 @@ StaticData.cpp \
 TargetPhraseCollection.cpp \
 TargetPhrase.cpp \
 TargetPhraseMatrix.cpp \
+Timer.cpp \
 TranslationOptionCollectionConfusionNet.cpp \
 TranslationOptionCollection.cpp \
 TranslationOptionCollectionText.cpp \

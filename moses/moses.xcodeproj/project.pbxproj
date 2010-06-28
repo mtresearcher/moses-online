@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E12ACE711D8F97B00D48405 /* Timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E12ACE511D8F97B00D48405 /* Timer.h */; };
+		1E12ACE811D8F97B00D48405 /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E12ACE611D8F97B00D48405 /* Timer.cpp */; };
 		1E148E5911D8BC8D00E33831 /* FactorMask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E148E5711D8BC8D00E33831 /* FactorMask.cpp */; };
 		1E148E5A11D8BC8D00E33831 /* FactorMask.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E148E5811D8BC8D00E33831 /* FactorMask.h */; };
 		1E148E5F11D8BC9C00E33831 /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E148E5B11D8BC9C00E33831 /* md5.cpp */; };
 		1E148E6011D8BC9C00E33831 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E148E5C11D8BC9C00E33831 /* md5.h */; };
-		1E148E6111D8BC9C00E33831 /* mempool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E148E5D11D8BC9C00E33831 /* mempool.cpp */; };
-		1E148E6211D8BC9C00E33831 /* mempool.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E148E5E11D8BC9C00E33831 /* mempool.h */; };
 		1E148E6711D8BCAB00E33831 /* TargetPhraseMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E148E6511D8BCAB00E33831 /* TargetPhraseMatrix.cpp */; };
 		1E148E6811D8BCAB00E33831 /* TargetPhraseMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E148E6611D8BCAB00E33831 /* TargetPhraseMatrix.h */; };
 		1E148E6F11D8BCB800E33831 /* PhraseList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E148E6B11D8BCB800E33831 /* PhraseList.cpp */; };
@@ -171,12 +171,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1E12ACE511D8F97B00D48405 /* Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Timer.h; path = src/Timer.h; sourceTree = "<group>"; };
+		1E12ACE611D8F97B00D48405 /* Timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Timer.cpp; path = src/Timer.cpp; sourceTree = "<group>"; };
 		1E148E5711D8BC8D00E33831 /* FactorMask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FactorMask.cpp; path = src/FactorMask.cpp; sourceTree = "<group>"; };
 		1E148E5811D8BC8D00E33831 /* FactorMask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FactorMask.h; path = src/FactorMask.h; sourceTree = "<group>"; };
 		1E148E5B11D8BC9C00E33831 /* md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = md5.cpp; path = src/md5.cpp; sourceTree = "<group>"; };
 		1E148E5C11D8BC9C00E33831 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = md5.h; path = src/md5.h; sourceTree = "<group>"; };
-		1E148E5D11D8BC9C00E33831 /* mempool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mempool.cpp; path = src/mempool.cpp; sourceTree = "<group>"; };
-		1E148E5E11D8BC9C00E33831 /* mempool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mempool.h; path = src/mempool.h; sourceTree = "<group>"; };
 		1E148E6511D8BCAB00E33831 /* TargetPhraseMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TargetPhraseMatrix.cpp; path = src/TargetPhraseMatrix.cpp; sourceTree = "<group>"; };
 		1E148E6611D8BCAB00E33831 /* TargetPhraseMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TargetPhraseMatrix.h; path = src/TargetPhraseMatrix.h; sourceTree = "<group>"; };
 		1E148E6B11D8BCB800E33831 /* PhraseList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PhraseList.cpp; path = src/PhraseList.cpp; sourceTree = "<group>"; };
@@ -435,8 +435,6 @@
 				1ED4FCCF11BDC0D2004E826A /* Manager.h */,
 				1E148E5B11D8BC9C00E33831 /* md5.cpp */,
 				1E148E5C11D8BC9C00E33831 /* md5.h */,
-				1E148E5D11D8BC9C00E33831 /* mempool.cpp */,
-				1E148E5E11D8BC9C00E33831 /* mempool.h */,
 				1ED4FCD011BDC0D2004E826A /* NGramCollection.cpp */,
 				1ED4FCD111BDC0D2004E826A /* NGramCollection.h */,
 				1ED4FCD211BDC0D2004E826A /* NGramNode.cpp */,
@@ -520,6 +518,8 @@
 				1ED4FD3411BDC0D2004E826A /* WordsRange.h */,
 				1ED4FD3511BDC0D2004E826A /* XmlOption.cpp */,
 				1ED4FD3611BDC0D2004E826A /* XmlOption.h */,
+				1E12ACE511D8F97B00D48405 /* Timer.h */,
+				1E12ACE611D8F97B00D48405 /* Timer.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -627,10 +627,10 @@
 				1E5810E911D8BB1D004A62EE /* ConcatenatedPhrase.h in Headers */,
 				1E148E5A11D8BC8D00E33831 /* FactorMask.h in Headers */,
 				1E148E6011D8BC9C00E33831 /* md5.h in Headers */,
-				1E148E6211D8BC9C00E33831 /* mempool.h in Headers */,
 				1E148E6811D8BCAB00E33831 /* TargetPhraseMatrix.h in Headers */,
 				1E148E7011D8BCB800E33831 /* PhraseList.h in Headers */,
 				1E148E7211D8BCB800E33831 /* PrefixPhraseCollection.h in Headers */,
+				1E12ACE711D8F97B00D48405 /* Timer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -748,10 +748,10 @@
 				1E5810E811D8BB1D004A62EE /* ConcatenatedPhrase.cpp in Sources */,
 				1E148E5911D8BC8D00E33831 /* FactorMask.cpp in Sources */,
 				1E148E5F11D8BC9C00E33831 /* md5.cpp in Sources */,
-				1E148E6111D8BC9C00E33831 /* mempool.cpp in Sources */,
 				1E148E6711D8BCAB00E33831 /* TargetPhraseMatrix.cpp in Sources */,
 				1E148E6F11D8BCB800E33831 /* PhraseList.cpp in Sources */,
 				1E148E7111D8BCB800E33831 /* PrefixPhraseCollection.cpp in Sources */,
+				1E12ACE811D8F97B00D48405 /* Timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -786,7 +786,7 @@
 		1DEB91F008733DB70010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -806,13 +806,14 @@
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 				USER_HEADER_SEARCH_PATHS = "";
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
 		1DEB91F108733DB70010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					TRACE_ENABLE,
@@ -831,6 +832,7 @@
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 				USER_HEADER_SEARCH_PATHS = "";
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
