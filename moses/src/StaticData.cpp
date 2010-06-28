@@ -313,7 +313,7 @@ void DeleteCacheFile(const string &cachePathStr)
 	directory_iterator end;
 	for (directory_iterator iter(cachePath) ; iter != end ; ++iter)
 	{
-		path &filePath = *iter;
+		const path &filePath = *iter;
 		// delete of old
 		if (filePath.leaf().find(PROJECT_NAME) == 0)
 		{
