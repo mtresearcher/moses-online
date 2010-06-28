@@ -316,6 +316,7 @@ void TranslationOptionCollection::CreateTranslationOptions(const vector <DecodeG
 		}
 	}
 
+	/*
 	for (size_t startVL = 0 ; startVL < decodeStepVL.size() ; startVL++) 
 	{
 		const DecodeGraph &decodeStepList = *decodeStepVL[startVL];
@@ -327,6 +328,7 @@ void TranslationOptionCollection::CreateTranslationOptions(const vector <DecodeG
 			binPhraseDict.ClearCache();
 		}
 	}
+	 */
 
 	VERBOSE(3,"Translation Option Collection\n " << *this << endl);
 	

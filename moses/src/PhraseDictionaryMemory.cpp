@@ -88,7 +88,7 @@ bool PhraseDictionaryMemory::Load(const std::vector<FactorType> &input
 		++line_num;
 
 		vector<string> tokens = TokenizeMultiCharSeparator( line , "|||" );
-		if (tokens.size() != 5)
+		if (tokens.size() < 5)
 		{
 			stringstream strme;
 			strme << "Syntax error at " << filePath << ":" << line_num;
