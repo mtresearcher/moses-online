@@ -507,7 +507,7 @@ void TranslationOptionCollection::Add(TranslationOption &translationOption)
 
 TO_STRING_BODY(TranslationOptionCollection);
 
-inline std::ostream& operator<<(std::ostream& out, const TranslationOptionCollection& coll)
+std::ostream& operator<<(std::ostream& out, const TranslationOptionCollection& coll)
 {
 	size_t size = coll.GetSize();
 	for (size_t startPos = 0 ; startPos < size ; ++startPos)
