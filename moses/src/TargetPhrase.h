@@ -42,10 +42,13 @@ protected:
 	ScoreComponentCollection m_scoreBreakdown;
 	AlignmentPair						m_alignmentPair;
 	size_t m_subRangeCount;
-
+	
 	// in case of confusion net, ptr to source phrase
 	Phrase const* m_sourcePhrase; 
 public:
+	std::vector<WordsRange> m_templateRanges;
+	std::vector<Phrase> m_templatePhrase;
+
 	TargetPhrase(FactorDirection direction=Output);
 
 	//! used by the unknown word handler- these targets

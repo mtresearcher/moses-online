@@ -213,6 +213,9 @@ void TargetPhrase::Append(const WordsRange &sourceRange, const TargetPhrase &app
 	//m_ngramScore
 	//m_fullScore	
 
+	m_templateRanges.push_back(sourceRange);
+	m_templatePhrase.push_back(appendPhrase);
+	
 	m_subRangeCount++;
 }
 

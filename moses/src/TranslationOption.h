@@ -63,6 +63,9 @@ protected:
 	
 	std::vector<size_t> m_subRangeCount;
 
+	std::vector<WordsRange> m_templateRanges;
+	std::vector<Phrase> m_templatePhrase;
+	
 	//! in TranslationOption, m_scoreBreakdown is not complete.  It cannot,
 	//! for example, know the full n-gram score since the length of the
 	//! TargetPhrase may be shorter than the n-gram order.  But, if it is

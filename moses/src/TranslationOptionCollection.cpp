@@ -519,7 +519,8 @@ inline std::ostream& operator<<(std::ostream& out, const TranslationOptionCollec
 		for (size_t endPos = startPos ; endPos < startPos + maxSize ; ++endPos)
 		{
 			const TranslationOptionList &fullList = coll.GetTranslationOptionList(startPos, endPos);
-			out << fullList;
+			//out << fullList;
+			out << startPos << "-" << endPos << "=" << fullList.GetSize() << " ";
 		}
 	}
  

@@ -54,10 +54,16 @@ TranslationOption::TranslationOption(const WordsRange &wordsRange
 	}
 
 	m_subRangeCount[decodeStepId] += targetPhrase.GetSubRangeCount();
+
+	if (decodeStepId == 1)
+	{
+		m_templateRanges = targetPhrase.m_templateRanges;
+		m_templatePhrase = targetPhrase.m_templatePhrase;
+	}
+	
 	CalcScore();
 }
-//TODO if (! hieu.isPartying && newYearsEve()){hieu.goParty(beer);}
-//TODO this should be a factory function!
+
 TranslationOption::TranslationOption( int /*whatever*/
 																		 , const WordsRange &wordsRange
 																		 , const TargetPhrase &targetPhrase
@@ -98,6 +104,8 @@ TranslationOption::TranslationOption(const TranslationOption &copy)
 , m_scoreBreakdown(copy.m_scoreBreakdown)
 , m_reordering(copy.m_reordering)
 , m_subRangeCount(copy.m_subRangeCount)
+, m_templateRanges(copy.m_templateRanges)
+, m_templatePhrase(copy.m_templatePhrase)
 {}
 
 TranslationOption::TranslationOption(const TranslationOption &copy, const WordsRange &sourceWordsRange)
@@ -125,6 +133,13 @@ void TranslationOption::MergeTargetPhrase(const TargetPhrase &targetPhrase
                                         , WordsRange(0, GetTargetSize() - 1));
 
 	m_subRangeCount[decodeStepId] += targetPhrase.GetSubRangeCount();
+
+	if (decodeStepId == 1)
+	{
+		m_templateRanges = targetPhrase.m_templateRanges;
+		m_templatePhrase = targetPhrase.m_templatePhrase;
+	}
+	
 	CalcScore();
 }
 
@@ -180,10 +195,28 @@ TO_STRING_BODY(TranslationOption);
 // friend
 ostream& operator<<(ostream& out, const TranslationOption& transOpt)
 {
+	/*
 	out << transOpt.GetTargetPhrase().GetStringRep()
 			<< "c=" << transOpt.GetFutureScore()
 			<< " [" << transOpt.GetSourceWordsRange() << "]"
 			<< transOpt.GetScoreBreakdown() << " " 
 			<< transOpt.GetAlignmentPair();
+	*/
+	size_t numSubPhrases = transOpt.m_templateRanges.size();
+	assert(numSubPhrases == transOpt.m_templatePhrase.size());
+	
+	if (numSubPhrases < 2)
+	{ // normal phrase
+		out << transOpt.m_sourceWordsRange << " " << static_cast<const Phrase&>(transOpt.m_targetPhrase); 
+	}
+	else 
+	{ // template
+		for (size_t ind = 0; ind < numSubPhrases; ++ind)
+		{
+			out << transOpt.m_templateRanges[ind] << " " << transOpt.m_templatePhrase[ind];
+		}
+	}
+
+	
 	return out;
 }

@@ -203,7 +203,7 @@ bool StaticData::LoadData(Parameter *parameter)
 
 	// additional output
 	SetBooleanParameter( &m_isDetailedTranslationReportingEnabled, 
-			     "translation-details", false );
+			     "translation-details", true );
 
 	SetBooleanParameter( &m_computeLMBackoffStats, "lmstats", false );
 	if (m_computeLMBackoffStats && 

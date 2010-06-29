@@ -93,6 +93,7 @@ void Manager::ProcessSentence()
 	//		2. initial hypothesis factors are given in the sentence
 	//CreateTranslationOptions(m_source, phraseDictionary, lmListInitial);
 	m_transOptColl->CreateTranslationOptions(decodeStepVL);
+	cerr << *m_transOptColl << endl;
 	
 	// initial seed hypothesis: nothing translated, no words produced
 	Hypothesis *hypo = Hypothesis::Create(m_source, m_initialTargetPhrase);

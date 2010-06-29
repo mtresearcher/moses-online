@@ -31,8 +31,8 @@ void PrintTranslationAnalysis(ostream &os, const Hypothesis* hypo)
 		if (transOpt != NULL)
 		{
 			os	<< hypo->GetCurrSourceWordsRange() << "  ";
-			for (size_t decodeStepId = 0; decodeStepId < DecodeStepTranslation::GetNumTransStep(); ++decodeStepId)
-				os << decodeStepId << "=" << transOpt->GetSubRangeCount(decodeStepId) << ",";
+			//for (size_t decodeStepId = 0; decodeStepId < DecodeStepTranslation::GetNumTransStep(); ++decodeStepId)
+			//	os << decodeStepId << "=" << transOpt->GetSubRangeCount(decodeStepId) << ",";
 			os	<< *transOpt << endl;
 		}
 	}
