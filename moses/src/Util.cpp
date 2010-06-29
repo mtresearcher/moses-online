@@ -72,19 +72,37 @@ void CreateTempFile(ofstream  &fileStream, string &filePath)
 
 string GetMD5Hash(const string &filePath)
 {
-	FILE *in;
-	if ((in = fopen(filePath.c_str(), "rb")) == NULL) 
-	{
-	  return "";
-	}
+  unsigned char buffer[16384], signature[30];
+  struct MD5Context md5c;
+  
+  memset(signature, 0, 30);
+  
+  FILE *in;
+  if ((in = fopen(filePath.c_str(), "rb")) == NULL) 
+    {
+      return "";
+    }
 
-	MD5 context(in);
-	stringstream ret;
-	ret << context;
-	
-	fclose(in);
+  MD5Init(&md5c);
+  size_t j;
+  while ((j = fread(buffer, 1, sizeof buffer, in)) > 0) 
+    {
+      MD5Update(&md5c, buffer, (unsigned) j);
+    }
+  MD5Final(signature, &md5c);
 
-	return ret.str();
+  std::stringstream stream("");
+  stream.setf(std::ios_base::hex,std::ios_base::basefield);
+  //for (j = 0; j < sizeof signature; j++) 
+  for (j = 0; j < 16; j++) 
+    {
+      stream << setw(2) << setfill('0') << (int) signature[j];
+    }
+  
+  fclose(in);
+
+  string ret = stream.str();
+  return ret;
 }
 
 const std::string ToLower(const std::string& str)
