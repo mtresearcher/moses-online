@@ -727,26 +727,14 @@ bool StaticData::LoadLexicalReorderingModel()
 {
   VERBOSE(1, "Loading lexical distortion models...");
   const vector<string> fileStr    = m_parameter->GetParam("distortion-file");
-  bool hasWeightlr = (m_parameter->GetParam("weight-lr").size() != 0);
-  vector<string> weightsStr;
-  if (hasWeightlr) {
-    weightsStr = m_parameter->GetParam("weight-lr");
-  } else {
-    weightsStr = m_parameter->GetParam("weight-d");
-  }
-
-  std::vector<float>   weights;
-  size_t w = 1; //cur weight
-  if (hasWeightlr) {
-    w = 0; // if reading from weight-lr, don't have to count first as distortion penalty
-  }
-  size_t f = 0; //cur file
+  const std::vector<float>   &weights = m_parameter->GetWeights("LexicalReordering_wbe-msd-bidirectional-fe-allff");
+  
   //get weights values
   VERBOSE(1, "have " << fileStr.size() << " models" << std::endl);
-  for(size_t j = 0; j < weightsStr.size(); ++j) {
-    weights.push_back(Scan<float>(weightsStr[j]));
-  }
+
   //load all models
+  size_t w = 0; //cur weight
+  size_t f = 0; //cur file
   for(size_t i = 0; i < fileStr.size(); ++i) {
     vector<string> spec = Tokenize<string>(fileStr[f], " ");
     ++f; //mark file as consumed
@@ -782,7 +770,7 @@ bool StaticData::LoadLexicalReorderingModel()
     size_t numWeights = atoi(spec[2].c_str());
     for(size_t k = 0; k < numWeights; ++k, ++w) {
       if(w >= weights.size()) {
-        UserMessage::Add("Lexicalized distortion model: Not enough weights, add to [weight-d]");
+        UserMessage::Add("Lexicalized distortion model: Not enough weights");
         return false;
       } else
         mweights.push_back(weights[w]);
@@ -1174,15 +1162,11 @@ void StaticData::LoadChartDecodingParameters()
 
 void StaticData::LoadPhraseBasedParameters()
 {
-  const vector<string> distortionWeights = m_parameter->GetParam("weight-d");
+  const vector<float> &distortionWeights = m_parameter->GetWeights("Distortion");
   size_t distortionWeightCount = distortionWeights.size();
-  //if there's a lex-reordering model, and no separate weight set, then
-  //take just one of these weights for linear distortion
-  if (!m_parameter->GetParam("weight-lr").size() && m_parameter->GetParam("distortion-file").size()) {
-    distortionWeightCount = 1;
-  }
+
   for (size_t i = 0; i < distortionWeightCount; ++i) {
-    float weightDistortion = Scan<float>(distortionWeights[i]);
+    float weightDistortion = distortionWeights[i];
     m_distortionScoreProducers.push_back(new DistortionScoreProducer(m_scoreIndexManager));
     m_allWeights.push_back(weightDistortion);
   }

@@ -163,13 +163,9 @@ Parameter::~Parameter()
 {
 }
   
-const std::vector<float> &Parameter::GetWeights(const std::string &name) const
+std::vector<float> &Parameter::GetWeights(const std::string &name)
 {
-  std::map<std::string, std::vector<float> >::const_iterator iter;
-  iter = m_weights.find(name);
-  
-  CHECK(iter != m_weights.end());
-  return iter->second;
+  return m_weights[name];
 }
 
 
