@@ -308,14 +308,15 @@ bool StaticData::LoadData(Parameter *parameter)
   }
 
   // word penalties
-  for (size_t i = 0; i < m_parameter->GetParam("weight-w").size(); ++i) {
-    float weightWordPenalty       = Scan<float>( m_parameter->GetParam("weight-w")[i] );
+  const vector<float> &weightWordPenalty = m_parameter->GetWeights("WordPenalty");
+  for (size_t i = 0; i < m_parameter->GetWeights("WordPenalty").size(); ++i) {
+    float weight       = weightWordPenalty[i];
     m_wordPenaltyProducers.push_back(new WordPenaltyProducer(m_scoreIndexManager));
-    m_allWeights.push_back(weightWordPenalty);
+    m_allWeights.push_back(weight);
   }
 
 
-  float weightUnknownWord				= (m_parameter->GetParam("weight-u").size() > 0) ? Scan<float>(m_parameter->GetParam("weight-u")[0]) : 1;
+  float weightUnknownWord				= (m_parameter->GetWeights("UnknownWordPenalty").size() > 0) ? m_parameter->GetWeights("UnknownWordPenalty")[0] : 1;
   m_unknownWordPenaltyProducer = new UnknownWordPenaltyProducer(m_scoreIndexManager);
   m_allWeights.push_back(weightUnknownWord);
 
@@ -796,7 +797,7 @@ bool StaticData::LoadLexicalReorderingModel()
 
 bool StaticData::LoadGlobalLexicalModel()
 {
-  const vector<float> &weight = Scan<float>(m_parameter->GetParam("weight-lex"));
+  const vector<float> &weight = m_parameter->GetWeights("LexicalReordering");
   const vector<string> &file = m_parameter->GetParam("global-lexical-file");
 
   if (weight.size() != file.size()) {
@@ -827,7 +828,7 @@ bool StaticData::LoadLanguageModels()
 {
   if (m_parameter->GetParam("lmodel-file").size() > 0) {
     // weights
-    vector<float> weightAll = Scan<float>(m_parameter->GetParam("weight-l"));
+    const vector<float> &weightAll = m_parameter->GetWeights("LM");
 
     for (size_t i = 0 ; i < weightAll.size() ; i++) {
       m_allWeights.push_back(weightAll[i]);
@@ -905,10 +906,10 @@ bool StaticData::LoadGenerationTables()
 {
   if (m_parameter->GetParam("generation-file").size() > 0) {
     const vector<string> &generationVector = m_parameter->GetParam("generation-file");
-    const vector<float> &weight = Scan<float>(m_parameter->GetParam("weight-generation"));
+    const vector<float> &weight = m_parameter->GetWeights("Generation");
 
     IFVERBOSE(1) {
-      TRACE_ERR( "weight-generation: ");
+      TRACE_ERR( "generation weights: ");
       for (size_t i = 0 ; i < weight.size() ; i++) {
         TRACE_ERR( weight[i] << "\t");
       }
@@ -962,7 +963,7 @@ bool StaticData::LoadPhraseTables()
   // load phrase translation tables
   if (m_parameter->GetParam("ttable-file").size() > 0) {
     // weights
-    vector<float> weightAll									= Scan<float>(m_parameter->GetParam("weight-t"));
+    vector<float> weightAll									= m_parameter->GetWeights("PhraseModel");
 
     const vector<string> &translationVector = m_parameter->GetParam("ttable-file");
     vector<size_t>	maxTargetPhrase					= Scan<size_t>(m_parameter->GetParam("ttable-limit"));
@@ -1026,12 +1027,12 @@ bool StaticData::LoadPhraseTables()
         // TODO. find what the assumptions made by confusion network about phrase table output which makes
         // it only work with binrary file. This is a hack
 
-        m_numInputScores=m_parameter->GetParam("weight-i").size();
+        m_numInputScores = m_parameter->GetWeights("Input").size();
         
         if (implementation == Binary)
         {
           for(unsigned k=0; k<m_numInputScores; ++k)
-            weight.push_back(Scan<float>(m_parameter->GetParam("weight-i")[k]));
+            weight.push_back(m_parameter->GetWeights("Input")[k]);
         }
         
         if(m_parameter->GetParam("link-param-count").size())
@@ -1046,7 +1047,7 @@ bool StaticData::LoadPhraseTables()
           } else {
             stringstream strme;
             strme << "You specified " << m_numInputScores
-                  << " input weights (weight-i), but you specified " << m_numLinkParams << " link parameters (link-param-count)!";
+                  << " input weights, but you specified " << m_numLinkParams << " link parameters (link-param-count)!";
             UserMessage::Add(strme.str());
             return false;
           }
