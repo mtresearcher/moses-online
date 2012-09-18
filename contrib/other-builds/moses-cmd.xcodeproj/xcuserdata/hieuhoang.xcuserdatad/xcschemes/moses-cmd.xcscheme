@@ -51,7 +51,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-i in"
+            argument = "-i phrase-model/in"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

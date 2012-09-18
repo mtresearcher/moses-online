@@ -82,16 +82,6 @@ Parameter::Parameter()
   AddParam("translation-option-threshold", "tot", "threshold for translation options relative to best for input phrase");
   AddParam("early-discarding-threshold", "edt", "threshold for constructing hypotheses based on estimate cost");
   AddParam("verbose", "v", "verbosity level of the logging");
-  AddParam("weight-d", "d", "weight(s) for distortion (reordering components)");
-  AddParam("weight-lr", "lr", "weight(s) for lexicalized reordering, if not included in weight-d");
-  AddParam("weight-generation", "g", "weight(s) for generation components");
-  AddParam("weight-i", "I", "weight(s) for word insertion - used for parameters from confusion network and lattice input links");
-  AddParam("weight-l", "lm", "weight(s) for language models");
-  AddParam("weight-lex", "lex", "weight for global lexical model");
-  AddParam("weight-t", "tm", "weights for translation model components");
-  AddParam("weight-w", "w", "weight for word penalty");
-  AddParam("weight-u", "u", "weight for unknown word penalty");
-  AddParam("weight-e", "e", "weight for word deletion");
   AddParam("output-factors", "list if factors in the output");
   AddParam("cache-path", "?");
   AddParam("distortion-limit", "dl", "distortion (reordering) limit in maximum number of words (0 = monotone, -1 = unlimited)");
@@ -152,6 +142,21 @@ Parameter::Parameter()
   // Compact phrase table and reordering table.                                                                                  
   AddParam("minlexr-memory", "Load lexical reordering table in minlexr format into memory");                                          
   AddParam("minphr-memory", "Load phrase table in minphr format into memory");
+
+  AddParam("weights", "all weights");
+
+  AddParam("weight-d", "d", "weight(s) for distortion (reordering components)");
+  AddParam("weight-lr", "lr", "weight(s) for lexicalized reordering, if not included in weight-d");
+  AddParam("weight-generation", "g", "weight(s) for generation components");
+  AddParam("weight-i", "I", "weight(s) for word insertion - used for parameters from confusion network and lattice input links");
+  AddParam("weight-lex", "lex", "weight for global lexical model");
+  AddParam("weight-u", "u", "weight for unknown word penalty");
+
+
+  AddParam("weight-t", "tm", "weights for translation model components");
+  AddParam("weight-w", "w", "weight for word penalty");
+  AddParam("weight-l", "lm", "weight(s) for language models");
+  
 }
 
 Parameter::~Parameter()
@@ -257,6 +262,10 @@ bool Parameter::LoadParam(int argc, char* argv[])
       TRACE_ERR( endl);
     }
   }
+  
+  // convert old weights args to new format
+  ConvertWeightArgs();
+  SortWeightsByName();
 
   // check for illegal parameters
   bool noErrorFlag = true;
@@ -273,6 +282,77 @@ bool Parameter::LoadParam(int argc, char* argv[])
 
   // check if parameters make sense
   return Validate() && noErrorFlag;
+}
+
+void Parameter::ConvertWeightArgs(const string &oldWeightName, const string &newWeightName)
+{
+  PARAM_VEC &newWeights = m_setting["weights"];
+  PARAM_MAP::iterator iterMap;
+  
+  // translation ff
+  iterMap = m_setting.find(oldWeightName);
+  if (iterMap != m_setting.end())
+  {
+    const PARAM_VEC &weights = iterMap->second;
+    for (size_t i = 0; i < weights.size(); ++i)
+    {
+      string line = newWeightName + " " + weights[i];
+      newWeights.push_back(line);
+    }
+    
+    m_setting.erase(iterMap);
+  }
+  
+}
+
+void Parameter::ConvertWeightArgs()
+{  
+  ConvertWeightArgs("weight-t", "PhraseModel");
+  ConvertWeightArgs("weight-w", "WordPenalty");
+  ConvertWeightArgs("weight-l", "LM");
+  ConvertWeightArgs("weight-u", "UnknownWordPenalty");
+  ConvertWeightArgs("weight-lex", "LexicalReordering");
+  ConvertWeightArgs("weight-generation", "Generation");
+  ConvertWeightArgs("weight-i", "Input");
+  ConvertWeightArgs("weight-lr", "LexicalReordering_wbe-msd-bidirectional-fe-allff");
+  
+  // distortion / lex distortion
+  PARAM_VEC &newWeights = m_setting["weights"];
+  PARAM_VEC &weights = m_setting["weight-d"];
+  CHECK(weights.size() > 0);
+  
+  if (weights.size() > 1)
+  {
+    // everything but the last is lex reordering model
+    for (size_t i = 0; i < weights.size() - 1; ++i)
+    {
+      string line = "LexicalReordering_wbe-msd-bidirectional-fe-allff " + weights[i];
+      newWeights.push_back(line);
+    }
+  }
+
+  // distance distortion
+  string line = "Distortion " + weights[weights.size() - 1];
+  newWeights.push_back(line);
+  
+  m_setting.erase("weight-d");
+  
+}
+
+void Parameter::SortWeightsByName()
+{
+  PARAM_VEC &vec = m_setting["weights"];
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    string line = vec[i];
+    vector<string> toks = Tokenize(line);
+    CHECK(toks.size() == 2);
+    
+    string &name = toks[0];
+    float weight = Scan<float>(toks[1]);
+    m_weights[name].push_back(weight);
+  }
+  
 }
 
 /** check that parameter settings make sense */
@@ -313,7 +393,7 @@ bool Parameter::Validate()
   }
 
   if (m_setting["lmodel-file"].size() * (m_setting.find("lmodel-oov-feature") != m_setting.end() ? 2 : 1)
-         != m_setting["weight-l"].size()) {
+         != m_weights["LM"].size()) {
     stringstream errorMsg("");
     errorMsg << "Config and parameters specify "
              << static_cast<int>(m_setting["lmodel-file"].size())

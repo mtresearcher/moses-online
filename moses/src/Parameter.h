@@ -47,6 +47,8 @@ protected:
   PARAM_STRING m_abbreviation;
   PARAM_STRING m_description;
 
+  std::map<std::string, std::vector<float> > 	m_weights;
+  
   std::string FindParam(const std::string &paramSwitch, int argc, char* argv[]);
   void OverwriteParam(const std::string &paramSwitch, const std::string &paramName, int argc, char* argv[]);
   bool ReadConfigFile(const std::string &filePath );
@@ -56,6 +58,10 @@ protected:
 
   void AddParam(const std::string &paramName, const std::string &description);
   void AddParam(const std::string &paramName, const std::string &abbrevName, const std::string &description);
+
+  void ConvertWeightArgs();
+  void ConvertWeightArgs(const std::string &oldWeightName, const std::string &newWeightName);
+  void SortWeightsByName();
 
   void PrintCredit();
 
