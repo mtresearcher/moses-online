@@ -65,7 +65,6 @@ namespace Moses
     
     m_weight = &weight;
    
-    cerr << "initStr=" << initStr << endl;
     m_config = Tokenize(initStr, ";");
     assert(m_config.size() == 3);
 

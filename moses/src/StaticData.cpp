@@ -951,7 +951,7 @@ bool StaticData::LoadPhraseTables()
   // load phrase translation tables
   if (m_parameter->GetParam("ttable-file").size() > 0) {
     // weights
-    vector<float> weightAll									= m_parameter->GetWeights("PhraseModel");
+    const vector<float> &weightAll					= m_parameter->GetWeights("PhraseModel");
 
     const vector<string> &translationVector = m_parameter->GetParam("ttable-file");
     vector<size_t>	maxTargetPhrase					= Scan<size_t>(m_parameter->GetParam("ttable-limit"));

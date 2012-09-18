@@ -325,24 +325,25 @@ void Parameter::ConvertWeightArgs()
   // distortion / lex distortion
   PARAM_VEC &newWeights = m_setting["weights"];
   PARAM_VEC &weights = m_setting["weight-d"];
-  CHECK(weights.size() > 0);
   
-  if (weights.size() > 1)
+  if (weights.size() > 0)
   {
-    // everything but the last is lex reordering model
-    for (size_t i = 0; i < weights.size() - 1; ++i)
+    if (weights.size() > 1)
     {
-      string line = "LexicalReordering_wbe-msd-bidirectional-fe-allff " + weights[i];
-      newWeights.push_back(line);
+      // everything but the last is lex reordering model
+      for (size_t i = 0; i < weights.size() - 1; ++i)
+      {
+        string line = "LexicalReordering_wbe-msd-bidirectional-fe-allff " + weights[i];
+        newWeights.push_back(line);
+      }
     }
-  }
 
-  // distance distortion
-  string line = "Distortion " + weights[weights.size() - 1];
-  newWeights.push_back(line);
-  
-  m_setting.erase("weight-d");
-  
+    // distance distortion
+    string line = "Distortion " + weights[weights.size() - 1];
+    newWeights.push_back(line);
+    
+    m_setting.erase("weight-d");
+  }
 }
 
 void Parameter::SortWeightsByName()
