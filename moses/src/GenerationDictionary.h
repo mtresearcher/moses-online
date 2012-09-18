@@ -72,8 +72,7 @@ public:
 
   size_t GetNumScoreComponents() const;
   std::string GetScoreProducerDescription(unsigned) const;
-  std::string GetScoreProducerWeightShortName(unsigned) const;
-
+  
   /** number of unique input entries in the generation table.
   * NOT the number of lines in the generation table
   */

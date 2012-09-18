@@ -78,10 +78,6 @@ public:
     return "GlobalLexicalModel";
   };
 
-  virtual std::string GetScoreProducerWeightShortName(unsigned) const {
-    return "lex";
-  };
-
   void InitializeForInput( Sentence const& in );
 
   void Evaluate(const TargetPhrase&, ScoreComponentCollection* ) const;

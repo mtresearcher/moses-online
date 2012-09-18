@@ -385,8 +385,8 @@ void OutputNBest(std::ostream& out, const Moses::TrellisPathList &nBestList, con
     std::string lastName = "";
     const vector<const StatefulFeatureFunction*>& sff = system->GetStatefulFeatureFunctions();
     for( size_t i=0; i<sff.size(); i++ ) {
-      if( labeledOutput && lastName != sff[i]->GetScoreProducerWeightShortName() ) {
-        lastName = sff[i]->GetScoreProducerWeightShortName();
+      if( labeledOutput && lastName != sff[i]->GetScoreProducerDescription() ) {
+        lastName = sff[i]->GetScoreProducerDescription();
         out << " " << lastName << ":";
       }
       vector<float> scores = path.GetScoreBreakdown().GetScoresForProducer( sff[i] );
@@ -397,8 +397,8 @@ void OutputNBest(std::ostream& out, const Moses::TrellisPathList &nBestList, con
 
     const vector<const StatelessFeatureFunction*>& slf = system->GetStatelessFeatureFunctions();
     for( size_t i=0; i<slf.size(); i++ ) {
-      if( labeledOutput && lastName != slf[i]->GetScoreProducerWeightShortName() ) {
-        lastName = slf[i]->GetScoreProducerWeightShortName();
+      if( labeledOutput && lastName != slf[i]->GetScoreProducerDescription() ) {
+        lastName = slf[i]->GetScoreProducerDescription();
         out << " " << lastName << ":";
       }
       vector<float> scores = path.GetScoreBreakdown().GetScoresForProducer( slf[i] );
@@ -418,7 +418,7 @@ void OutputNBest(std::ostream& out, const Moses::TrellisPathList &nBestList, con
 
 	  if (labeledOutput && (i == 0) ){
 	    if ((j == 0) || (j == pd_numinputscore)){
-	      lastName =  pds[i]->GetScoreProducerWeightShortName(j);
+	      lastName =  pds[i]->GetScoreProducerDescription(j);
 	      out << " " << lastName << ":";
 	    }
 	  }
@@ -438,7 +438,7 @@ void OutputNBest(std::ostream& out, const Moses::TrellisPathList &nBestList, con
 
 	  if (labeledOutput && (i == 0) ){
 	    if ((j == 0) || (j == pd_numinputscore)){
-	      lastName =  gds[i]->GetScoreProducerWeightShortName(j);
+	      lastName =  gds[i]->GetScoreProducerDescription(j);
 	      out << " " << lastName << ":";
 	    }
 	  }

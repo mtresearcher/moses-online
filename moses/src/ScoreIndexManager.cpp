@@ -83,7 +83,7 @@ void ScoreIndexManager::InitFeatureNames()
       if (add_idx)
         os << '_' << ind;
       m_featureNames.push_back(os.str());
-      m_featureShortNames.push_back( m_producers[cur_scoreType]->GetScoreProducerWeightShortName(nis_idx+ind-1) );
+      m_featureShortNames.push_back( m_producers[cur_scoreType]->GetScoreProducerDescription(nis_idx+ind-1) );
       ++cur_i;
       ++ind;
     }

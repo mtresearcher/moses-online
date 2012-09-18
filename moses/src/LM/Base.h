@@ -60,10 +60,6 @@ public:
   float GetWeight() const;
   float GetOOVWeight() const;
 
-  std::string GetScoreProducerWeightShortName(unsigned) const {
-    return "lm";
-  }
-
   virtual void InitializeBeforeSentenceProcessing() {}
 
   virtual void CleanUpAfterSentenceProcessing(const InputType& source) {}

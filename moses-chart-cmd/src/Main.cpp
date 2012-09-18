@@ -166,7 +166,7 @@ static void PrintFeatureWeight(const FeatureFunction* ff)
   size_t weightStart  = StaticData::Instance().GetScoreIndexManager().GetBeginIndex(ff->GetScoreBookkeepingID());
   size_t weightEnd  = StaticData::Instance().GetScoreIndexManager().GetEndIndex(ff->GetScoreBookkeepingID());
   for (size_t i = weightStart; i < weightEnd; ++i) {
-    cout << ff->GetScoreProducerDescription(i-weightStart) <<  " " << ff->GetScoreProducerWeightShortName(i-weightStart) << " "
+    cout << ff->GetScoreProducerDescription(i-weightStart) <<  " " << ff->GetScoreProducerDescription(i-weightStart) << " "
          << StaticData::Instance().GetAllWeights()[i] << endl;
   }
 }

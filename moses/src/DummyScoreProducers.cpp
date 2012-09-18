@@ -53,11 +53,6 @@ std::string DistortionScoreProducer::GetScoreProducerDescription(unsigned) const
   return "Distortion";
 }
 
-std::string DistortionScoreProducer::GetScoreProducerWeightShortName(unsigned) const
-{
-  return "d";
-}
-
 float DistortionScoreProducer::CalculateDistortionScore(const Hypothesis& hypo,
     const WordsRange &prev, const WordsRange &curr, const int FirstGap) const
 {
@@ -141,11 +136,6 @@ std::string WordPenaltyProducer::GetScoreProducerDescription(unsigned) const
   return "WordPenalty";
 }
 
-std::string WordPenaltyProducer::GetScoreProducerWeightShortName(unsigned) const
-{
-  return "w";
-}
-
 size_t WordPenaltyProducer::GetNumInputScores() const
 {
   return 0;
@@ -169,11 +159,6 @@ size_t UnknownWordPenaltyProducer::GetNumScoreComponents() const
 std::string UnknownWordPenaltyProducer::GetScoreProducerDescription(unsigned) const
 {
   return "!UnknownWordPenalty";
-}
-
-std::string UnknownWordPenaltyProducer::GetScoreProducerWeightShortName(unsigned) const
-{
-  return "u";
 }
 
 size_t UnknownWordPenaltyProducer::GetNumInputScores() const

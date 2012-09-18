@@ -440,7 +440,7 @@ void IOWrapper::OutputNBestList(const ChartTrellisPathList &nBestList, const Cha
 
 	  if (labeledOutput && (i == 0) ){
 	    if ((j == 0) || (j == pd_numinputscore)){
-	      lastName =  pds[i]->GetScoreProducerWeightShortName(j);
+	      lastName =  pds[i]->GetScoreProducerDescription(j);
 	      out << " " << lastName << ":";
 	    }
 	  }
@@ -465,7 +465,7 @@ void IOWrapper::OutputNBestList(const ChartTrellisPathList &nBestList, const Cha
 
 	  if (labeledOutput && (i == 0) ){
 	    if ((j == 0) || (j == pd_numinputscore)){
-	      lastName =  gds[i]->GetScoreProducerWeightShortName(j);
+	      lastName =  gds[i]->GetScoreProducerDescription(j);
 	      out << " " << lastName << ":";
 	    }
 	  }

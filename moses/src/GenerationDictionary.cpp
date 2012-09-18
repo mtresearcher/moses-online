@@ -128,12 +128,6 @@ std::string GenerationDictionary::GetScoreProducerDescription(unsigned) const
   return "GenerationScore,file=" + m_filePath;
 }
 
-std::string GenerationDictionary::GetScoreProducerWeightShortName(unsigned) const
-{
-  return "g";
-}
-
-
 const OutputWordCollection *GenerationDictionary::FindWord(const Word &word) const
 {
   const OutputWordCollection *ret;

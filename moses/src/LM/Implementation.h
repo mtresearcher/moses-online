@@ -118,10 +118,6 @@ public:
 
   float GetWeight() const;
 
-  std::string GetScoreProducerWeightShortName(unsigned) const {
-    return "lm";
-  }
-
   //! overrideable funtions for IRST LM to cleanup. Maybe something to do with on demand/cache loading/unloading
   virtual void InitializeBeforeSentenceProcessing() {};
   virtual void CleanUpAfterSentenceProcessing(const InputType& source) {};

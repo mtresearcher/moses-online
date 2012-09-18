@@ -55,10 +55,6 @@ public:
     return "LexicalReordering_" + m_modelTypeString;
   }
 
-  std::string GetScoreProducerWeightShortName(unsigned) const {
-    return "d";
-  };
-
   void InitializeForInput(const InputType& i) {
     m_table->InitializeForInput(i);
   }

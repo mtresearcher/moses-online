@@ -108,13 +108,4 @@ std::string PhraseDictionaryTreeAdaptor::GetScoreProducerDescription(unsigned id
   }
 }
 
-std::string PhraseDictionaryTreeAdaptor::GetScoreProducerWeightShortName(unsigned idx) const
-{
-  if (idx < imp->GetNumInputScores()){
-    return "I";
-  }else{  
-    return "tm";
-  }
-}
-
 }

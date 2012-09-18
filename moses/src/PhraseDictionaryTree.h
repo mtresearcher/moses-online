@@ -126,9 +126,7 @@ public:
   // for debugging
   void PrintTargetCandidates(PrefixPtr p,std::ostream& out) const;
   std::string GetScoreProducerDescription(unsigned) const;
-  std::string GetScoreProducerWeightShortName(unsigned) const {
-    return "tm";
-  }
+  
 };
 
 
