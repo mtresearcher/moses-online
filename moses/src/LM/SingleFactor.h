@@ -61,7 +61,6 @@ public:
   FactorType GetFactorType() const {
     return m_factorType;
   }
-  std::string GetScoreProducerDescription(unsigned) const;
 };
 
 // Single factor LM that uses a null pointer state.

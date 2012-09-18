@@ -114,7 +114,8 @@ public:
     return m_sentenceEndArray;
   }
 
-  virtual std::string GetScoreProducerDescription(unsigned) const = 0;
+  virtual std::string GetScoreProducerDescription(unsigned) const
+  { return "LM"; }
 
   float GetWeight() const;
 
