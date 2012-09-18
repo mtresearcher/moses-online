@@ -64,6 +64,10 @@ public:
 
   virtual void CleanUpAfterSentenceProcessing(const InputType& source) {}
 
+  std::string GetScoreProducerDescription(unsigned) const {
+    return "LM";
+  }
+
   virtual const FFState* EmptyHypothesisState(const InputType &input) const = 0;
 
   /* whether this LM can be used on a particular phrase.
