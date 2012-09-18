@@ -162,6 +162,16 @@ Parameter::Parameter()
 Parameter::~Parameter()
 {
 }
+  
+const std::vector<float> &Parameter::GetWeights(const std::string &name) const
+{
+  std::map<std::string, std::vector<float> >::const_iterator iter;
+  iter = m_weights.find(name);
+  
+  CHECK(iter != m_weights.end());
+  return iter->second;
+}
+
 
 /** initialize a parameter, sub of constructor */
 void Parameter::AddParam(const string &paramName, const string &description)

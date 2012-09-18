@@ -81,6 +81,7 @@ public:
     return  m_setting.find( paramName ) != m_setting.end();
   }
 
+  const std::vector<float> &GetWeights(const std::string &name) const;
 };
 
 }
