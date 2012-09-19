@@ -74,7 +74,7 @@ public:
     return 1;
   };
 
-  virtual std::string GetScoreProducerDescription(unsigned) const {
+  virtual std::string GetScoreProducerDescription() const {
     return "GlobalLexicalModel";
   };
 

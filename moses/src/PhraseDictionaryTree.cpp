@@ -661,7 +661,7 @@ GetTargetCandidates(PrefixPtr p,
   imp->ConvertTgtCand(tcands,rv,wa);
 }
 
-std::string PhraseDictionaryTree::GetScoreProducerDescription(unsigned) const
+std::string PhraseDictionaryTree::GetScoreProducerDescription() const
 {
   return "PhraseDictionaryTree";
 }

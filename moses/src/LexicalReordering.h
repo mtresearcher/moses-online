@@ -51,8 +51,8 @@ public:
 
   virtual const FFState* EmptyHypothesisState(const InputType &input) const;
 
-  virtual std::string GetScoreProducerDescription(unsigned) const {
-    return "LexicalReordering_" + m_modelTypeString;
+  virtual std::string GetScoreProducerDescription() const {
+    return "LexicalReordering";
   }
 
   void InitializeForInput(const InputType& i) {

@@ -114,7 +114,7 @@ public:
     return m_sentenceEndArray;
   }
 
-  virtual std::string GetScoreProducerDescription(unsigned) const
+  virtual std::string GetScoreProducerDescription() const
   { return "LM"; }
 
   float GetWeight() const;
@@ -162,8 +162,8 @@ class LMRefCount : public LanguageModel {
       return m_impl->EvaluateChart(cur_hypo, featureID, accumulator, this);
     }
 
-    std::string GetScoreProducerDescription(unsigned int param) const {
-      return m_impl->GetScoreProducerDescription(param);
+    std::string GetScoreProducerDescription() const {
+      return m_impl->GetScoreProducerDescription();
     }
 
     LanguageModelImplementation *MosesServerCppShouldNotHaveLMCode() { return m_impl.get(); }

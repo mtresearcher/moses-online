@@ -278,7 +278,7 @@ PhraseDictionaryFeature::~PhraseDictionaryFeature()
 {}
 
 
-std::string PhraseDictionaryFeature::GetScoreProducerDescription(unsigned idx) const
+std::string PhraseDictionaryFeature::GetScoreProducerDescription() const
 {
   return "PhraseModel";
 }

@@ -123,9 +123,9 @@ size_t GenerationDictionary::GetNumScoreComponents() const
   return m_numScoreComponent;
 }
 
-std::string GenerationDictionary::GetScoreProducerDescription(unsigned) const
+std::string GenerationDictionary::GetScoreProducerDescription() const
 {
-  return "GenerationScore,file=" + m_filePath;
+  return "GenerationModel";
 }
 
 const OutputWordCollection *GenerationDictionary::FindWord(const Word &word) const

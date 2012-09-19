@@ -107,7 +107,7 @@ void PrintTranslationAnalysis(const TranslationSystem* system, std::ostream &os,
     for (; acc != lmAcc.end(); ++acc, ++i) {
       char buf[256];
       sprintf(buf, "%.4f", (float)(*acc)/(float)lmCalls);
-      os << (*i)->GetScoreProducerDescription(0) <<", AVG N-GRAM LENGTH: " << buf << std::endl;
+      os << (*i)->GetScoreProducerDescription() <<", AVG N-GRAM LENGTH: " << buf << std::endl;
     }
   }
 

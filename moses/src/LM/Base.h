@@ -64,7 +64,7 @@ public:
 
   virtual void CleanUpAfterSentenceProcessing(const InputType& source) {}
 
-  std::string GetScoreProducerDescription(unsigned) const {
+  std::string GetScoreProducerDescription() const {
     return "LM";
   }
 

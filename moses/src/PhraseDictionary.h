@@ -111,7 +111,7 @@ public:
 
   virtual bool ComputeValueInTranslationOption() const;
 
-  std::string GetScoreProducerDescription(unsigned) const;
+  std::string GetScoreProducerDescription() const;
   
   size_t GetNumScoreComponents() const;
 

@@ -70,8 +70,8 @@ public:
             const LMList& languageModels,
             const WordPenaltyProducer* wpProducer);
 
-  std::string GetScoreProducerDescription(unsigned) const {
-    return "BerkeleyPt";
+  std::string GetScoreProducerDescription() const {
+    return "OnDiskPhraseModel";
   }
 
   // PhraseDictionary impl

@@ -125,7 +125,7 @@ public:
   // print target candidates for a given prefix pointer to a stream, mainly
   // for debugging
   void PrintTargetCandidates(PrefixPtr p,std::ostream& out) const;
-  std::string GetScoreProducerDescription(unsigned) const;
+  std::string GetScoreProducerDescription() const;
   
 };
 
