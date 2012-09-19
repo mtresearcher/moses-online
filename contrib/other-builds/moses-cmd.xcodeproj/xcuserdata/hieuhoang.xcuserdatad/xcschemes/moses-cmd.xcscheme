@@ -47,6 +47,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "-n-best-list best.txt 100"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-f moses.ini -i to-translate.txt"
             isEnabled = "YES">
          </CommandLineArgument>

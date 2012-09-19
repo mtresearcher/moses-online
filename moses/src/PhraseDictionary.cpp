@@ -280,11 +280,7 @@ PhraseDictionaryFeature::~PhraseDictionaryFeature()
 
 std::string PhraseDictionaryFeature::GetScoreProducerDescription(unsigned idx) const
 {
-  if (idx < GetNumInputScores()){
-    return "InputScore";
-  }else{
-    return "PhraseModel";
-  }
+  return "PhraseModel";
 }
 
 size_t PhraseDictionaryFeature::GetNumScoreComponents() const
