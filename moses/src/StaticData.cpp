@@ -77,11 +77,9 @@ static size_t CalcMax(size_t x, const vector<size_t>& y, const vector<size_t>& z
 StaticData StaticData::s_instance;
 
 StaticData::StaticData()
-  :m_numLinkParams(1)
-  ,m_fLMsLoaded(false)
+  :m_fLMsLoaded(false)
   ,m_sourceStartPosMattersForRecombination(false)
   ,m_inputType(SentenceInput)
-  ,m_numInputScores(0)
   ,m_detailedTranslationReportingFilePath()
   ,m_onlyDistinctNBest(false)
   ,m_factorDelimiter("|") // default delimiter between factors
@@ -948,6 +946,15 @@ bool StaticData::LoadPhraseTables()
 
   // language models must be loaded prior to loading phrase tables
   CHECK(m_fLMsLoaded);
+
+  if (m_inputType == ConfusionNetworkInput || m_inputType == WordLatticeInput) {
+    m_numLinkParams = (m_parameter->GetParam("link-param-count").size() == 1) ?
+                        Scan<size_t>(m_parameter->GetParam("link-param-count")[0]) : 2;
+  }
+  else {
+    m_numLinkParams = 0;
+  }
+
   // load phrase translation tables
   if (m_parameter->GetParam("ttable-file").size() > 0) {
     // weights
@@ -1011,56 +1018,26 @@ bool StaticData::LoadPhraseTables()
       // first InputScores (if any), then translation scores
       vector<float> weight;
 
+      size_t numInputScores = 0;
       if(currDict==0 && (m_inputType == ConfusionNetworkInput || m_inputType == WordLatticeInput)) {
         // TODO. find what the assumptions made by confusion network about phrase table output which makes
         // it only work with binrary file. This is a hack
-
-        m_numInputScores = m_parameter->GetWeights("Input").size();
-        
-        if (implementation == Binary)
-        {
-          for(unsigned k=0; k<m_numInputScores; ++k)
-            weight.push_back(m_parameter->GetWeights("Input")[k]);
-        }
-        
-        if(m_parameter->GetParam("link-param-count").size())
-          m_numLinkParams = Scan<size_t>(m_parameter->GetParam("link-param-count")[0]);
-
-        //print some info about this interaction:
-        if (implementation == Binary) {
-          if (m_numLinkParams == m_numInputScores) {
-            VERBOSE(1,"specified equal numbers of link parameters and insertion weights, not using non-epsilon 'real' word link count.\n");
-          } else if ((m_numLinkParams + 1) == m_numInputScores) {
-            VERBOSE(1,"WARN: "<< m_numInputScores << " insertion weights found and only "<< m_numLinkParams << " link parameters specified, applying non-epsilon 'real' word link count for last feature weight.\n");
-          } else {
-            stringstream strme;
-            strme << "You specified " << m_numInputScores
-                  << " input weights, but you specified " << m_numLinkParams << " link parameters (link-param-count)!";
-            UserMessage::Add(strme.str());
-            return false;
-          }
-        }
-        
+        numInputScores = m_numLinkParams;
       }
-      if (!m_inputType) {
-        m_numInputScores=0;
-      }
-      //this number changes depending on what phrase table we're talking about: only 0 has the weights on it
-      size_t tableInputScores = (currDict == 0 && implementation == Binary) ? m_numInputScores : 0;
+      size_t numScores = numScoreComponent + numInputScores;
 
-      for (size_t currScore = 0 ; currScore < numScoreComponent; currScore++)
+      for (size_t currScore = 0 ; currScore < numScores; currScore++)
         weight.push_back(weightAll[weightAllOffset + currScore]);
 
-      if(weight.size() - tableInputScores != numScoreComponent) {
+      if(weight.size() != numScoreComponent + numInputScores) {
         stringstream strme;
         strme << "Your phrase table has " << numScoreComponent
-              << " scores, but you specified " << (weight.size() - tableInputScores) << " weights!";
+              << " scores, but you specified " << (weight.size() - numInputScores) << " weights!";
         UserMessage::Add(strme.str());
         return false;
       }
 
       weightAllOffset += numScoreComponent;
-      numScoreComponent += tableInputScores;
 
       string targetPath, alignmentsFile;
       if (implementation == SuffixArray) {
@@ -1068,7 +1045,7 @@ bool StaticData::LoadPhraseTables()
         alignmentsFile= token[6];
       }
 
-      CHECK(numScoreComponent==weight.size());
+      CHECK(numScoreComponent + numInputScores ==weight.size());
 
       std::copy(weight.begin(),weight.end(),std::back_inserter(m_allWeights));
 
@@ -1080,8 +1057,8 @@ bool StaticData::LoadPhraseTables()
 
       PhraseDictionaryFeature* pdf = new PhraseDictionaryFeature(
         implementation
-        , numScoreComponent
-        , (currDict==0 ? m_numInputScores : 0)
+        , numScores
+        , numInputScores
         , input
         , output
         , filePath
@@ -1090,10 +1067,6 @@ bool StaticData::LoadPhraseTables()
         , targetPath, alignmentsFile);
 
       m_phraseDictionary.push_back(pdf);
-
-
-
-
 
       index++;
     }

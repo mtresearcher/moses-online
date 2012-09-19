@@ -313,13 +313,24 @@ void Parameter::ConvertWeightArgs(const string &oldWeightName, const string &new
 
 void Parameter::ConvertWeightArgs()
 {  
+  // input scores. if size=1, add an extra for 'real' word count feature. TODO HACK
+  bool addExtraInputWeight = false;
+  if (m_setting["weight-i"].size() == 1)
+  {
+    addExtraInputWeight = true;
+  }
+  ConvertWeightArgs("weight-i", "PhraseModel");
+
+  if (addExtraInputWeight)
+    m_setting["weights"].push_back("PhraseModel 0.0");
+
+  
   ConvertWeightArgs("weight-t", "PhraseModel");
   ConvertWeightArgs("weight-w", "WordPenalty");
   ConvertWeightArgs("weight-l", "LM");
   ConvertWeightArgs("weight-u", "UnknownWordPenalty");
   ConvertWeightArgs("weight-lex", "LexicalReordering");
   ConvertWeightArgs("weight-generation", "Generation");
-  ConvertWeightArgs("weight-i", "Input");
   ConvertWeightArgs("weight-lr", "LexicalReordering_wbe-msd-bidirectional-fe-allff");
   
   // distortion / lex distortion

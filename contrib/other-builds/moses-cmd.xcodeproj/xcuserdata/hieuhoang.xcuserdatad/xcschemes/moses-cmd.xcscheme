@@ -34,7 +34,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.GDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/hieuhoang/workspace/experiment/data/sample-models"
+      customWorkingDirectory = "/Users/hieuhoang/unison/workspace/experiment/data/issues/mert-new/phrase.confusionNet-surface-only"
       buildConfiguration = "Debug">
       <BuildableProductRunnable>
          <BuildableReference
@@ -47,15 +47,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-n-best-list best.txt 100"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-f phrase-model/moses.ini "
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-i phrase-model/in"
+            argument = "-f moses.ini -i to-translate.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

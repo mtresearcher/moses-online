@@ -120,8 +120,6 @@ bool ConfusionNet::ReadFormat0(std::istream& in,
   Clear();
   std::string line;
   size_t numLinkParams = StaticData::Instance().GetNumLinkParams();
-  size_t numLinkWeights = StaticData::Instance().GetNumInputScores();
-  bool addRealWordCount = ((numLinkParams + 1) == numLinkWeights);
 
   while(getline(in,line)) {
     std::istringstream is(line);
@@ -131,8 +129,8 @@ bool ConfusionNet::ReadFormat0(std::istream& in,
     while(is>>word) {
       Word w;
       String2Word(word,w,factorOrder);
-      std::vector<float> probs(numLinkWeights,0.0);
-      for(size_t i=0; i<numLinkParams; i++) {
+      std::vector<float> probs(numLinkParams,0.0);
+      for(size_t i=0; i<numLinkParams-1; i++) {
         double prob;
         if (!(is>>prob)) {
           TRACE_ERR("ERROR: unable to parse CN input - bad link probability, or wrong number of scores\n");
@@ -149,8 +147,8 @@ bool ConfusionNet::ReadFormat0(std::istream& in,
 
       }
       //store 'real' word count in last feature if we have one more weight than we do arc scores and not epsilon
-      if (addRealWordCount && word!=EPSILON && word!="")
-        probs[numLinkParams] = -1.0;
+      if (word!=EPSILON && word!="")
+        probs[numLinkParams-1] = -1.0;
       col.push_back(std::make_pair(w,probs));
     }
     if(col.size()) {

@@ -137,7 +137,6 @@ protected:
   ParsingAlgorithm m_parsingAlgorithm;
   SearchAlgorithm m_searchAlgorithm;
   InputTypeEnum m_inputType;
-  size_t m_numInputScores;
 
   mutable size_t m_verboseLevel;
   std::vector<WordPenaltyProducer*> m_wordPenaltyProducers;
@@ -452,9 +451,6 @@ public:
   }
   LMList GetLMList() const { 
     return m_languageModel; 
-  }
-  size_t GetNumInputScores() const {
-    return m_numInputScores;
   }
 
   const std::vector<float>& GetAllWeights() const {

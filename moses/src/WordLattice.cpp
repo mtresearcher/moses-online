@@ -34,11 +34,9 @@ void WordLattice::Print(std::ostream& out) const
 int WordLattice::InitializeFromPCNDataType(const PCN::CN& cn, const std::vector<FactorType>& factorOrder, const std::string& debug_line)
 {
   size_t numLinkParams = StaticData::Instance().GetNumLinkParams();
-  size_t numLinkWeights = StaticData::Instance().GetNumInputScores();
   size_t maxSizePhrase = StaticData::Instance().GetMaxPhraseLength();
 
   //when we have one more weight than params, we add a word count feature
-  bool addRealWordCount = ((numLinkParams + 1) == numLinkWeights);
   data.resize(cn.size());
   next_nodes.resize(cn.size());
   for(size_t i=0; i<cn.size(); ++i) {
@@ -72,12 +70,12 @@ int WordLattice::InitializeFromPCNDataType(const PCN::CN& cn, const std::vector<
         }
         data[i][j].second.push_back(std::max(static_cast<float>(log(*probsIterator)), LOWEST_SCORE));
       }
+      
       //store 'real' word count in last feature if we have one more weight than we do arc scores and not epsilon
-      if (addRealWordCount) {
-        //only add count if not epsilon
-        float value = (alt.first.first=="" || alt.first.first==EPSILON) ? 0.0f : -1.0f;
-        data[i][j].second.push_back(value);
-      }
+      //only add count if not epsilon
+      float value = (alt.first.first=="" || alt.first.first==EPSILON) ? 0.0f : -1.0f;
+      data[i][j].second.push_back(value);
+      
       String2Word(alt.first.first,data[i][j].first,factorOrder);
       next_nodes[i][j] = alt.second;
 
