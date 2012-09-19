@@ -42,15 +42,15 @@ void ScoreIndexManager::PrintLabeledScores(std::ostream& os, const ScoreComponen
 
 void ScoreIndexManager::PrintLabeledWeightedScores(std::ostream& os, const ScoreComponentCollection& scores, const std::vector<float>& weights) const
 {
-  CHECK(m_featureShortNames.size() == weights.size());
+  CHECK(m_featureNames.size() == weights.size());
   string lastName = "";
-  for (size_t i = 0; i < m_featureShortNames.size(); ++i) {
+  for (size_t i = 0; i < m_featureNames.size(); ++i) {
     if (i>0) {
       os << " ";
     }
-    if (lastName != m_featureShortNames[i]) {
-      os << m_featureShortNames[i] << ": ";
-      lastName = m_featureShortNames[i];
+    if (lastName != m_featureNames[i]) {
+      os << m_featureNames[i] << ": ";
+      lastName = m_featureNames[i];
     }
     os << weights[i] * scores[i];
   }
@@ -59,7 +59,6 @@ void ScoreIndexManager::PrintLabeledWeightedScores(std::ostream& os, const Score
 void ScoreIndexManager::InitFeatureNames()
 {
   m_featureNames.clear();
-  m_featureShortNames.clear();
   size_t cur_i = 0;
   size_t cur_scoreType = 0;
   while (cur_i < m_last) {
@@ -83,7 +82,6 @@ void ScoreIndexManager::InitFeatureNames()
       if (add_idx)
         os << '_' << ind;
       m_featureNames.push_back(os.str());
-      m_featureShortNames.push_back( m_producers[cur_scoreType]->GetScoreProducerDescription() );
       ++cur_i;
       ++ind;
     }

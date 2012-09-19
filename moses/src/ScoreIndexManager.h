@@ -58,7 +58,6 @@ private:
   std::vector<size_t> m_ends;
   std::vector<const ScoreProducer*> m_producers; /**< all the score producers in this run */
   std::vector<std::string> m_featureNames;
-  std::vector<std::string> m_featureShortNames;
   size_t m_last;
 };
 
