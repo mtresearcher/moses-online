@@ -58,7 +58,6 @@ public:
 
   std::string GetScoreProducerDescription() const;
   
-  size_t GetNumInputScores() const;
   virtual void InitializeForInput(InputType const& source);
 
   virtual ChartRuleLookupManager *CreateRuleLookupManager(

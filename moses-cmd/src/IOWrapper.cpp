@@ -427,18 +427,13 @@ void OutputNBest(std::ostream& out, const Moses::TrellisPathList &nBestList, con
     if (gds.size() > 0) {
 
       for( size_t i=0; i<gds.size(); i++ ) {
-	size_t pd_numinputscore = gds[i]->GetNumInputScores();
-	vector<float> scores = path.GetScoreBreakdown().GetScoresForProducer( gds[i] );
-	for (size_t j = 0; j<scores.size(); ++j){
+        lastName =  gds[i]->GetScoreProducerDescription();
+        out << " " << lastName << ":";
 
-	  if (labeledOutput && (i == 0) ){
-	    if ((j == 0) || (j == pd_numinputscore)){
-	      lastName =  gds[i]->GetScoreProducerDescription();
-	      out << " " << lastName << ":";
-	    }
-	  }
-	  out << " " << scores[j];
-	}
+        vector<float> scores = path.GetScoreBreakdown().GetScoresForProducer( gds[i] );
+        for (size_t j = 0; j<scores.size(); ++j){
+          out << " " << scores[j];
+        }
       }
     }
 

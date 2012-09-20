@@ -63,24 +63,29 @@ void ScoreIndexManager::InitFeatureNames()
   size_t cur_scoreType = 0;
   while (cur_i < m_last) {
     size_t nis_idx = 0;
+    
+    /*
     bool add_idx = (m_producers[cur_scoreType]->GetNumInputScores() > 1);
     while (nis_idx < m_producers[cur_scoreType]->GetNumInputScores()) {
       ostringstream os;
       os << m_producers[cur_scoreType]->GetScoreProducerDescription();
       if (add_idx)
         os << '_' << (nis_idx+1);
+      cerr << os.str() << endl;
       m_featureNames.push_back(os.str());
       nis_idx++;
       cur_i++;
     }
-
+     */
+    
     int ind = 1;
-    add_idx = (m_ends[cur_scoreType] - cur_i > 1);
+    bool add_idx = (m_ends[cur_scoreType] - cur_i > 1);
     while (cur_i < m_ends[cur_scoreType]) {
       ostringstream os;
       os << m_producers[cur_scoreType]->GetScoreProducerDescription();
       if (add_idx)
         os << '_' << ind;
+      cerr << os.str() << endl;
       m_featureNames.push_back(os.str());
       ++cur_i;
       ++ind;

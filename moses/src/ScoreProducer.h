@@ -52,11 +52,6 @@ public:
   //! returns a string description of this producer
   virtual std::string GetScoreProducerDescription() const = 0;
 
-  //! returns the number of scores gathered from the input (0 by default)
-  virtual size_t GetNumInputScores() const {
-    return 0;
-  };
-
   virtual bool IsStateless() const = 0;
 
 };

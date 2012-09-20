@@ -506,10 +506,6 @@ public:
     m_dict->FreeMemory();
   }
 
-
-  size_t GetNumInputScores() const {
-    return m_numInputScores;
-  }
 };
 
 }

@@ -115,7 +115,6 @@ public:
   
   size_t GetNumScoreComponents() const;
 
-  size_t GetNumInputScores() const;
 
   //Initialises the dictionary (may involve loading from file)
   void InitDictionary(const TranslationSystem* system);
