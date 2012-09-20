@@ -725,7 +725,7 @@ bool StaticData::LoadLexicalReorderingModel()
 {
   VERBOSE(1, "Loading lexical distortion models...");
   const vector<string> fileStr    = m_parameter->GetParam("distortion-file");
-  const std::vector<float>   &weights = m_parameter->GetWeights("LexicalReordering_wbe-msd-bidirectional-fe-allff");
+  const std::vector<float>   &weights = m_parameter->GetWeights("LexicalReordering");
   
   //get weights values
   VERBOSE(1, "have " << fileStr.size() << " models" << std::endl);
@@ -783,7 +783,7 @@ bool StaticData::LoadLexicalReorderingModel()
 
 bool StaticData::LoadGlobalLexicalModel()
 {
-  const vector<float> &weight = m_parameter->GetWeights("LexicalReordering");
+  const vector<float> &weight = m_parameter->GetWeights("GlobalLexicalReordering");
   const vector<string> &file = m_parameter->GetParam("global-lexical-file");
 
   if (weight.size() != file.size()) {

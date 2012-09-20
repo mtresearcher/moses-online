@@ -157,6 +157,8 @@ Parameter::Parameter()
   AddParam("weight-w", "w", "weight for word penalty");
   AddParam("weight-l", "lm", "weight(s) for language models");
   
+  AddParam("weights", "weights for ALL models, 1 per line 'WeightName value'. Weight names can be repeated");
+  AddParam("weights-overwrite", "special parameter for mert. All on 1 line. Overrides weights specified in 'weights' argument");
 }
 
 Parameter::~Parameter()
@@ -271,8 +273,9 @@ bool Parameter::LoadParam(int argc, char* argv[])
   
   // convert old weights args to new format
   ConvertWeightArgs();
-  SortWeightsByName();
-
+  CreateWeightsMap();
+  WeightOverwrite();
+  
   // check for illegal parameters
   bool noErrorFlag = true;
   for (int i = 0 ; i < argc ; i++) {
@@ -329,9 +332,9 @@ void Parameter::ConvertWeightArgs()
   ConvertWeightArgs("weight-w", "WordPenalty");
   ConvertWeightArgs("weight-l", "LM");
   ConvertWeightArgs("weight-u", "UnknownWordPenalty");
-  ConvertWeightArgs("weight-lex", "LexicalReordering");
+  ConvertWeightArgs("weight-lex", "GlobalLexicalReordering");
   ConvertWeightArgs("weight-generation", "Generation");
-  ConvertWeightArgs("weight-lr", "LexicalReordering_wbe-msd-bidirectional-fe-allff");
+  ConvertWeightArgs("weight-lr", "LexicalReordering");
   
   // distortion / lex distortion
   PARAM_VEC &newWeights = m_setting["weights"];
@@ -344,7 +347,7 @@ void Parameter::ConvertWeightArgs()
       // everything but the last is lex reordering model
       for (size_t i = 0; i < weights.size() - 1; ++i)
       {
-        string line = "LexicalReordering_wbe-msd-bidirectional-fe-allff " + weights[i];
+        string line = "LexicalReordering " + weights[i];
         newWeights.push_back(line);
       }
     }
@@ -357,12 +360,12 @@ void Parameter::ConvertWeightArgs()
   }
 }
 
-void Parameter::SortWeightsByName()
+void Parameter::CreateWeightsMap()
 {
   PARAM_VEC &vec = m_setting["weights"];
   for (size_t i = 0; i < vec.size(); ++i)
   {
-    string line = vec[i];
+    const string &line = vec[i];
     vector<string> toks = Tokenize(line);
     CHECK(toks.size() == 2);
     
@@ -371,6 +374,28 @@ void Parameter::SortWeightsByName()
     m_weights[name].push_back(weight);
   }
   
+}
+
+void Parameter::WeightOverwrite()
+{
+  PARAM_VEC &vec = m_setting["weights-overwrite"];
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    cerr << vec[i] << endl;
+    const string &line = vec[i]; 
+    
+    vector<string> toks = Tokenize(line);
+    CHECK(toks.size() == 3);
+    
+    string &name = toks[0];
+    size_t ind = Scan<size_t>(toks[1]);
+    float weight = Scan<float>(toks[2]);
+    
+    vector<float> &weightsForProducer = m_weights[name];
+    CHECK(ind < weightsForProducer.size());
+    weightsForProducer[ind] = weight;
+
+  }
 }
 
 /** check that parameter settings make sense */

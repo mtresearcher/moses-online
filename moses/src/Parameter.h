@@ -61,7 +61,8 @@ protected:
 
   void ConvertWeightArgs();
   void ConvertWeightArgs(const std::string &oldWeightName, const std::string &newWeightName);
-  void SortWeightsByName();
+  void CreateWeightsMap();
+  void WeightOverwrite();
 
   void PrintCredit();
 

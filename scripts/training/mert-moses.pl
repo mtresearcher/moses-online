@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w 
 # $Id$
 # Usage:
 # mert-moses.pl <foreign> <english> <decoder-executable> <decoder-config>
@@ -76,10 +76,10 @@ $SCRIPTS_ROOTDIR = $ENV{"SCRIPTS_ROOTDIR"} if defined($ENV{"SCRIPTS_ROOTDIR"});
 
 # moses.ini file uses FULL names for lambdas, while this training script
 # internally (and on the command line) uses ABBR names.
-my @ABBR_FULL_MAP = qw(d=weight-d lm=weight-l tm=weight-t w=weight-w
-  g=weight-generation lex=weight-lex I=weight-i);
-my %ABBR2FULL = map { split /=/, $_, 2 } @ABBR_FULL_MAP;
-my %FULL2ABBR = map { my ($a, $b) = split /=/, $_, 2; ($b, $a); } @ABBR_FULL_MAP;
+#my @ABBR_FULL_MAP = qw(d=weight-d lm=weight-l tm=weight-t w=weight-w
+#  g=weight-generation lex=weight-lex I=weight-i);
+#my %ABBR2FULL = map { split /=/, $_, 2 } @ABBR_FULL_MAP;
+#my %FULL2ABBR = map { my ($a, $b) = split /=/, $_, 2; ($b, $a); } @ABBR_FULL_MAP;
 
 my $minimum_required_change_in_weights = 0.00001;
     # stop if no lambda changes more than this
@@ -1044,14 +1044,29 @@ sub run_decoder {
       grep($totlambda += abs($_), @vals);
       grep($_ /= $totlambda, @vals);
     }
+    
     # moses now does not seem accept "-tm X -tm Y" but needs "-tm X Y"
-    my %model_weights;
+    my $prev_name = "";
+    my $feat_ind = 0;
+    my $weight_str = "-weights-overwrite ";
     for(my $i=0; $i<scalar(@{$featlist->{"names"}}); $i++) {
       my $name = $featlist->{"names"}->[$i];
-      $model_weights{$name} = "-$name" if !defined $model_weights{$name};
-      $model_weights{$name} .= sprintf " %.6f", $vals[$i];
+      
+      $weight_str .= "\"$name";
+      
+      if ($prev_name eq $name) {
+        ++$feat_ind;
+      } else {
+        $prev_name = $name;
+        $feat_ind = 0;
+      }
+      $weight_str .= " $feat_ind ";
+      
+      $weight_str .= sprintf "%.6f", $vals[$i];
+      $weight_str .= "\" ";
     }
-    my $decoder_config = join(" ", values %model_weights);
+    
+    my $decoder_config = $weight_str;
     $decoder_config .= " -weight-file run$run.sparse-weights" if -e "run$run.sparse-weights";
     print STDERR "DECODER_CFG = $decoder_config\n";
     print "decoder_config = $decoder_config\n";
@@ -1090,8 +1105,6 @@ sub insert_ranges_to_featlist {
       if ($namedpair =~ /^(.*?):/) {
         $name = $1;
         $namedpair =~ s/^.*?://;
-        die "Unrecognized name '$name' in --range=$range"
-          if !defined $ABBR2FULL{$name};
       }
       my ($min, $max) = split /\.\./, $namedpair;
       die "Bad min '$min' in --range=$range" if $min !~ /^-?[0-9.]+$/;
@@ -1154,14 +1167,12 @@ sub get_featlist_from_file {
   while (<$fh>) {
     $nr++;
     chomp;
-    /^(.+) (\S+) (\S+)$/ || die "invalid feature: $_";
-    my ($longname, $feature, $value) = ($1, $2, $3);
+    /^(.+) (\S+)$/ || die "invalid feature: $_";
+    my ($longname, $value) = ($1, $2);
     next if $value eq "sparse";
-    push @errs, "$featlistfn:$nr:Bad initial value of $feature: $value\n"
+    push @errs, "$featlistfn:$nr:Bad initial value of $longname: $value\n"
       if $value !~ /^[+-]?[0-9.\-e]+$/;
-    push @errs, "$featlistfn:$nr:Unknown feature '$feature', please add it to \@ABBR_FULL_MAP\n"
-      if !defined $ABBR2FULL{$feature};
-    push @names, $feature;
+    push @names, $longname;
     push @startvalues, $value;
   }
   close $fh;
@@ -1232,7 +1243,6 @@ sub create_config {
     foreach (split(/ /, $___DECODER_FLAGS)) {
       if (/^\-([^\d].*)$/) {
         $parameter = $1;
-        $parameter = $ABBR2FULL{$parameter} if defined($ABBR2FULL{$parameter});
       } else {
         die "Found value with no -paramname before it: $_"
             if !defined $parameter;
@@ -1246,14 +1256,12 @@ sub create_config {
   for (my $i = 0; $i < scalar(@{$featlist->{"names"}}); $i++) {
     my $name = $featlist->{"names"}->[$i];
     delete($P{$name});
-    delete($P{$ABBR2FULL{$name}});
   }
 
   # Convert weights to elements in P
   for (my $i = 0; $i < scalar(@{$featlist->{"names"}}); $i++) {
     my $name = $featlist->{"names"}->[$i];
     my $val = $featlist->{"values"}->[$i];
-    $name = defined $ABBR2FULL{$name} ? $ABBR2FULL{$name} : $name;
     # ensure long name
     push @{$P{$name}}, $val;
   }
@@ -1287,7 +1295,6 @@ sub create_config {
 
     # parameter name
     my $parameter = $1;
-    $parameter = $ABBR2FULL{$parameter} if defined($ABBR2FULL{$parameter});
     print $out "[$parameter]\n";
 
     # change parameter, if new values
