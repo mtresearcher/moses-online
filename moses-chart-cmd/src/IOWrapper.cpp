@@ -416,26 +416,34 @@ void IOWrapper::OutputNBestList(const ChartTrellisPathList &nBestList, const Cha
     // MERT script relies on this
 
     // lm
+    std::string lastName = "";
+
     const LMList& lml = system->GetLanguageModels();
     if (lml.size() > 0) {
-      if (labeledOutput)
-        out << "lm:";
       LMList::const_iterator lmi = lml.begin();
       for (; lmi != lml.end(); ++lmi) {
-        out << " " << path.GetScoreBreakdown().GetScoreForProducer(*lmi);
+        const LanguageModel *lm = *lmi;
+
+        if( labeledOutput && lastName != lm->GetScoreProducerDescription() ) {
+          lastName = lm->GetScoreProducerDescription();
+          out << " " << lastName << ":";
+        }
+
+        out << " " << path.GetScoreBreakdown().GetScoreForProducer(lm);
       }
     }
 
-
-    std::string lastName = "";
+    lastName = "";
 
     // translation components
     const vector<PhraseDictionaryFeature*>& pds = system->GetPhraseDictionaries();
     if (pds.size() > 0) {
 
       for( size_t i=0; i<pds.size(); i++ ) {
-        lastName =  pds[i]->GetScoreProducerDescription();
-        out << " " << lastName << ":";
+        if( labeledOutput && lastName != pds[i]->GetScoreProducerDescription() ) {
+          lastName = pds[i]->GetScoreProducerDescription();
+          out << " " << lastName << ":";
+        }
 
         vector<float> scores = path.GetScoreBreakdown().GetScoresForProducer( pds[i] );
         for (size_t j = 0; j<scores.size(); ++j){
@@ -445,11 +453,11 @@ void IOWrapper::OutputNBestList(const ChartTrellisPathList &nBestList, const Cha
     }
 
     // word penalty
-    if (labeledOutput)
-      out << " w:";
-    out << " " << path.GetScoreBreakdown().GetScoreForProducer(system->GetWordPenaltyProducer());
+    out << " " << system->GetWordPenaltyProducer()->GetScoreProducerDescription() << ": "
+        << path.GetScoreBreakdown().GetScoreForProducer(system->GetWordPenaltyProducer());
 
     // generation
+    lastName = "";
     const vector<GenerationDictionary*>& gds = system->GetGenerationDictionaries();
     if (gds.size() > 0) {
 
@@ -466,7 +474,7 @@ void IOWrapper::OutputNBestList(const ChartTrellisPathList &nBestList, const Cha
 
 
     // total
-    out << " |||" << path.GetTotalScore();
+    out << " ||| " << path.GetTotalScore();
 
     /*
     if (includeAlignment) {
