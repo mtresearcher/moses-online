@@ -1903,39 +1903,40 @@ sub create_ini {
   }
   
   if (!$_HIERARCHICAL) {
-    $weightsStr .= "# distortion (reordering) weight\n[weight-d]\n";
-    for(my $i=0;$i<$weight_d_count;$i++) { 
-      $weightsStr .= "".(0.6/(scalar @REORDERING_MODELS+1))."\n";
+    $weightsStr .= "# distortion (reordering) weight\n";
+    
+    $weightsStr .= "Distortion ".(0.6/(scalar @REORDERING_MODELS+1))."\n";
+    for(my $i=1;$i<$weight_d_count;$i++) { 
+      $weightsStr .= "LexicalReordering ".(0.6/(scalar @REORDERING_MODELS+1))."\n";
     }
   }
 
-  $weightsStr .= "\n# language model weights\n[weight-l]\n";
+  $weightsStr .= "\n# language model weights\n";
   my $lmweighttotal = 0.5;
   foreach(1..scalar @___LM) {
-    $weightsStr .= sprintf("%.4f\n", $lmweighttotal / scalar @___LM);
+    $weightsStr .= "LM " .sprintf("%.4f\n", $lmweighttotal / scalar @___LM);
   }
 
-  $weightsStr .= "\n\n# translation model weights\n[weight-t]\n";
+  $weightsStr .= "\n# translation model weights\n";
   foreach my $f (split(/\+/,$___TRANSLATION_FACTORS)) {
      for(1..$basic_weight_count) {
-       $weightsStr .= sprintf("%.2f\n", 1/$basic_weight_count);
+       $weightsStr .= "PhraseModel " .sprintf("%.2f\n", 1/$basic_weight_count);
      }
   }
-  $weightsStr .= "1.0\n" if $_HIERARCHICAL; # glue grammar
+  $weightsStr .= "PhraseModel 1.0\n" if $_HIERARCHICAL; # glue grammar
 
     if (defined $___GENERATION_FACTORS) {
       $weightsStr .= "\n# generation model weights\n";
-      $weightsStr .= "[weight-generation]\n";
       my @TYPE = @_GENERATION_TYPE;
       foreach my $f (split(/\+/,$___GENERATION_FACTORS)) {
-        $weightsStr .= "0.3\n";
-        $weightsStr .= "0\n" unless scalar(@TYPE) && (shift @TYPE) eq 'single';
+        $weightsStr .= "Generation 0.3\n";
+        $weightsStr .= "Generation 0\n" unless scalar(@TYPE) && (shift @TYPE) eq 'single';
       }
     } else {
-	  $weightsStr .= "\n# no generation models, no weight-generation section\n";
+	  $weightsStr .= "\n# no generation models\n";
     }
 
-  $weightsStr .= "\n# word penalty\n[weight-w]\n-1\n\n";
+  $weightsStr .= "\n# word penalty\nWordPenalty -1\n\n";
   
   if ($_HIERARCHICAL) {
     print INI "[unknown-lhs]\n$_UNKNOWN_WORD_LABEL_FILE\n\n" if $_TARGET_SYNTAX && defined($_UNKNOWN_WORD_LABEL_FILE);
@@ -1967,7 +1968,7 @@ sub create_ini {
   }
 
   # all weights
-  print INI $weightsStr;
+  print INI "\n\n[weights]\n".$weightsStr;
   
   close(INI);
 }
