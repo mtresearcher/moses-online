@@ -69,7 +69,7 @@ Parameter::Parameter()
   AddParam("report-segmentation", "t", "report phrase segmentation in the output");
 #ifdef HAVE_SYNLM
 	AddParam("slmodel-file", "location of the syntactic language model file(s)");
-	AddParam("weight-slm", "slm", "weight(s) for syntactic language model");
+	AddParam("weight-slm", "slm", "DEPRECATED. DO NOT USE. weight(s) for syntactic language model");
 	AddParam("slmodel-factor", "factor to use with syntactic language model");
 	AddParam("slmodel-beam", "beam width to use with syntactic language model's parser");
 #endif
@@ -146,17 +146,17 @@ Parameter::Parameter()
 
   AddParam("weights", "all weights");
 
-  AddParam("weight-d", "d", "weight(s) for distortion (reordering components)");
-  AddParam("weight-lr", "lr", "weight(s) for lexicalized reordering, if not included in weight-d");
-  AddParam("weight-generation", "g", "weight(s) for generation components");
-  AddParam("weight-i", "I", "weight(s) for word insertion - used for parameters from confusion network and lattice input links");
-  AddParam("weight-lex", "lex", "weight for global lexical model");
-  AddParam("weight-u", "u", "weight for unknown word penalty");
+  AddParam("weight-d", "d", "DEPRECATED. DO NOT USE. weight(s) for distortion (reordering components)");
+  AddParam("weight-lr", "lr", "DEPRECATED. DO NOT USE. weight(s) for lexicalized reordering, if not included in weight-d");
+  AddParam("weight-generation", "g", "DEPRECATED. DO NOT USE. weight(s) for generation components");
+  AddParam("weight-i", "I", "DEPRECATED. DO NOT USE. weight(s) for word insertion - used for parameters from confusion network and lattice input links");
+  AddParam("weight-lex", "lex", "DEPRECATED. DO NOT USE. weight for global lexical model");
+  AddParam("weight-u", "u", "DEPRECATED. DO NOT USE. weight for unknown word penalty");
 
 
-  AddParam("weight-t", "tm", "weights for translation model components");
-  AddParam("weight-w", "w", "weight for word penalty");
-  AddParam("weight-l", "lm", "weight(s) for language models");
+  AddParam("weight-t", "tm", "DEPRECATED. DO NOT USE. weights for translation model components");
+  AddParam("weight-w", "w", "DEPRECATED. DO NOT USE. weight for word penalty");
+  AddParam("weight-l", "lm", "DEPRECATED. DO NOT USE. weight(s) for language models");
   
   AddParam("weights", "weights for ALL models, 1 per line 'WeightName value'. Weight names can be repeated");
   AddParam("weights-overwrite", "special parameter for mert. All on 1 line. Overrides weights specified in 'weights' argument");
@@ -342,6 +342,7 @@ void Parameter::ConvertWeightArgs()
   ConvertWeightArgs("weight-t", "PhraseModel");
   ConvertWeightArgs("weight-w", "WordPenalty");
   ConvertWeightArgs("weight-l", "LM");
+  ConvertWeightArgs("weight-slm", "SyntacticLM");
   ConvertWeightArgs("weight-u", "UnknownWordPenalty");
   ConvertWeightArgs("weight-lex", "GlobalLexicalReordering");
   ConvertWeightArgs("weight-generation", "Generation");

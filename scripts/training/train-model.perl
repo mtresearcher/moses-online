@@ -1728,6 +1728,8 @@ sub create_ini {
 ### MOSES CONFIG FILE ###
 #########################
 \n";
+
+	my $weightsStr = "";
     
     if (defined $___TRANSLATION_FACTORS) {
 	print INI "# input factors\n";
@@ -1901,39 +1903,40 @@ sub create_ini {
   }
   
   if (!$_HIERARCHICAL) {
-    print INI "# distortion (reordering) weight\n[weight-d]\n";
+    $weightsStr .= "# distortion (reordering) weight\n[weight-d]\n";
     for(my $i=0;$i<$weight_d_count;$i++) { 
-      print INI "".(0.6/(scalar @REORDERING_MODELS+1))."\n";
+      $weightsStr .= "".(0.6/(scalar @REORDERING_MODELS+1))."\n";
     }
   }
-  print INI "\n# language model weights\n[weight-l]\n";
+
+  $weightsStr .= "\n# language model weights\n[weight-l]\n";
   my $lmweighttotal = 0.5;
   foreach(1..scalar @___LM) {
-    printf INI "%.4f\n", $lmweighttotal / scalar @___LM;
+    $weightsStr .= sprintf("%.4f\n", $lmweighttotal / scalar @___LM);
   }
 
-  print INI "\n\n# translation model weights\n[weight-t]\n";
+  $weightsStr .= "\n\n# translation model weights\n[weight-t]\n";
   foreach my $f (split(/\+/,$___TRANSLATION_FACTORS)) {
      for(1..$basic_weight_count) {
-       printf INI "%.2f\n", 1/$basic_weight_count;
+       $weightsStr .= sprintf("%.2f\n", 1/$basic_weight_count);
      }
   }
-  print INI "1.0\n" if $_HIERARCHICAL; # glue grammar
+  $weightsStr .= "1.0\n" if $_HIERARCHICAL; # glue grammar
 
     if (defined $___GENERATION_FACTORS) {
-      print INI "\n# generation model weights\n";
-      print INI "[weight-generation]\n";
+      $weightsStr .= "\n# generation model weights\n";
+      $weightsStr .= "[weight-generation]\n";
       my @TYPE = @_GENERATION_TYPE;
       foreach my $f (split(/\+/,$___GENERATION_FACTORS)) {
-        print INI "0.3\n";
-        print INI "0\n" unless scalar(@TYPE) && (shift @TYPE) eq 'single';
+        $weightsStr .= "0.3\n";
+        $weightsStr .= "0\n" unless scalar(@TYPE) && (shift @TYPE) eq 'single';
       }
     } else {
-      print INI "\n# no generation models, no weight-generation section\n";
+	  $weightsStr .= "\n# no generation models, no weight-generation section\n";
     }
 
-  print INI "\n# word penalty\n[weight-w]\n-1\n\n";
-
+  $weightsStr .= "\n# word penalty\n[weight-w]\n-1\n\n";
+  
   if ($_HIERARCHICAL) {
     print INI "[unknown-lhs]\n$_UNKNOWN_WORD_LABEL_FILE\n\n" if $_TARGET_SYNTAX && defined($_UNKNOWN_WORD_LABEL_FILE);
     print INI "[cube-pruning-pop-limit]\n1000\n\n";
@@ -1963,6 +1966,9 @@ sub create_ini {
     print INI `cat $_ADDITIONAL_INI_FILE`;
   }
 
+  # all weights
+  print INI $weightsStr;
+  
   close(INI);
 }
 

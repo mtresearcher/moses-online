@@ -58,29 +58,6 @@ my $SCRIPTS_ROOTDIR = $RealBin;
 $SCRIPTS_ROOTDIR =~ s/\/training$//;
 $SCRIPTS_ROOTDIR = $ENV{"SCRIPTS_ROOTDIR"} if defined($ENV{"SCRIPTS_ROOTDIR"});
 
-## We preserve this bit of comments to keep the traditional weight ranges.
-#     "w" => [ [ 0.0, -1.0, 1.0 ] ],  # word penalty
-#     "d"  => [ [ 1.0, 0.0, 2.0 ] ],  # lexicalized reordering model
-#     "lm" => [ [ 1.0, 0.0, 2.0 ] ],  # language model
-#     "g"  => [ [ 1.0, 0.0, 2.0 ],    # generation model
-# 	      [ 1.0, 0.0, 2.0 ] ],
-#     "tm" => [ [ 0.3, 0.0, 0.5 ],    # translation model
-# 	      [ 0.2, 0.0, 0.5 ],
-# 	      [ 0.3, 0.0, 0.5 ],
-# 	      [ 0.2, 0.0, 0.5 ],
-# 	      [ 0.0,-1.0, 1.0 ] ],  # ... last weight is phrase penalty
-#     "lex"=> [ [ 0.1, 0.0, 0.2 ] ],  # global lexical model
-#     "I"  => [ [ 0.0,-1.0, 1.0 ] ],  # input lattice scores
-
-
-
-# moses.ini file uses FULL names for lambdas, while this training script
-# internally (and on the command line) uses ABBR names.
-#my @ABBR_FULL_MAP = qw(d=weight-d lm=weight-l tm=weight-t w=weight-w
-#  g=weight-generation lex=weight-lex I=weight-i);
-#my %ABBR2FULL = map { split /=/, $_, 2 } @ABBR_FULL_MAP;
-#my %FULL2ABBR = map { my ($a, $b) = split /=/, $_, 2; ($b, $a); } @ABBR_FULL_MAP;
-
 my $minimum_required_change_in_weights = 0.00001;
     # stop if no lambda changes more than this
 
@@ -1253,7 +1230,7 @@ sub create_config {
 
   # First delete all weights params from the input, we're overwriting them.
   # Delete both short and long-named version.
-  my @oldWeightNames = ("weight-t", "weight-w", "weight-l", "weight-u", "weight-lex", "weight-generation", "weight-lr", "weight-i", "weight-d", "weights");
+  my @oldWeightNames = ("weights");
   for (my $i = 0; $i < scalar(@oldWeightNames); $i++) {
     my $name = $oldWeightNames[$i];
     delete($P{$name});
