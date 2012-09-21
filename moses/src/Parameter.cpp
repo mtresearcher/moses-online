@@ -317,6 +317,16 @@ void Parameter::ConvertWeightArgs(const string &oldWeightName, const string &new
 
 void Parameter::ConvertWeightArgs()
 {  
+  // check that old & new format aren't mixed
+  if (m_setting.count("weights") && 
+      (m_setting.count("weight-i") || m_setting.count("weight-t") || m_setting.count("weight-w") ||
+       m_setting.count("weight-l") || m_setting.count("weight-u") || m_setting.count("weight-lex") || 
+       m_setting.count("weight-generation") || m_setting.count("weight-lr") || m_setting.count("weight-d")
+       ))
+    {
+      cerr << "Do not mix old and new format for specify weights";
+    }
+    
   // input scores. if size=1, add an extra for 'real' word count feature. TODO HACK
   bool addExtraInputWeight = false;
   if (m_setting["weight-i"].size() == 1)

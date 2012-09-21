@@ -1253,18 +1253,21 @@ sub create_config {
 
   # First delete all weights params from the input, we're overwriting them.
   # Delete both short and long-named version.
-  for (my $i = 0; $i < scalar(@{$featlist->{"names"}}); $i++) {
-    my $name = $featlist->{"names"}->[$i];
+  my @oldWeightNames = ("weight-t", "weight-w", "weight-l", "weight-u", "weight-lex", "weight-generation", "weight-lr", "weight-i", "weight-d", "weights");
+  for (my $i = 0; $i < scalar(@oldWeightNames); $i++) {
+    my $name = $oldWeightNames[$i];
     delete($P{$name});
   }
 
   # Convert weights to elements in P
+  my $weightsStr = "";
   for (my $i = 0; $i < scalar(@{$featlist->{"names"}}); $i++) {
     my $name = $featlist->{"names"}->[$i];
     my $val = $featlist->{"values"}->[$i];
+    $weightsStr .= "$name $val \n";
     # ensure long name
-    push @{$P{$name}}, $val;
   }
+  push @{$P{"weights"}}, $weightsStr;
 
   if (defined($sparse_weights_file)) {
     push @{$P{"weight-file"}}, File::Spec->catfile($___WORKING_DIR, $sparse_weights_file);
