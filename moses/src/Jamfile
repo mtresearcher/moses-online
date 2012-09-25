@@ -17,7 +17,8 @@ lib rt : : <runtime-link>static:<link>static <runtime-link>shared:<link>shared ;
 lib moses_internal :
 #All cpp files except those listed
 [ glob *.cpp DynSAInclude/*.cpp : PhraseDictionary.cpp ThreadPool.cpp SyntacticLanguageModel.cpp ]
-synlm ThreadPool headers rt ;
+#synlm ThreadPool headers rt ;
+synlm ThreadPool headers ;
 
 lib moses : PhraseDictionary.cpp moses_internal CYKPlusParser//CYKPlusParser CompactPT//CompactPT LM//LM RuleTable//RuleTable Scope3Parser//Scope3Parser fuzzy-match//fuzzy-match headers ../..//z ../../OnDiskPt//OnDiskPt ../..//boost_filesystem ;
 
