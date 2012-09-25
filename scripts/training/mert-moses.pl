@@ -141,6 +141,7 @@ my $___ACTIVATE_FEATURES = undef; # comma-separated (or blank-separated) list of
                                   # if undef work on all features
                                   # (others are fixed to the starting values)
 my $___RANGES = undef;
+my $___USE_CONFIG_WEIGHTS_FIRST = 0; # use weights in configuration file for first iteration
 my $prev_aggregate_nbl_size = -1; # number of previous step to consider when loading data (default =-1)
                                   # -1 means all previous, i.e. from iteration 1
                                   # 0 means no previous data, i.e. from actual iteration
@@ -189,6 +190,7 @@ GetOptions(
   "return-best-dev" => \$___RETURN_BEST_DEV, # return the best weights according to dev, not the last
   "activate-features=s" => \$___ACTIVATE_FEATURES, #comma-separated (or blank-separated) list of features to work on (others are fixed to the starting values)
   "range=s@" => \$___RANGES,
+  "use-config-weights-for-first-run" => \$___USE_CONFIG_WEIGHTS_FIRST, # use the weights in the configuration file when running the decoder for the first time
   "prev-aggregate-nbestlist=i" => \$prev_aggregate_nbl_size, #number of previous step to consider when loading data (default =-1, i.e. all previous)
   "maximum-iterations=i" => \$maximum_iterations,
   "pairwise-ranked" => \$___PAIRWISE_RANKED_OPTIMIZER,
