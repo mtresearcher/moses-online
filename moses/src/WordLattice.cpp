@@ -49,11 +49,14 @@ int WordLattice::InitializeFromPCNDataType(const PCN::CN& cn, const std::vector<
 
 
       //check for correct number of link parameters
+      CHECK(alt.first.second.size() + 1 == numLinkParams);
+      /*
       if (alt.first.second.size() != numLinkParams) {
         TRACE_ERR("ERROR: need " << numLinkParams << " link parameters, found " << alt.first.second.size() << " while reading column " << i << " from " << debug_line << "\n");
         return false;
       }
-
+       */
+      
       //check each element for bounds
       std::vector<float>::const_iterator probsIterator;
       data[i][j].second = std::vector<float>(0);
