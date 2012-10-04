@@ -354,19 +354,16 @@ void Parameter::ConvertWeightArgs()
   
   if (weights.size() > 0)
   {
-    if (weights.size() > 1)
-    {
-      // everything but the last is lex reordering model
-      for (size_t i = 0; i < weights.size() - 1; ++i)
-      {
-        string line = "LexicalReordering " + weights[i];
-        newWeights.push_back(line);
-      }
-    }
-
     // distance distortion
-    string line = "Distortion " + weights[weights.size() - 1];
+    string line = "Distortion " + weights[0];
     newWeights.push_back(line);
+
+    // everything but the last is lex reordering model
+    for (size_t i = 1; i < weights.size(); ++i)
+    {
+      string line = "LexicalReordering " + weights[i];
+      newWeights.push_back(line);
+    }
     
     m_setting.erase("weight-d");
   }

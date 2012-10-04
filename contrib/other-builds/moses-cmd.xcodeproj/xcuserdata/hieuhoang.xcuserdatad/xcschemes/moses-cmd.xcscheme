@@ -47,7 +47,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-f /var/folders/70/1r4rxvpx04vccttywpc3g1n80000gn/T/dWgoJbgFzg.ini -i /Users/hieuhoang/unison/workspace/github/moses-smt/regression-testing/tests/tests/phrase.lexicalized-reordering/to-translate.txt"
+            argument = "-show-weights"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-f /var/folders/70/1r4rxvpx04vccttywpc3g1n80000gn/T/GGsfTEMf2S.ini"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
