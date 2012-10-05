@@ -11,8 +11,13 @@ if [ option.get "with-synlm" : no : yes ] = yes
   alias synlm ;
 }
 
-#required for clock_gettime.  Threads already have rt.  
-lib rt : : <runtime-link>static:<link>static <runtime-link>shared:<link>shared ;
+local have-clock = [ SHELL "bash -c \"g++ -dM -x c++ -E /dev/null -include time.h 2>/dev/null |grep CLOCK_MONOTONIC\"" : exit-status ] ;
+if $(have-clock[2]) = 0 {
+  #required for clock_gettime.  Threads already have rt.  
+  lib rt : : <runtime-link>static:<link>static <runtime-link>shared:<link>shared ;
+} else {
+  alias rt ;
+}
 
 lib moses_internal :
 #All cpp files except those listed
@@ -20,6 +25,6 @@ lib moses_internal :
 #synlm ThreadPool headers rt ;
 synlm ThreadPool headers ;
 
-lib moses : PhraseDictionary.cpp moses_internal CYKPlusParser//CYKPlusParser CompactPT//CompactPT LM//LM RuleTable//RuleTable Scope3Parser//Scope3Parser fuzzy-match//fuzzy-match headers ../..//z ../../OnDiskPt//OnDiskPt ../..//boost_filesystem ;
+lib moses : PhraseDictionary.cpp moses_internal CYKPlusParser//CYKPlusParser CompactPT//CompactPT LM//LM RuleTable//RuleTable Scope3Parser//Scope3Parser fuzzy-match//fuzzy-match headers ../..//z ../../OnDiskPt//OnDiskPt ;
 
 alias headers-to-install : [ glob-tree *.h ] ;
