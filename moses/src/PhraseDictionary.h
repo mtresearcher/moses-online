@@ -83,9 +83,14 @@ public:
     const InputType &,
     const ChartCellCollectionBase &) = 0;
 
+  //PhraseDictionaryMultiModel may use input phrase dictionaries with a different number of features than it is assigned in the log-linear model
+  void SetNumScoreComponentMultiModel(size_t num);
+  size_t GetNumScoreComponentMultiModel() const;
+
 protected:
   size_t m_tableLimit;
   const PhraseDictionaryFeature* m_feature;
+  size_t m_numScoreComponentMultiModel;
 };
 
 
@@ -108,7 +113,8 @@ public:
                             , size_t dictIndex
                             , size_t tableLimit
                             , const std::string &targetFile
-                            , const std::string &alignmentsFile);
+                            , const std::string &alignmentsFile
+                            , const std::vector<std::string> &allPaths);
 
 
   virtual ~PhraseDictionaryFeature();
@@ -176,7 +182,7 @@ private:
   std::string m_targetFile;
   std::string m_alignmentsFile;
   SparsePhraseDictionaryFeature* m_sparsePhraseDictionaryFeature;
-
+  std::vector<std::string> m_allPaths;
 };
 
 

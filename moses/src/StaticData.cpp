@@ -349,6 +349,8 @@ bool StaticData::LoadData(Parameter *parameter)
   m_unknownWordPenaltyProducer = new UnknownWordPenaltyProducer();
   SetWeight(m_unknownWordPenaltyProducer, weightUnknownWord);
 
+  m_multimodelweights = Scan<float>( m_parameter->GetParam("weight-t-multimodel") );
+
   // reordering constraints
   m_maxDistortion = (m_parameter->GetParam("distortion-limit").size() > 0) ?
                     Scan<int>(m_parameter->GetParam("distortion-limit")[0])
@@ -1348,6 +1350,8 @@ bool StaticData::LoadPhraseTables()
       weightAllOffset += numScoreComponent;
       numScoreComponent += tableInputScores;
 
+      std::vector<std::string> allPaths(token.begin()+4,token.end());
+
       string targetPath, alignmentsFile;
       if (implementation == SuffixArray) {
         targetPath		= token[5];
@@ -1382,7 +1386,9 @@ bool StaticData::LoadPhraseTables()
         , weight
        	, currDict
         , maxTargetPhrase[index]
-        , targetPath, alignmentsFile);
+        , targetPath
+        , alignmentsFile
+        , allPaths);
 
       m_phraseDictionary.push_back(pdf);
 

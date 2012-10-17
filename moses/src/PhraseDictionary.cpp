@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "RuleTable/PhraseDictionaryOnDisk.h"
 #include "RuleTable/PhraseDictionaryALSuffixArray.h"
 #include "RuleTable/PhraseDictionaryFuzzyMatch.h"
+#include "PhraseDictionaryMultiModel.h"
 
 #ifndef WIN32
 #include "PhraseDictionaryDynSuffixArray.h"
@@ -65,7 +66,8 @@ PhraseDictionaryFeature::PhraseDictionaryFeature
  , size_t dictIndex
  , size_t tableLimit
  , const std::string &targetFile  // default param
- , const std::string &alignmentsFile) // default param
+ , const std::string &alignmentsFile // default param
+ , const std::vector<std::string> &allPaths)
   :DecodeFeature("PhraseModel",numScoreComponent,input,output),
   m_dictIndex(dictIndex),
   m_numInputScores(numInputScores),
@@ -74,10 +76,11 @@ PhraseDictionaryFeature::PhraseDictionaryFeature
   m_implementation(implementation),
   m_targetFile(targetFile),
   m_alignmentsFile(alignmentsFile),
-  m_sparsePhraseDictionaryFeature(spdf)
+  m_sparsePhraseDictionaryFeature(spdf),
+  m_allPaths(allPaths)
 {
   if (implementation == Memory || implementation == SCFG || implementation == SuffixArray ||
-      implementation==Compact ) {
+      implementation==Compact  || implementation == MultiModel) {
     m_useThreadSafePhraseDictionary = true;
     if (implementation == SuffixArray) {
       cerr << "Warning: implementation holds chached weights!" << endl;
@@ -237,7 +240,24 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
 #else
     CHECK(false);
 #endif
-  }  
+  } else if (m_implementation == MultiModel ) {
+    // memory phrase table
+    VERBOSE(2,"multi-model mode" << std::endl);
+    if (staticData.GetInputType() != SentenceInput) {
+      UserMessage::Add("Must use binary phrase table for this input type");
+      CHECK(false);
+    }
+
+    PhraseDictionaryMultiModel* pd  = new PhraseDictionaryMultiModel(GetNumScoreComponents(),this);
+    bool ret = pd->Load(GetInput(), GetOutput()
+                         , m_allPaths
+                         , weightT
+                         , m_tableLimit
+                         , system->GetLanguageModels()
+                         , system->GetWeightWordPenalty());
+    CHECK(ret);
+    return pd;
+  }
   else {
     std::cerr << "Unknown phrase table type " << m_implementation << endl;
     CHECK(false);
@@ -255,6 +275,16 @@ void PhraseDictionaryFeature::InitDictionary(const TranslationSystem* system)
     PrintUserTime("Finished loading phrase tables");
   }
   //Other types will be lazy loaded
+}
+
+void PhraseDictionary::SetNumScoreComponentMultiModel(size_t num)
+{
+  m_numScoreComponentMultiModel = num;
+}
+
+size_t PhraseDictionary::GetNumScoreComponentMultiModel() const
+{
+  return m_numScoreComponentMultiModel;
 }
 
 //Called when we start translating a new sentence
