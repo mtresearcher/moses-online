@@ -57,9 +57,10 @@ public:
 
   /** create empty phrase
   */
-  Phrase(size_t reserveSize);
+  Phrase();
+  explicit Phrase(size_t reserveSize);
   /** create phrase from vectors of words	*/
-  Phrase(const std::vector< const Word* > &mergeWords);
+  explicit Phrase(const std::vector< const Word* > &mergeWords);
 
   /** destructor */
   virtual ~Phrase();
@@ -69,7 +70,9 @@ public:
   	* \param phraseString formatted input string to parse
   	*	\param factorDelimiter delimiter between factors.  
   */
-  void CreateFromString(const std::vector<FactorType> &factorOrder, const StringPiece &phraseString, const StringPiece &factorDelimiter);
+  void CreateFromString(const std::vector<FactorType> &factorOrder
+  											, const StringPiece &phraseString
+  											, const StringPiece &factorDelimiter);
 
   void CreateFromStringNewFormat(FactorDirection direction
                                  , const std::vector<FactorType> &factorOrder

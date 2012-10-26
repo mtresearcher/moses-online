@@ -8,6 +8,7 @@
 
 #include "CompactPT/PhraseDictionaryCompact.h"
 #include "Util.h"
+#include "Phrase.h"
 
 void usage();
 
@@ -57,17 +58,17 @@ int main(int argc, char **argv)
   const_cast<std::vector<std::string>&>(parameter->GetParam("weight-w")).resize(1, "0");
   const_cast<std::vector<std::string>&>(parameter->GetParam("weight-d")).resize(1, "0");
   
-  const_cast<StaticData&>(StaticData::Instance()).LoadData(parameter);
+  StaticData::InstanceNonConst().LoadData(parameter);
 
-  
-  PhraseDictionaryFeature pdf(Compact, nscores, nscores, input, output, ttable, weight, 0, "", "", allPaths);
+  SparsePhraseDictionaryFeature *spdf = NULL;
+  PhraseDictionaryFeature pdf(Compact, spdf, nscores, nscores, input, output, ttable, weight, 0, 0, "", "", allPaths));
   PhraseDictionaryCompact pdc(nscores, Compact, &pdf, false, useAlignments);
   bool ret = pdc.Load(input, output, ttable, weight, 0, lmList, 0);                                                                           
   assert(ret);
   
   std::string line;
   while(getline(std::cin, line)) {
-    Phrase sourcePhrase(0);
+    Phrase sourcePhrase;
     sourcePhrase.CreateFromString(input, line, "||dummy_string||");
     
     TargetPhraseVectorPtr decodedPhraseColl
@@ -83,11 +84,11 @@ int main(int argc, char **argv)
           std::cout << static_cast<const Phrase&>(tp) << "|||";
           
           if(useAlignments)
-            std::cout << " " << tp.GetAlignmentInfo() << "|||"; 
+            std::cout << " " << tp.GetAlignTerm() << "|||"; 
           
-          size_t offset = tp.GetScoreBreakdown().size() - nscores;
-          for(size_t i = offset; i < tp.GetScoreBreakdown().size(); i++)
-            std::cout << " " << exp(tp.GetScoreBreakdown()[i]);
+          std::vector<float> scores = tp.GetScoreBreakdown().GetScoresForProducer(&pdf);
+          for(size_t i = 0; i < scores.size(); i++)
+            std::cout << " " << exp(scores[i]);
           std::cout << std::endl;
         }
     }

@@ -71,7 +71,7 @@ namespace Moses
     m_input		= &input;
     m_output	= &output;
     
-    m_weight = &weight;
+    m_weight = new vector<float>(weight);
    
     cerr << "initStr=" << initStr << endl;
     m_config = Tokenize(initStr, ";");
@@ -235,7 +235,7 @@ namespace Moses
       sourcePhrase.CreateFromStringNewFormat(Input, *m_input, sourcePhraseString, factorDelimiter, sourceLHS);
       
       // create target phrase obj
-      TargetPhrase *targetPhrase = new TargetPhrase(Output);
+      TargetPhrase *targetPhrase = new TargetPhrase();
       targetPhrase->CreateFromStringNewFormat(Output, *m_output, targetPhraseString, factorDelimiter, targetLHS);
       
       // rest of target phrase
@@ -266,7 +266,7 @@ namespace Moses
     // sort and prune each target phrase collection
     SortAndPrune(rootNode);
    
-    removedirectoryrecursively(dirName);
+    //removedirectoryrecursively(dirName);
   }
   
   TargetPhraseCollection &PhraseDictionaryFuzzyMatch::GetOrCreateTargetPhraseCollection(PhraseDictionaryNodeSCFG &rootNode
@@ -286,7 +286,7 @@ namespace Moses
     cerr << source << endl << target << endl;
     const size_t size = source.GetSize();
     
-    const AlignmentInfo &alignmentInfo = target.GetAlignmentInfo();
+    const AlignmentInfo &alignmentInfo = target.GetAlignNonTerm();
     AlignmentInfo::const_iterator iterAlign = alignmentInfo.begin();
     
     PhraseDictionaryNodeSCFG *currNode = &rootNode;
@@ -297,7 +297,7 @@ namespace Moses
         // indexed by source label 1st
         const Word &sourceNonTerm = word;
         
-        CHECK(iterAlign != target.GetAlignmentInfo().end());
+        CHECK(iterAlign != alignmentInfo.end());
         CHECK(iterAlign->first == pos);
         size_t targetNonTermInd = iterAlign->second;
         ++iterAlign;

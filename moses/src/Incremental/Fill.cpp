@@ -22,21 +22,20 @@ template <class Model> Fill<Model>::Fill(search::Context<Model> &context, const 
   : context_(context), vocab_mapping_(vocab_mapping) {}
 
 template <class Model> void Fill<Model>::Add(const TargetPhraseCollection &targets, const StackVec &nts, const WordsRange &) {
-  CHECK(nts.size() <= search::kMaxArity);
-
-  search::PartialVertex vertices[search::kMaxArity];
+  std::vector<search::PartialVertex> vertices;
+  vertices.reserve(nts.size());
   float below_score = 0.0;
-  for (unsigned int i = 0; i < nts.size(); ++i) {
-    vertices[i] = nts[i]->GetStack().incr->RootPartial();
-    if (vertices[i].Empty()) return;
-    below_score += vertices[i].Bound();
+  for (StackVec::const_iterator i(nts.begin()); i != nts.end(); ++i) {
+    vertices.push_back((*i)->GetStack().incr->RootPartial());
+    if (vertices.back().Empty()) return;
+    below_score += vertices.back().Bound();
   }
 
   std::vector<lm::WordIndex> words;
   for (TargetPhraseCollection::const_iterator p(targets.begin()); p != targets.end(); ++p) {
     words.clear();
     const TargetPhrase &phrase = **p;
-    const AlignmentInfo::NonTermIndexMap &align = phrase.GetAlignmentInfo().GetNonTermIndexMap();
+    const AlignmentInfo::NonTermIndexMap &align = phrase.GetAlignNonTerm().GetNonTermIndexMap();
     search::PartialEdge edge(edges_.AllocateEdge(nts.size()));
 
     size_t i = 0;
@@ -66,7 +65,9 @@ template <class Model> void Fill<Model>::Add(const TargetPhraseCollection &targe
 
     search::Note note;
     note.vp = &phrase;
-    edges_.AddEdge(edge, note);
+    edge.SetNote(note);
+
+    edges_.AddEdge(edge);
   }
 }
 
@@ -82,7 +83,9 @@ template <class Model> void Fill<Model>::AddPhraseOOV(TargetPhrase &phrase, std:
 
   search::Note note;
   note.vp = &phrase;
-  edges_.AddEdge(edge, note);
+  edge.SetNote(note);
+
+  edges_.AddEdge(edge);
 }
 
 namespace {
@@ -92,12 +95,12 @@ class HypothesisCallback {
     HypothesisCallback(search::ContextBase &context, ChartCellLabelSet &out, boost::object_pool<search::Vertex> &vertex_pool)
       : context_(context), out_(out), vertex_pool_(vertex_pool) {}
 
-    void NewHypothesis(search::PartialEdge partial, search::Note note) {
-      search::VertexGenerator *&entry = out_.FindOrInsert(static_cast<const TargetPhrase *>(note.vp)->GetTargetLHS()).incr_generator;
+    void NewHypothesis(search::PartialEdge partial) {
+      search::VertexGenerator *&entry = out_.FindOrInsert(static_cast<const TargetPhrase *>(partial.GetNote().vp)->GetTargetLHS()).incr_generator;
       if (!entry) {
         entry = generator_pool_.construct(context_, *vertex_pool_.construct());
       }
-      entry->NewHypothesis(partial, note);
+      entry->NewHypothesis(partial);
     }
 
     void FinishedSearch() {

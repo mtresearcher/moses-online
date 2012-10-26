@@ -53,14 +53,13 @@ protected:
 
 	// in case of confusion net, ptr to source phrase
 	Phrase m_sourcePhrase; 
-	const AlignmentInfo* m_alignmentInfo;
+	const AlignmentInfo* m_alignTerm, *m_alignNonTerm;
 	Word m_lhsTarget;
-	size_t m_ruleCount;
 
 public:
   TargetPhrase();
-  TargetPhrase(std::string out_string);
-  TargetPhrase(const Phrase &targetPhrase);
+  explicit TargetPhrase(std::string out_string);
+  explicit TargetPhrase(const Phrase &targetPhrase);
 
   //! used by the unknown word handler- these targets
   //! don't have a translation score, so wp is the only thing used
@@ -134,6 +133,10 @@ public:
 	{
 		m_sourcePhrase=p;
 	}
+  // ... but if we must store a copy, at least initialize it in-place
+  Phrase &MutableSourcePhrase() {
+    return m_sourcePhrase;
+  }
 	const Phrase& GetSourcePhrase() const 
 	{
 		return m_sourcePhrase;
@@ -149,22 +152,23 @@ public:
   }
 
   void SetAlignmentInfo(const StringPiece &alignString);
-  void SetAlignmentInfo(const StringPiece &alignString, Phrase &sourcePhrase);
-  void SetAlignmentInfo(const std::set<std::pair<size_t,size_t> > &alignmentInfo);
-  void SetAlignmentInfo(const std::set<std::pair<size_t,size_t> > &alignmentInfo, int* indicator);
-  void SetAlignmentInfo(const AlignmentInfo *alignmentInfo) {
-    m_alignmentInfo = alignmentInfo;
+  void SetAlignTerm(const AlignmentInfo *alignTerm) {
+    m_alignTerm = alignTerm;
   }
+  void SetAlignNonTerm(const AlignmentInfo *alignNonTerm) {
+    m_alignNonTerm = alignNonTerm;
+  }
+
+  void SetAlignTerm(const AlignmentInfo::CollType &coll);
+  void SetAlignNonTerm(const AlignmentInfo::CollType &coll);
+
+  const AlignmentInfo &GetAlignTerm() const
+	{ return *m_alignTerm; }
+  const AlignmentInfo &GetAlignNonTerm() const
+	{ return *m_alignNonTerm; }
 	
-	const AlignmentInfo &GetAlignmentInfo() const
-	{ return *m_alignmentInfo; }
-	
-	void SetRuleCount(const StringPiece &ruleCountString, float p_f_given_e);
-	size_t GetRuleCount() const { return m_ruleCount; }
 
   TO_STRING();
-	
-
 };
 
 std::ostream& operator<<(std::ostream&, const TargetPhrase&);
@@ -179,7 +183,9 @@ struct TargetPhraseHasher
     size_t seed = 0;
     boost::hash_combine(seed, targetPhrase);
     boost::hash_combine(seed, targetPhrase.GetSourcePhrase());
-    boost::hash_combine(seed, targetPhrase.GetAlignmentInfo());
+    boost::hash_combine(seed, targetPhrase.GetAlignTerm());
+    boost::hash_combine(seed, targetPhrase.GetAlignNonTerm());
+
     return seed;
   }
 };
@@ -190,7 +196,8 @@ struct TargetPhraseComparator
   {
     return lhs.Compare(rhs) == 0 &&
       lhs.GetSourcePhrase().Compare(rhs.GetSourcePhrase()) == 0 &&
-      lhs.GetAlignmentInfo() == rhs.GetAlignmentInfo();
+      lhs.GetAlignTerm() == rhs.GetAlignTerm() &&
+      lhs.GetAlignNonTerm() == rhs.GetAlignNonTerm();
   }
 
 };
