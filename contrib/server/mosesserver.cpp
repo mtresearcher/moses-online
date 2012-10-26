@@ -13,6 +13,10 @@
 #include "LMList.h"
 #include "LM/ORLM.h"
 
+#ifdef WITH_THREADS
+#include <boost/thread.hpp>
+#endif
+
 #include <xmlrpc-c/base.hpp>
 #include <xmlrpc-c/registry.hpp>
 #include <xmlrpc-c/server_abyss.hpp>
@@ -166,10 +170,27 @@ public:
     si = params.find("report-all-factors");
     bool reportAllFactors = (si != params.end());
 
+    vector<float> multiModelWeights;
+    si = params.find("weight-t-multimodel");
+    if (si != params.end()) {
+        xmlrpc_c::value_array multiModelArray = xmlrpc_c::value_array(si->second);
+        vector<xmlrpc_c::value> multiModelValueVector(multiModelArray.vectorValueValue());
+        for (size_t i=0;i < multiModelValueVector.size();i++) {
+            multiModelWeights.push_back(xmlrpc_c::value_double(multiModelValueVector[i]));
+        }
+    }
+
     const StaticData &staticData = StaticData::Instance();
 
     if (addGraphInfo) {
       (const_cast<StaticData&>(staticData)).SetOutputSearchGraph(true);
+    }
+
+    if (multiModelWeights.size() > 0) {
+      staticData.SetTemporaryMultiModelWeightsVector(multiModelWeights);
+      if (staticData.GetUseTransOptCache()) {
+          cerr << "Warning: -use-persistent-cache is set to true; sentence-specific weights may be ignored. Disable cache for true results.\n";
+      }
     }
 
     const TranslationSystem& system = getTranslationSystem(params);

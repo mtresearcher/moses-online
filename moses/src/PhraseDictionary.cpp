@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "RuleTable/PhraseDictionaryALSuffixArray.h"
 #include "RuleTable/PhraseDictionaryFuzzyMatch.h"
 #include "PhraseDictionaryMultiModel.h"
+#include "PhraseDictionaryMultiModelCounts.h"
 
 #ifndef WIN32
 #include "PhraseDictionaryDynSuffixArray.h"
@@ -80,7 +81,7 @@ PhraseDictionaryFeature::PhraseDictionaryFeature
   m_allPaths(allPaths)
 {
   if (implementation == Memory || implementation == SCFG || implementation == SuffixArray ||
-      implementation==Compact  || implementation == MultiModel) {
+      implementation==Compact  || implementation == MultiModel || implementation == MultiModelCounts) {
     m_useThreadSafePhraseDictionary = true;
     if (implementation == SuffixArray) {
       cerr << "Warning: implementation holds chached weights!" << endl;
@@ -249,6 +250,23 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
     }
 
     PhraseDictionaryMultiModel* pd  = new PhraseDictionaryMultiModel(GetNumScoreComponents(),this);
+    bool ret = pd->Load(GetInput(), GetOutput()
+                         , m_allPaths
+                         , weightT
+                         , m_tableLimit
+                         , system->GetLanguageModels()
+                         , system->GetWeightWordPenalty());
+    CHECK(ret);
+    return pd;
+  } else if (m_implementation == MultiModelCounts) {
+    // memory phrase table
+    VERBOSE(2,"multi-model mode (count tables)" << std::endl);
+    if (staticData.GetInputType() != SentenceInput) {
+      UserMessage::Add("Must use binary phrase table for this input type");
+      CHECK(false);
+    }
+
+    PhraseDictionaryMultiModelCounts* pd  = new PhraseDictionaryMultiModelCounts(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
                          , m_allPaths
                          , weightT
