@@ -43,9 +43,12 @@ namespace Moses
     std::vector<float> fst, ft;
   };
 
+  typedef boost::unordered_map<std::string, double > lexicalMap;
+  typedef boost::unordered_map<std::string, lexicalMap > lexicalMapJoint;
+
   struct lexicalTable {
-    boost::unordered_map<std::string, boost::unordered_map<std::string, double > > joint;
-    boost::unordered_map<std::string, double > marginal;
+    lexicalMapJoint joint;
+    lexicalMap marginal;
   };
 
   double InstanceWeighting(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);

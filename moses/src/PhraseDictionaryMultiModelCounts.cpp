@@ -318,12 +318,17 @@ double PhraseDictionaryMultiModelCounts::GetLexicalProbability( std::string &wor
     std::vector<float> marginals (m_numModels);
 
     for (size_t i=0;i < m_numModels;i++) {
-        if (tables[i]->joint.find( wordS ) == tables[i]->joint.end()) joint_count[i] = 0.0;
-        else if (tables[i]->joint.find( wordS )->second.find( wordT ) == tables[i]->joint.find( wordS )->second.end()) joint_count[i] = 0.0;
-        else joint_count[i] = tables[i]->joint.find( wordS )->second.find( wordT )->second;
+        lexicalMapJoint::iterator joint_s = tables[i]->joint.find( wordS );
+        if (joint_s == tables[i]->joint.end()) joint_count[i] = 0.0;
+        else {
+            lexicalMap::iterator joint_t = joint_s->second.find( wordT );
+            if (joint_t == joint_s->second.end()) joint_count[i] = 0.0;
+            else joint_count[i] = joint_t->second;
+        }
 
-        if (tables[i]->marginal.find( wordS ) == tables[i]->marginal.end()) marginals[i] = 0.0;
-        else marginals[i] = tables[i]->marginal.find( wordS )->second;
+        lexicalMap::iterator marginal_s = tables[i]->marginal.find( wordS );
+        if (marginal_s == tables[i]->marginal.end()) marginals[i] = 0.0;
+        else marginals[i] = marginal_s->second;
         }
 
     double lexProb = m_combineFunction(joint_count, marginals, multimodelweights);
