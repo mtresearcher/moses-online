@@ -20,8 +20,8 @@ import gzip
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 
-if len(sys.argv) != 3:
-    sys.stderr.write('Usage: ' + sys.argv[0] + ' in_file out_path\nThis script will create the files out_path/count-table.gz and out_path/count-table-target.gz\n')
+if len(sys.argv) < 3 or len(sys.argv) > 4:
+    sys.stderr.write('Usage: ' + sys.argv[0] + ' in_file out_path [prune_count]\nThis script will create the files out_path/count-table.gz and out_path/count-table-target.gz\n')
     exit()
 
 
@@ -67,9 +67,12 @@ def sort_and_uniq(infile, outfile):
     fobj.close()
 
 
-def create_count_lines(fobj, countobj, countobj_target):
+def create_count_lines(fobj, countobj, countobj_target, prune=0):
 
     i = 0
+    original_pos = 0
+    source = ""
+    store_lines = set()
     for line in fobj:
 
         if not i % 100000:
@@ -77,6 +80,7 @@ def create_count_lines(fobj, countobj, countobj_target):
         i += 1
 
         line = line.split(b' ||| ')
+        current_source = line[0]
         scores = line[2].split()
         comments = line[4].split()
 
@@ -88,7 +92,20 @@ def create_count_lines(fobj, countobj, countobj_target):
             fst = str(int(round(float(scores[0])*float(ft)))).encode()
 
         line[2] = b' '.join([fst,ft,fs])
-        countobj.write(b' ||| '.join(line))
+
+        if prune:
+            if current_source == source:
+                store_lines.add((int(fst), original_pos, b' ||| '.join(line)))
+                original_pos += 1
+            else:
+                top20 = sorted(store_lines, reverse=True)[:prune]
+                for score, original_pos, store_line in sorted(top20, key = lambda x: x[1]): #write in original_order
+                    countobj.write(store_line)
+                source = current_source
+                store_lines = set()
+                original_pos = 0
+        else:
+            countobj.write(b' ||| '.join(line))
 
         # target count file
         tline = b' ||| '.join([line[1], b'X', ft]) + b' ||| |||\n' # if you use string formatting to make this look nicer, you may break Python 3 compatibility.
@@ -100,16 +117,22 @@ def create_count_lines(fobj, countobj, countobj_target):
 
 if __name__ == '__main__':
 
+    if len(sys.argv) == 4:
+        prune = int(sys.argv[3])
+    else:
+        prune = 0
+
     fileobj = handle_file(sys.argv[1],'open')
     out_path = sys.argv[2]
-    count_table_file = gzip.open(os.path.join(out_path,'count-table.gz'), 'w')
+
+    count_table_file = gzip.open(os.path.join(out_path,'count-table.pruned.gz'), 'w')
     count_table_target_file = os.path.join(out_path,'count-table-target.gz')
 
     count_table_target_file_temp = NamedTemporaryFile(delete=False)
     try:
         sys.stderr.write('Creating temporary file for unsorted target counts file: ' + count_table_target_file_temp.name + '\n')
 
-        create_count_lines(fileobj, count_table_file, count_table_target_file_temp)
+        create_count_lines(fileobj, count_table_file, count_table_target_file_temp, prune)
         count_table_target_file_temp.close()
         sys.stderr.write('Finished writing, now re-sorting and compressing target count file\n')
 
@@ -119,5 +142,4 @@ if __name__ == '__main__':
 
     except BaseException:
         os.remove(count_table_target_file_temp.name)
-        print('hello world!')
         raise
