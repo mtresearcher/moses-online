@@ -125,7 +125,7 @@ if __name__ == '__main__':
     fileobj = handle_file(sys.argv[1],'open')
     out_path = sys.argv[2]
 
-    count_table_file = gzip.open(os.path.join(out_path,'count-table.pruned.gz'), 'w')
+    count_table_file = gzip.open(os.path.join(out_path,'count-table.gz'), 'w')
     count_table_target_file = os.path.join(out_path,'count-table-target.gz')
 
     count_table_target_file_temp = NamedTemporaryFile(delete=False)
