@@ -94,16 +94,15 @@ def create_count_lines(fobj, countobj, countobj_target, prune=0):
         line[2] = b' '.join([fst,ft,fs])
 
         if prune:
-            if current_source == source:
-                store_lines.add((int(fst), original_pos, b' ||| '.join(line)))
-                original_pos += 1
-            else:
-                top20 = sorted(store_lines, reverse=True)[:prune]
-                for score, original_pos, store_line in sorted(top20, key = lambda x: x[1]): #write in original_order
-                    countobj.write(store_line)
+            if current_source != source:
+                write_batch(store_lines, countobj, prune)
                 source = current_source
                 store_lines = set()
                 original_pos = 0
+
+            store_lines.add((int(fst), original_pos, b' ||| '.join(line)))
+            original_pos += 1
+
         else:
             countobj.write(b' ||| '.join(line))
 
@@ -111,8 +110,20 @@ def create_count_lines(fobj, countobj, countobj_target, prune=0):
         tline = b' ||| '.join([line[1], b'X', ft]) + b' ||| |||\n' # if you use string formatting to make this look nicer, you may break Python 3 compatibility.
         countobj_target.write(tline)
 
+    if prune:
+        write_batch(store_lines, countobj, prune)
+
     countobj.close()
     countobj_target.close()
+
+
+def write_batch(store_lines, outfile, prune):
+    top20 = sorted(store_lines, reverse=True)[:prune]
+    for score, original_pos, store_line in sorted(top20, key = lambda x: x[1]): #write in original_order
+        outfile.write(store_line)
+    source = current_source
+    store_lines = set()
+    original_pos = 0
 
 
 if __name__ == '__main__':
