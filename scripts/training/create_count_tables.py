@@ -121,9 +121,6 @@ def write_batch(store_lines, outfile, prune):
     top20 = sorted(store_lines, reverse=True)[:prune]
     for score, original_pos, store_line in sorted(top20, key = lambda x: x[1]): #write in original_order
         outfile.write(store_line)
-    source = current_source
-    store_lines = set()
-    original_pos = 0
 
 
 if __name__ == '__main__':
