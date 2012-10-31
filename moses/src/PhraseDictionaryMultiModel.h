@@ -77,6 +77,7 @@ protected:
   std::vector<FactorType> m_input;
   std::vector<FactorType> m_output;
   size_t m_numModels;
+  size_t m_componentTableLimit;
   PhraseDictionaryFeature* m_feature_load;
 
   typedef std::vector<TargetPhraseCollection*> PhraseCache;

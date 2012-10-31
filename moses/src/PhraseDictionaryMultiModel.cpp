@@ -50,8 +50,11 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
   m_input = input;
   m_output = output;
   m_tableLimit = tableLimit;
-
   m_numModels = files.size();
+
+  // since the top X target phrases of the final model are not the same as the top X phrases of each component model,
+  // one could choose a higher value than tableLimit (or 0) here for maximal precision, at a cost of speed.
+  m_componentTableLimit = tableLimit;
 
   //how many actual scores there are in the phrase tables
   //so far, equal to number of log-linear scores, but it is allowed to be smaller (for other combination types)
@@ -70,7 +73,6 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
 
       impl = files[i].substr(0,delim_pos);
       file = files[i].substr(delim_pos+1,files[i].size());
-      size_t table_limit = 0;
 
       PhraseTableImplementation implementation = (PhraseTableImplementation) Scan<int>(impl);
 
@@ -80,14 +82,14 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
 
             PhraseDictionaryMemory* pdm = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm->SetNumScoreComponentMultiModel(numPtScores); //instead of complaining about inequal number of scores, silently fill up the score vector with zeroes
-            pdm->Load( input, output, file, weight, table_limit, languageModels, weightWP);
+            pdm->Load( input, output, file, weight, m_componentTableLimit, languageModels, weightWP);
             m_pd.push_back(pdm);
       }
       else if (implementation == Compact) {
 #ifndef WIN32
             PhraseDictionaryCompact* pdc = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc->SetNumScoreComponentMultiModel(m_numScoreComponent); //for compact models, we need to pass number of log-linear components to correctly resize the score vector
-            pdc->Load( input, output, file, weight, table_limit, languageModels, weightWP);
+            pdc->Load( input, output, file, weight, m_componentTableLimit, languageModels, weightWP);
             m_pd.push_back(pdc);
 #else
             CHECK(false);
@@ -121,8 +123,15 @@ const TargetPhraseCollection *PhraseDictionaryMultiModel::GetTargetPhraseCollect
     TargetPhraseCollection *ret_raw = (TargetPhraseCollection*)  m_pd[i]->GetTargetPhraseCollection( src);
     if (ret_raw != NULL) {
 
-      TargetPhraseCollection::iterator iterTargetPhrase;
-      for (iterTargetPhrase = ret_raw->begin(); iterTargetPhrase != ret_raw->end();  ++iterTargetPhrase) {
+      TargetPhraseCollection::iterator iterTargetPhrase, iterLast;
+      if (m_componentTableLimit != 0 && ret_raw->GetSize() > m_componentTableLimit) {
+          iterLast = ret_raw->begin() + m_componentTableLimit;
+      }
+      else {
+          iterLast = ret_raw->end();
+      }
+
+      for (iterTargetPhrase = ret_raw->begin(); iterTargetPhrase != iterLast;  ++iterTargetPhrase) {
         TargetPhrase * targetPhrase = *iterTargetPhrase;
         std::vector<float> raw_scores = targetPhrase->GetScoreBreakdown().GetScoresForProducer(m_feature);
 
