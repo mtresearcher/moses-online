@@ -73,6 +73,7 @@ public:
             , const LMList &languageModels
             , float weightWP);
   TargetPhraseCollection* CreateTargetPhraseCollectionCounts(const Phrase &src, std::vector<float> &fs, std::map<std::string,multiModelCountsStatistics*>* allStats, std::vector<std::vector<float> > &multimodelweights) const;
+  void CollectSufficientStatistics(const Phrase &src, std::vector<float> &fs, std::map<std::string,multiModelCountsStatistics*>* allStats) const;
   float GetTargetCount(const Phrase& target, size_t modelIndex) const;
   double GetLexicalProbability( std::string &inner, std::string &outer, const std::vector<lexicalTable*> &tables, std::vector<float> &multimodelweights ) const;
   double ComputeWeightedLexicalTranslation( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const std::vector<lexicalTable*> &tables, std::vector<float> &multimodelweights, const std::vector<FactorType> &input_factors, const std::vector<FactorType> &output_factors ) const;

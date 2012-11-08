@@ -56,6 +56,7 @@ public:
             , size_t tableLimit
             , const LMList &languageModels
             , float weightWP);
+  void CollectSufficientStatistics(const Phrase& src, std::map<std::string,multiModelStatistics*>* allStats) const;
   TargetPhraseCollection* CreateTargetPhraseCollectionLinearInterpolation(std::map<std::string,multiModelStatistics*>* allStats, std::vector<std::vector<float> > &multimodelweights) const;
   std::vector<std::vector<float> > getWeights(size_t numWeights, bool normalize) const;
   std::vector<float> normalizeWeights(std::vector<float> &weights) const;

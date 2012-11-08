@@ -118,6 +118,23 @@ const TargetPhraseCollection *PhraseDictionaryMultiModel::GetTargetPhraseCollect
 
   std::map<std::string,multiModelStatistics*>* allStats = new(std::map<std::string,multiModelStatistics*>);
 
+  CollectSufficientStatistics(src, allStats);
+
+  TargetPhraseCollection *ret;
+  if (m_mode == "interpolate") {
+    ret = CreateTargetPhraseCollectionLinearInterpolation(allStats, multimodelweights);
+  }
+
+  ret->NthElement(m_tableLimit); // sort the phrases for pruning later
+  const_cast<PhraseDictionaryMultiModel*>(this)->CacheForCleanup(ret);
+  delete allStats;
+
+  return ret;
+}
+
+
+void PhraseDictionaryMultiModel::CollectSufficientStatistics(const Phrase& src, std::map<std::string,multiModelStatistics*>* allStats) const
+{
   for(size_t i = 0; i < m_numModels; ++i){
 
     TargetPhraseCollection *ret_raw = (TargetPhraseCollection*)  m_pd[i]->GetTargetPhraseCollection( src);
@@ -163,17 +180,6 @@ const TargetPhraseCollection *PhraseDictionaryMultiModel::GetTargetPhraseCollect
       }
     }
   }
-
-  TargetPhraseCollection *ret;
-  if (m_mode == "interpolate") {
-    ret = CreateTargetPhraseCollectionLinearInterpolation(allStats, multimodelweights);
-  }
-
-  ret->NthElement(m_tableLimit); // sort the phrases for pruning later
-  const_cast<PhraseDictionaryMultiModel*>(this)->CacheForCleanup(ret);
-  delete allStats;
-
-  return ret;
 }
 
 

@@ -100,7 +100,7 @@ bool PhraseDictionaryMultiModelCounts::Load(const std::vector<FactorType> &input
       target_table = file + "/count-table-target";
       lex_e2f = file + "/lex.counts.e2f";
       lex_f2e = file + "/lex.counts.f2e";
-      size_t table_limit = 0;
+      size_t componentTableLimit = 0; // using 0, because we can't trust implemented pruning algorithms with count tables.
 
       PhraseTableImplementation implementation = (PhraseTableImplementation) Scan<int>(impl);
 
@@ -115,24 +115,24 @@ bool PhraseDictionaryMultiModelCounts::Load(const std::vector<FactorType> &input
 
             PhraseDictionaryMemory* pdm = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm->SetNumScoreComponentMultiModel(numScoresCounts); //instead of complaining about inequal number of scores, silently fill up the score vector with zeroes
-            pdm->Load( input, output, main_table, weight, table_limit, languageModels, weightWP);
+            pdm->Load( input, output, main_table, weight, componentTableLimit, languageModels, weightWP);
             m_pd.push_back(pdm);
 
             PhraseDictionaryMemory* pdm_inverse = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm_inverse->SetNumScoreComponentMultiModel(numScoresTargetCounts);
-            pdm_inverse->Load( input, output, target_table, weight, table_limit, languageModels, weightWP);
+            pdm_inverse->Load( input, output, target_table, weight, componentTableLimit, languageModels, weightWP);
             m_inverse_pd.push_back(pdm_inverse);
       }
       else if (implementation == Compact) {
 #ifndef WIN32
             PhraseDictionaryCompact* pdc = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc->SetNumScoreComponentMultiModel(m_numScoreComponent); //for compact models, we need to pass number of log-linear components to correctly resize the score vector
-            pdc->Load( input, output, main_table, weight, table_limit, languageModels, weightWP);
+            pdc->Load( input, output, main_table, weight, componentTableLimit, languageModels, weightWP);
             m_pd.push_back(pdc);
 
             PhraseDictionaryCompact* pdc_inverse = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc_inverse->SetNumScoreComponentMultiModel(m_numScoreComponent);
-            pdc_inverse->Load( input, output, target_table, weight, table_limit, languageModels, weightWP);
+            pdc_inverse->Load( input, output, target_table, weight, componentTableLimit, languageModels, weightWP);
             m_inverse_pd.push_back(pdc_inverse);
 #else
             CHECK(false);
@@ -167,6 +167,19 @@ const TargetPhraseCollection *PhraseDictionaryMultiModelCounts::GetTargetPhraseC
 
   std::map<std::string,multiModelCountsStatistics*>* allStats = new(std::map<std::string,multiModelCountsStatistics*>);
 
+  CollectSufficientStatistics(src, fs, allStats);
+
+  TargetPhraseCollection *ret = CreateTargetPhraseCollectionCounts(src, fs, allStats, multimodelweights);
+
+  ret->NthElement(m_tableLimit); // sort the phrases for pruning later
+  const_cast<PhraseDictionaryMultiModelCounts*>(this)->CacheForCleanup(ret);
+  return ret;
+}
+
+
+void PhraseDictionaryMultiModelCounts::CollectSufficientStatistics(const Phrase& src, std::vector<float> &fs, std::map<std::string,multiModelCountsStatistics*>* allStats) const
+//fill fs and allStats with statistics from models
+{
   for(size_t i = 0; i < m_numModels; ++i){
 
     TargetPhraseCollection *ret_raw = (TargetPhraseCollection*)  m_pd[i]->GetTargetPhraseCollection( src);
@@ -204,11 +217,16 @@ const TargetPhraseCollection *PhraseDictionaryMultiModelCounts::GetTargetPhraseC
     }
   }
 
-  TargetPhraseCollection *ret = CreateTargetPhraseCollectionCounts(src, fs, allStats, multimodelweights);
+  // get target phrase frequency for models which have not seen the phrase pair
+  for ( std::map< std::string, multiModelCountsStatistics*>::const_iterator iter = allStats->begin(); iter != allStats->end(); ++iter ) {
+    multiModelCountsStatistics * statistics = iter->second;
 
-  ret->NthElement(m_tableLimit); // sort the phrases for pruning later
-  const_cast<PhraseDictionaryMultiModelCounts*>(this)->CacheForCleanup(ret);
-  return ret;
+    for (size_t i = 0; i < m_numModels; ++i) {
+        if (!statistics->ft[i]) {
+            statistics->ft[i] = GetTargetCount(static_cast<const Phrase&>(*statistics->targetPhrase), i);
+        }
+    }
+  }
 }
 
 
@@ -218,12 +236,6 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
   for ( std::map< std::string, multiModelCountsStatistics*>::const_iterator iter = allStats->begin(); iter != allStats->end(); ++iter ) {
 
     multiModelCountsStatistics * statistics = iter->second;
-    // get target phrase frequency for models which have not seen the phrase pair
-    for (size_t i = 0; i < m_numModels; ++i) {
-        if (!statistics->ft[i]) {
-            statistics->ft[i] = GetTargetCount(static_cast<const Phrase&>(*statistics->targetPhrase), i);
-        }
-    }
 
     if (statistics->targetPhrase->GetAlignTerm().GetSize() == 0) {
         UserMessage::Add("models need to include alignment information for computation of lexical weights.\nUse --phrase-word-alignment during training; for on-disk tables, also set -alignment-info when creating on-disk tables, and -use-alignment-info during decoding.");
@@ -237,11 +249,11 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
     double lexts = ComputeWeightedLexicalTranslation(src, static_cast<const Phrase&>(*statistics->targetPhrase), alignedToT, m_lexTable_f2e, multimodelweights[3], m_input, m_output );
 
     Scores scoreVector(5);
-    scoreVector[0] = TransformScore(m_combineFunction(statistics->fst, statistics->ft, multimodelweights[0]));
-    scoreVector[1] = TransformScore(lexst);
-    scoreVector[2] = TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[1]));
-    scoreVector[3] = TransformScore(lexts);
-    scoreVector[4] = TransformScore(2.718);
+    scoreVector[0] = FloorScore(TransformScore(m_combineFunction(statistics->fst, statistics->ft, multimodelweights[0])));
+    scoreVector[1] = FloorScore(TransformScore(lexst));
+    scoreVector[2] = FloorScore(TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[1])));
+    scoreVector[3] = FloorScore(TransformScore(lexts));
+    scoreVector[4] = FloorScore(TransformScore(2.718));
 
     statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
 
@@ -251,7 +263,6 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
   }
   return ret;
 }
-
 
 
 float PhraseDictionaryMultiModelCounts::GetTargetCount(const Phrase &target, size_t modelIndex) const {
@@ -267,7 +278,6 @@ float PhraseDictionaryMultiModelCounts::GetTargetCount(const Phrase &target, siz
     // target phrase unknown
     else return 0;
 }
-
 
 
 std::pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiModelCounts::AlignVector> PhraseDictionaryMultiModelCounts::GetAlignmentsForLexWeights(const Phrase &phraseS, const Phrase &phraseT, const AlignmentInfo &alignment) const {
