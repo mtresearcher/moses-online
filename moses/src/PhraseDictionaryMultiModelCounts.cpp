@@ -251,7 +251,7 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
     Scores scoreVector(5);
     scoreVector[0] = FloorScore(TransformScore(m_combineFunction(statistics->fst, statistics->ft, multimodelweights[0])));
     scoreVector[1] = FloorScore(TransformScore(lexst));
-    scoreVector[2] = FloorScore(TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[1])));
+    scoreVector[2] = FloorScore(TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[2])));
     scoreVector[3] = FloorScore(TransformScore(lexts));
     scoreVector[4] = FloorScore(TransformScore(2.718));
 
