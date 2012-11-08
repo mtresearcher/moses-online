@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Util.h"
 #include "UserMessage.h"
 
+#include "/home/rico/smtworkspace/online/lbfgs/dlib-17.47/dlib/optimization.h"
+
 extern std::vector<std::string> tokenize( const char*);
 
 namespace Moses
@@ -41,6 +43,13 @@ namespace Moses
   struct multiModelCountsStatistics {
     TargetPhrase *targetPhrase;
     std::vector<float> fst, ft;
+  };
+
+  struct multiModelCountsOptimizationCache {
+    TargetPhrase *targetPhrase;
+    std::vector<float> fst, ft, fs;
+    std::pair<std::vector< std::set<size_t> >, std::vector< std::set<size_t> > > alignment;
+    Phrase sourcePhrase;
   };
 
   typedef boost::unordered_map<std::string, double > lexicalMap;
@@ -52,12 +61,13 @@ namespace Moses
   };
 
   double InstanceWeighting(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
-  double LinearInterpolation(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
+  double LinearInterpolationFromCounts(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
 
 /** Implementation of a phrase table with raw counts.
  */
 class PhraseDictionaryMultiModelCounts: public PhraseDictionaryMultiModel
 {
+friend class PerplexityFunction;
 
 typedef std::vector< std::set<size_t> > AlignVector;
 
@@ -80,18 +90,89 @@ public:
   std::pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiModelCounts::AlignVector> GetAlignmentsForLexWeights(const Phrase &phraseS, const Phrase &phraseT, const AlignmentInfo &alignment) const;
   void LoadLexicalTable( std::string &fileName, lexicalTable* ltable);
   const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
+  void Optimize();
   // functions below required by base class
   virtual void InitializeForInput(InputType const&) {
     /* Don't do anything source specific here as this object is shared between threads.*/
   }
 
-
 private:
   std::vector<PhraseDictionary*> m_inverse_pd;
   std::vector<lexicalTable*> m_lexTable_e2f, m_lexTable_f2e;
   double (*m_combineFunction) (std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
-
 };
+
+class PerplexityFunction
+{
+public:
+
+    PerplexityFunction (
+        std::map<std::pair<std::string, std::string>, size_t> phrase_pairs,
+        std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats,
+        PhraseDictionaryMultiModelCounts * model,
+        size_t iFeature
+    )
+    {
+        m_phrase_pairs = phrase_pairs;
+        m_optimizerStats = optimizerStats;
+        m_model = model;
+        m_iFeature = iFeature;
+    }
+
+    double operator() ( const dlib::matrix<double,0,1>& arg) const
+    {
+        double total = 0.0;
+        double n = 0.0;
+        std::vector<float> weight_vector (arg.nr());
+
+        for (int i=0; i < arg.nr(); i++) {
+            weight_vector[i] = arg(i);
+        }
+
+        for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = m_phrase_pairs.begin(); iter != m_phrase_pairs.end(); ++iter ) {
+            std::pair<std::string, std::string> phrase_pair = iter->first;
+            std::string source_string = phrase_pair.first;
+            std::string target_string = phrase_pair.second;
+            size_t f = iter->second;
+
+            //ignore unseen phrase pairs
+            if (m_optimizerStats->find(phrase_pair) == m_optimizerStats->end()) {
+                continue;
+            }
+
+            double score;
+            multiModelCountsOptimizationCache* statistics = (*m_optimizerStats)[phrase_pair];
+            //TODO: refactor to make this more modular
+            if (m_iFeature == 0) {
+                score = m_model->m_combineFunction(statistics->fst, statistics->ft, weight_vector);
+            }
+            else if (m_iFeature == 1) {
+                score = m_model->ComputeWeightedLexicalTranslation(static_cast<const Phrase&>(*statistics->targetPhrase), statistics->sourcePhrase, statistics->alignment.second, m_model->m_lexTable_e2f, weight_vector, m_model->m_output, m_model->m_input );
+            }
+            else if (m_iFeature == 2) {
+                score = m_model->m_combineFunction(statistics->fst, statistics->fs, weight_vector);
+            }
+            else if (m_iFeature == 3) {
+                score = m_model->ComputeWeightedLexicalTranslation(statistics->sourcePhrase, static_cast<const Phrase&>(*statistics->targetPhrase), statistics->alignment.first, m_model->m_lexTable_f2e, weight_vector, m_model->m_input, m_model->m_output );
+            }
+            else {
+                score = 0;
+                UserMessage::Add("Trying to optimize feature that I don't know. Aborting");
+                CHECK(false);
+            }
+            total -= (FloorScore(TransformScore(score))/TransformScore(2))*f;
+            n += f;
+        }
+        return total/n;
+    }
+
+private:
+    std::map<std::pair<std::string, std::string>, size_t> m_phrase_pairs;
+    std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* m_optimizerStats;
+    PhraseDictionaryMultiModelCounts * m_model;
+    size_t m_iFeature;
+};
+
 
 } // end namespace
 

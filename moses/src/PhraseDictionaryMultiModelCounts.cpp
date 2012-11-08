@@ -152,7 +152,7 @@ bool PhraseDictionaryMultiModelCounts::Load(const std::vector<FactorType> &input
       m_lexTable_f2e.push_back(f2e);
 
   }
-
+  Optimize();
   return true;
 }
 
@@ -187,6 +187,7 @@ void PhraseDictionaryMultiModelCounts::CollectSufficientStatistics(const Phrase&
 
       TargetPhraseCollection::iterator iterTargetPhrase;
       for (iterTargetPhrase = ret_raw->begin(); iterTargetPhrase != ret_raw->end();  ++iterTargetPhrase) {
+
         TargetPhrase * targetPhrase = *iterTargetPhrase;
         std::vector<float> raw_scores = targetPhrase->GetScoreBreakdown().GetScoresForProducer(m_feature);
 
@@ -261,6 +262,7 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
 
     delete statistics;
   }
+  delete allStats;
   return ret;
 }
 
@@ -299,8 +301,10 @@ std::pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiMod
 
 double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslation( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const std::vector<lexicalTable*> &tables, std::vector<float> &multimodelweights, const std::vector<FactorType> &input_factors, const std::vector<FactorType> &output_factors ) const {
   // lexical translation probability
+
   double lexScore = 1.0;
   std::string null = "NULL";
+
   // all target words have to be explained
   for(size_t ti=0; ti<alignment.size(); ti++) {
     const set< size_t > & srcIndices = alignment[ ti ];
@@ -387,6 +391,83 @@ void PhraseDictionaryMultiModelCounts::LoadLexicalTable( std::string &fileName, 
 }
 
 
+void PhraseDictionaryMultiModelCounts::Optimize() {
+
+    const StaticData &staticData = StaticData::Instance();
+    const std::string& factorDelimiter = staticData.GetFactorDelimiter();
+
+    //TODO: pass this as argument
+    std::map<std::pair<std::string, std::string>, size_t> phrase_pairs;
+    phrase_pairs[make_pair("pass","col")] = 1;
+    phrase_pairs[make_pair("sitzung", "séance")] = 1;
+
+    std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats = new(std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>);
+
+    for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = phrase_pairs.begin(); iter != phrase_pairs.end(); ++iter ) {
+
+        std::pair<std::string, std::string> phrase_pair = iter->first;
+        std::string source_string = phrase_pair.first;
+        std::string target_string = phrase_pair.second;
+
+        std::vector<float> fs(m_numModels);
+        std::map<std::string,multiModelCountsStatistics*>* allStats = new(std::map<std::string,multiModelCountsStatistics*>);
+        multiModelCountsOptimizationCache * cache = new multiModelCountsOptimizationCache;
+
+        Phrase sourcePhrase(0);
+        sourcePhrase.CreateFromString(m_input, source_string, factorDelimiter);
+
+        CollectSufficientStatistics(sourcePhrase, fs, allStats); //optimization potential: only call this once per source phrase
+
+        //phrase pair not found; leave cache empty
+        if (allStats->find(target_string) == allStats->end()) {
+            delete allStats;
+            continue;
+        }
+
+        multiModelCountsStatistics * targetStatistics = (*allStats)[target_string];
+        cache->sourcePhrase = sourcePhrase;
+        cache->fs = fs;
+        cache->ft = targetStatistics->ft;
+        cache->fst = targetStatistics->fst;
+        cache->targetPhrase = targetStatistics->targetPhrase;
+        std::pair<std::vector< std::set<size_t> >, std::vector< std::set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
+        cache->alignment = alignment;
+
+        (*optimizerStats)[phrase_pair] = cache;
+        delete allStats;
+        }
+
+    using namespace dlib;
+    for (size_t iFeature=0; iFeature < 4; iFeature++) {
+
+        matrix<double,0,1> starting_point;
+        starting_point.set_size(m_numModels);
+        starting_point = 1.0;
+
+        find_min_bobyqa(PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature),
+                        starting_point,
+                        6,    // number of interpolation points
+                        uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
+                        uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
+                        0.5,    // initial trust region radius
+                        1e-10,  // stopping trust region radius
+                        10000    // max number of objective function evaluations
+        );
+
+        cout << starting_point << endl;
+        cout << PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature)(starting_point) << endl;
+
+    }
+
+    for ( std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
+        multiModelCountsOptimizationCache * cache = iter->second;
+        delete cache;
+    }
+    delete optimizerStats;
+
+}
+
+
 // calculate weighted probability based on instance weighting of joint counts and marginal counts
 double InstanceWeighting(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights) {
 
@@ -399,7 +480,7 @@ double InstanceWeighting(std::vector<float> &joint_counts, std::vector<float> &m
 
 // calculate linear interpolation of relative frequency estimates based on joint count and marginal counts
 //unused for now; enable in config?
-double LinearInterpolation(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights) {
+double LinearInterpolationFromCounts(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights) {
 
     std::vector<float> p(marginals.size());
 
