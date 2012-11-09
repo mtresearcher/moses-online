@@ -126,7 +126,7 @@ public:
         std::vector<float> weight_vector (m_model->m_numModels);
 
         for (int i=0; i < arg.nr(); i++) {
-            weight_vector[i+1] = arg(i);
+            weight_vector[i] = arg(i);
         }
         if (m_model->m_mode == "interpolate") {
             weight_vector = m_model->normalizeWeights(weight_vector);
@@ -142,7 +142,6 @@ public:
             if (m_optimizerStats->find(phrase_pair) == m_optimizerStats->end()) {
                 continue;
             }
-
             double score;
             multiModelCountsOptimizationCache* statistics = (*m_optimizerStats)[phrase_pair];
             //TODO: refactor to make this more modular

@@ -452,7 +452,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     for (size_t iFeature=0; iFeature < 4; iFeature++) {
 
         dlib::matrix<double,0,1> starting_point;
-        starting_point.set_size(m_numModels); //first weight is fixed to 1
+        starting_point.set_size(m_numModels);
         starting_point = 1.0;
 
         dlib::find_min_bobyqa(PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature),
@@ -474,17 +474,19 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
             weight_vector = normalizeWeights(weight_vector);
         }
         else if (m_mode == "instance_weighting") {
+            float first_value = weight_vector[0];
             for (int i=0; i < starting_point.nr(); i++) {
-                float first_value = weight_vector[i];
                 weight_vector[i] = weight_vector[i]/first_value;
             }
         }
+        cerr << "Weight vector for feature " << iFeature << ": ";
         for (size_t i=0; i < m_numModels; i++) {
             ret[(iFeature*m_numModels)+i] = weight_vector[i];
             cerr << weight_vector[i] << " ";
         }
         cerr << endl;
-        cerr << PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature)(starting_point) << endl;
+
+        cerr << "Cross-entropy: " << PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature)(starting_point) << endl;
     }
 
     for ( map<pair<string, string>, multiModelCountsOptimizationCache*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
