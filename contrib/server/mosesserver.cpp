@@ -8,6 +8,7 @@
 #include "Manager.h"
 #include "StaticData.h"
 #include "PhraseDictionaryDynSuffixArray.h"
+#include "PhraseDictionaryMultiModelCounts.h"
 #include "TranslationSystem.h"
 #include "TreeInput.h"
 #include "LMList.h"
@@ -133,6 +134,55 @@ public:
     add2ORLM_ = (si != params.end());
   }
 };
+
+class Optimizer : public xmlrpc_c::method
+{
+public:
+  Optimizer() {
+    // signature and help strings are documentation -- the client
+    // can query this information with a system.methodSignature and
+    // system.methodHelp RPC.
+    this->_signature = "S:S";
+    this->_help = "Optimizes multi-model translation model";
+  }
+
+  void
+  execute(xmlrpc_c::paramList const& paramList,
+          xmlrpc_c::value *   const  retvalP) {
+    const params_t params = paramList.getStruct(0);
+    const TranslationSystem& system = getTranslationSystem(params);
+    const PhraseDictionaryFeature* pdf = system.GetPhraseDictionaries()[0];
+    PhraseDictionaryMultiModelCounts* pdmm = (PhraseDictionaryMultiModelCounts*) pdf->GetDictionary();
+
+    params_t::const_iterator si = params.find("phrase_pairs");
+    if (si == params.end()) {
+      throw xmlrpc_c::fault(
+        "Missing list of phrase pairs",
+        xmlrpc_c::fault::CODE_PARSE);
+    }
+
+    vector<pair<string, string> > phrase_pairs;
+
+    xmlrpc_c::value_array phrase_pairs_array = xmlrpc_c::value_array(si->second);
+    vector<xmlrpc_c::value> phrasePairValueVector(phrase_pairs_array.vectorValueValue());
+    for (size_t i=0;i < phrasePairValueVector.size();i++) {
+        vector<xmlrpc_c::value> phrasePair(xmlrpc_c::value_array(phrasePairValueVector[i]).vectorValueValue());
+        string L1 = xmlrpc_c::value_string(phrasePair[0]);
+        string L2 = xmlrpc_c::value_string(phrasePair[1]);
+        phrase_pairs.push_back(make_pair(L1,L2));
+    }
+
+    vector<float> weight_vector = pdmm->MinimizePerplexity(phrase_pairs);
+    vector<xmlrpc_c::value> weight_vector_ret;
+    for (size_t i=0;i < weight_vector.size();i++) {
+        cerr << weight_vector[i] << "-";
+        weight_vector_ret.push_back(xmlrpc_c::value_double(weight_vector[i]));
+    }
+    cerr << endl;
+    *retvalP = xmlrpc_c::value_array(weight_vector_ret);
+  }
+};
+
 
 class Translator : public xmlrpc_c::method
 {
@@ -397,9 +447,11 @@ int main(int argc, char** argv)
 
   xmlrpc_c::methodPtr const translator(new Translator);
   xmlrpc_c::methodPtr const updater(new Updater);
+  xmlrpc_c::methodPtr const optimizer(new Optimizer);
 
   myRegistry.addMethod("translate", translator);
   myRegistry.addMethod("updater", updater);
+  myRegistry.addMethod("optimize", optimizer);
 
   xmlrpc_c::serverAbyss myAbyssServer(
     myRegistry,
