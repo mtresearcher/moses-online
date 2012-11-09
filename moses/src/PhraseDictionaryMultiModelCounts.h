@@ -90,7 +90,7 @@ public:
   std::pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiModelCounts::AlignVector> GetAlignmentsForLexWeights(const Phrase &phraseS, const Phrase &phraseT, const AlignmentInfo &alignment) const;
   void LoadLexicalTable( std::string &fileName, lexicalTable* ltable);
   const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
-  void Optimize();
+  std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
   // functions below required by base class
   virtual void InitializeForInput(InputType const&) {
     /* Don't do anything source specific here as this object is shared between threads.*/
@@ -123,10 +123,14 @@ public:
     {
         double total = 0.0;
         double n = 0.0;
-        std::vector<float> weight_vector (arg.nr());
+        std::vector<float> weight_vector (m_model->m_numModels);
 
+        weight_vector[0] = 1.0; //first weight is fixed to 1
         for (int i=0; i < arg.nr(); i++) {
-            weight_vector[i] = arg(i);
+            weight_vector[i+1] = arg(i);
+        }
+        if (m_model->m_mode == "interpolate") {
+            weight_vector = m_model->normalizeWeights(weight_vector);
         }
 
         for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = m_phrase_pairs.begin(); iter != m_phrase_pairs.end(); ++iter ) {
