@@ -452,7 +452,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     for (size_t iFeature=0; iFeature < 4; iFeature++) {
 
         dlib::matrix<double,0,1> starting_point;
-        starting_point.set_size(m_numModels-1); //first weight is fixed to 1
+        starting_point.set_size(m_numModels); //first weight is fixed to 1
         starting_point = 1.0;
 
         dlib::find_min_bobyqa(PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature),
@@ -467,12 +467,17 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
 
         vector<float> weight_vector (m_numModels);
 
-        weight_vector[0] = 1.0; //first weight is fixed to 1
         for (int i=0; i < starting_point.nr(); i++) {
-            weight_vector[i+1] = starting_point(i);
+            weight_vector[i] = starting_point(i);
         }
         if (m_mode == "interpolate") {
             weight_vector = normalizeWeights(weight_vector);
+        }
+        else if (m_mode == "instance_weighting") {
+            for (int i=0; i < starting_point.nr(); i++) {
+                float first_value = weight_vector[i];
+                weight_vector[i] = weight_vector[i]/first_value;
+            }
         }
         for (size_t i=0; i < m_numModels; i++) {
             ret[(iFeature*m_numModels)+i] = weight_vector[i];

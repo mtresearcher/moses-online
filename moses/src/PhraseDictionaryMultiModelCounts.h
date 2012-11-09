@@ -107,7 +107,7 @@ class PerplexityFunction
 public:
 
     PerplexityFunction (
-        std::map<std::pair<std::string, std::string>, size_t> phrase_pairs,
+        std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
         std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats,
         PhraseDictionaryMultiModelCounts * model,
         size_t iFeature
@@ -125,7 +125,6 @@ public:
         double n = 0.0;
         std::vector<float> weight_vector (m_model->m_numModels);
 
-        weight_vector[0] = 1.0; //first weight is fixed to 1
         for (int i=0; i < arg.nr(); i++) {
             weight_vector[i+1] = arg(i);
         }
