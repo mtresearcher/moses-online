@@ -152,7 +152,7 @@ public:
     const params_t params = paramList.getStruct(0);
     const TranslationSystem& system = getTranslationSystem(params);
     const PhraseDictionaryFeature* pdf = system.GetPhraseDictionaries()[0];
-    PhraseDictionaryMultiModelCounts* pdmm = (PhraseDictionaryMultiModelCounts*) pdf->GetDictionary();
+    PhraseDictionaryMultiModel* pdmm = (PhraseDictionaryMultiModel*) pdf->GetDictionary();
 
     params_t::const_iterator si = params.find("phrase_pairs");
     if (si == params.end()) {

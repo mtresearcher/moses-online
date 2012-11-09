@@ -60,15 +60,15 @@ public:
             , size_t tableLimit
             , const LMList &languageModels
             , float weightWP);
-  void CollectSufficientStatistics(const Phrase& src, std::map<std::string,multiModelStatistics*>* allStats) const;
-  TargetPhraseCollection* CreateTargetPhraseCollectionLinearInterpolation(std::map<std::string,multiModelStatistics*>* allStats, std::vector<std::vector<float> > &multimodelweights) const;
+  virtual void CollectSufficientStatistics(const Phrase& src, std::map<std::string,multiModelStatistics*>* allStats) const;
+  virtual TargetPhraseCollection* CreateTargetPhraseCollectionLinearInterpolation(std::map<std::string,multiModelStatistics*>* allStats, std::vector<std::vector<float> > &multimodelweights) const;
   std::vector<std::vector<float> > getWeights(size_t numWeights, bool normalize) const;
   std::vector<float> normalizeWeights(std::vector<float> &weights) const;
   void CacheForCleanup(TargetPhraseCollection* tpc);
   void CleanUp(const InputType &source);
-  std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
+  virtual std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
   // functions below required by base class
-  const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
+  virtual const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
   virtual void InitializeForInput(InputType const&) {
     /* Don't do anything source specific here as this object is shared between threads.*/
   }
