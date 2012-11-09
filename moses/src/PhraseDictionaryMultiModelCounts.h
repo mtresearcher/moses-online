@@ -67,7 +67,7 @@ namespace Moses
  */
 class PhraseDictionaryMultiModelCounts: public PhraseDictionaryMultiModel
 {
-friend class PerplexityFunction;
+friend class PerplexityFunctionCounts;
 
 typedef std::vector< std::set<size_t> > AlignVector;
 
@@ -102,11 +102,11 @@ private:
   double (*m_combineFunction) (std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
 };
 
-class PerplexityFunction
+class PerplexityFunctionCounts
 {
 public:
 
-    PerplexityFunction (
+    PerplexityFunctionCounts (
         std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
         std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats,
         PhraseDictionaryMultiModelCounts * model,
@@ -144,7 +144,6 @@ public:
             }
             double score;
             multiModelCountsOptimizationCache* statistics = (*m_optimizerStats)[phrase_pair];
-            //TODO: refactor to make this more modular
             if (m_iFeature == 0) {
                 score = m_model->m_combineFunction(statistics->fst, statistics->ft, weight_vector);
             }

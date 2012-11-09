@@ -175,10 +175,8 @@ public:
     vector<float> weight_vector = pdmm->MinimizePerplexity(phrase_pairs);
     vector<xmlrpc_c::value> weight_vector_ret;
     for (size_t i=0;i < weight_vector.size();i++) {
-        cerr << weight_vector[i] << "-";
         weight_vector_ret.push_back(xmlrpc_c::value_double(weight_vector[i]));
     }
-    cerr << endl;
     *retvalP = xmlrpc_c::value_array(weight_vector_ret);
   }
 };

@@ -400,21 +400,15 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     const StaticData &staticData = StaticData::Instance();
     const string& factorDelimiter = staticData.GetFactorDelimiter();
 
-    map<pair<string, string>, size_t> phrase_pairs;
+    map<pair<string, string>, size_t> phrase_pair_map;
 
     for ( vector<pair<string, string> >::const_iterator iter = phrase_pair_vector.begin(); iter != phrase_pair_vector.end(); ++iter ) {
-        pair<string, string> phrase_pair = *iter;
-        if (phrase_pairs.find(phrase_pair) == phrase_pairs.end()) {
-            phrase_pairs[phrase_pair] = 1;
-        }
-        else {
-            phrase_pairs[phrase_pair] += 1;
-        }
+        phrase_pair_map[*iter] += 1;
     }
 
     map<pair<string, string>, multiModelCountsOptimizationCache*>* optimizerStats = new(map<pair<string, string>, multiModelCountsOptimizationCache*>);
 
-    for ( map<pair<string, string>, size_t>::const_iterator iter = phrase_pairs.begin(); iter != phrase_pairs.end(); ++iter ) {
+    for ( map<pair<string, string>, size_t>::const_iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
 
         pair<string, string> phrase_pair = iter->first;
         string source_string = phrase_pair.first;
@@ -455,7 +449,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         starting_point.set_size(m_numModels);
         starting_point = 1.0;
 
-        dlib::find_min_bobyqa(PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature),
+        dlib::find_min_bobyqa(PerplexityFunctionCounts(phrase_pair_map, optimizerStats, this, iFeature),
                         starting_point,
                         6,    // number of interpolation points
                         dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
@@ -486,7 +480,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         }
         cerr << endl;
 
-        cerr << "Cross-entropy: " << PerplexityFunction(phrase_pairs, optimizerStats, this, iFeature)(starting_point) << endl;
+        cerr << "Cross-entropy: " << PerplexityFunctionCounts(phrase_pair_map, optimizerStats, this, iFeature)(starting_point) << endl;
     }
 
     for ( map<pair<string, string>, multiModelCountsOptimizationCache*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {

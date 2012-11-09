@@ -296,6 +296,7 @@ void PhraseDictionaryMultiModel::CacheForCleanup(TargetPhraseCollection* tpc) {
   ref.push_back(tpc);
 }
 
+
 void PhraseDictionaryMultiModel::CleanUp(const InputType &source) {
 #ifdef WITH_THREADS
   boost::mutex::scoped_lock lock(m_sentenceMutex);
@@ -313,6 +314,95 @@ void PhraseDictionaryMultiModel::CleanUp(const InputType &source) {
   const StaticData &staticData = StaticData::Instance();
   std::vector<float> empty_vector;
   (const_cast<StaticData&>(staticData)).SetTemporaryMultiModelWeightsVector(empty_vector);
+}
+
+
+vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string, string> > &phrase_pair_vector) {
+
+    const StaticData &staticData = StaticData::Instance();
+    const string& factorDelimiter = staticData.GetFactorDelimiter();
+
+    map<pair<string, string>, size_t> phrase_pair_map;
+
+    for ( vector<pair<string, string> >::const_iterator iter = phrase_pair_vector.begin(); iter != phrase_pair_vector.end(); ++iter ) {
+        phrase_pair_map[*iter] += 1;
+    }
+
+    map<pair<string, string>, multiModelStatistics*>* optimizerStats = new(map<pair<string, string>, multiModelStatistics*>);
+
+    for ( map<pair<string, string>, size_t>::const_iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
+
+        pair<string, string> phrase_pair = iter->first;
+        string source_string = phrase_pair.first;
+        string target_string = phrase_pair.second;
+
+        vector<float> fs(m_numModels);
+        map<string,multiModelStatistics*>* allStats = new(map<string,multiModelStatistics*>);
+
+        Phrase sourcePhrase(0);
+        sourcePhrase.CreateFromString(m_input, source_string, factorDelimiter);
+
+        CollectSufficientStatistics(sourcePhrase, allStats); //optimization potential: only call this once per source phrase
+
+        //phrase pair not found; leave cache empty
+        if (allStats->find(target_string) == allStats->end()) {
+            delete allStats;
+            continue;
+        }
+
+        (*optimizerStats)[phrase_pair] = (*allStats)[target_string];
+        delete allStats;
+        }
+
+    size_t numWeights = m_numScoreComponent;
+    if (m_mode == "interpolate") {
+        //interpolation of phrase penalty is skipped, and fixed-value (2.718) is used instead. results will be screwed up if phrase penalty is not last feature
+        numWeights = m_numScoreComponent-1;
+    }
+
+    vector<float> ret (m_numModels*numWeights);
+    for (size_t iFeature=0; iFeature < numWeights; iFeature++) {
+
+        dlib::matrix<double,0,1> starting_point;
+        starting_point.set_size(m_numModels);
+        starting_point = 1.0;
+
+        dlib::find_min_bobyqa(PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature),
+                        starting_point,
+                        6,    // number of interpolation points
+                        dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
+                        dlib::uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
+                        0.5,    // initial trust region radius
+                        1e-10,  // stopping trust region radius
+                        10000    // max number of objective function evaluations
+        );
+
+        vector<float> weight_vector (m_numModels);
+
+        for (int i=0; i < starting_point.nr(); i++) {
+            weight_vector[i] = starting_point(i);
+        }
+        if (m_mode == "interpolate") {
+            weight_vector = normalizeWeights(weight_vector);
+        }
+
+        cerr << "Weight vector for feature " << iFeature << ": ";
+        for (size_t i=0; i < m_numModels; i++) {
+            ret[(iFeature*m_numModels)+i] = weight_vector[i];
+            cerr << weight_vector[i] << " ";
+        }
+        cerr << endl;
+
+        cerr << "Cross-entropy: " << PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature)(starting_point) << endl;
+    }
+
+    for ( map<pair<string, string>, multiModelStatistics*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
+        multiModelStatistics * cache = iter->second;
+        delete cache;
+    }
+    delete optimizerStats;
+    return ret;
+
 }
 
 } //namespace

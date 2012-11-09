@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Util.h"
 #include "UserMessage.h"
 
+#include "/home/rico/smtworkspace/online/lbfgs/dlib-17.47/dlib/optimization.h"
+
 namespace Moses
 {
 
@@ -41,10 +43,12 @@ namespace Moses
     std::vector<std::vector<float> > p;
   };
 
-/** Implementation of a phrase table with raw counts.
+/** Implementation of a virtual phrase table constructed from multiple component phrase tables.
  */
 class PhraseDictionaryMultiModel: public PhraseDictionary
 {
+
+friend class PerplexityFunction;
 
 public:
   PhraseDictionaryMultiModel(size_t m_numScoreComponent, PhraseDictionaryFeature* feature);
@@ -62,6 +66,7 @@ public:
   std::vector<float> normalizeWeights(std::vector<float> &weights) const;
   void CacheForCleanup(TargetPhraseCollection* tpc);
   void CleanUp(const InputType &source);
+  std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
   // functions below required by base class
   const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
   virtual void InitializeForInput(InputType const&) {
@@ -90,6 +95,61 @@ protected:
 #endif
   SentenceCache m_sentenceCache;
 
+};
+
+class PerplexityFunction
+{
+public:
+
+    PerplexityFunction (
+        std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
+        std::map<std::pair<std::string, std::string>, multiModelStatistics*>* optimizerStats,
+        PhraseDictionaryMultiModel * model,
+        size_t iFeature
+    )
+    {
+        m_phrase_pairs = phrase_pairs;
+        m_optimizerStats = optimizerStats;
+        m_model = model;
+        m_iFeature = iFeature;
+    }
+
+    double operator() ( const dlib::matrix<double,0,1>& arg) const
+    {
+        double total = 0.0;
+        double n = 0.0;
+        std::vector<float> weight_vector (m_model->m_numModels);
+
+        for (int i=0; i < arg.nr(); i++) {
+            weight_vector[i] = arg(i);
+        }
+        if (m_model->m_mode == "interpolate") {
+            weight_vector = m_model->normalizeWeights(weight_vector);
+        }
+
+        for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = m_phrase_pairs.begin(); iter != m_phrase_pairs.end(); ++iter ) {
+            std::pair<std::string, std::string> phrase_pair = iter->first;
+            size_t f = iter->second;
+
+            //ignore unseen phrase pairs
+            if (m_optimizerStats->find(phrase_pair) == m_optimizerStats->end()) {
+                continue;
+            }
+            double score;
+            multiModelStatistics* statistics = (*m_optimizerStats)[phrase_pair];
+            score = std::inner_product(statistics->p[m_iFeature].begin(), statistics->p[m_iFeature].end(), weight_vector.begin(), 0.0);
+
+            total -= (FloorScore(TransformScore(score))/TransformScore(2))*f;
+            n += f;
+        }
+        return total/n;
+    }
+
+protected:
+    std::map<std::pair<std::string, std::string>, size_t> m_phrase_pairs;
+    std::map<std::pair<std::string, std::string>, multiModelStatistics*>* m_optimizerStats;
+    PhraseDictionaryMultiModel * m_model;
+    size_t m_iFeature;
 };
 
 } // end namespace
