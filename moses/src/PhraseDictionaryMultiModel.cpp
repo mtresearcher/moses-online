@@ -367,15 +367,21 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         starting_point.set_size(m_numModels);
         starting_point = 1.0;
 
-        dlib::find_min_bobyqa(PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature),
-                        starting_point,
-                        6,    // number of interpolation points
-                        dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
-                        dlib::uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
-                        0.5,    // initial trust region radius
-                        1e-10,  // stopping trust region radius
-                        10000    // max number of objective function evaluations
-        );
+        try {
+            dlib::find_min_bobyqa(PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature),
+                            starting_point,
+                            2*m_numModels+1,    // number of interpolation points
+                            dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
+                            dlib::uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
+                            1.0,    // initial trust region radius
+                            1e-5,  // stopping trust region radius
+                            10000    // max number of objective function evaluations
+            );
+        }
+        catch (dlib::bobyqa_failure& e)
+        {
+            cerr << e.what() << endl;
+        }
 
         vector<float> weight_vector (m_numModels);
 
