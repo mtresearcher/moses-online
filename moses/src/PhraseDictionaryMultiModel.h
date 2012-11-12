@@ -43,12 +43,14 @@ namespace Moses
     std::vector<std::vector<float> > p;
   };
 
+class OptimizationObjective;
+
 /** Implementation of a virtual phrase table constructed from multiple component phrase tables.
  */
 class PhraseDictionaryMultiModel: public PhraseDictionary
 {
 
-friend class PerplexityFunction;
+friend class CrossEntropy;
 
 public:
   PhraseDictionaryMultiModel(size_t m_numScoreComponent, PhraseDictionaryFeature* feature);
@@ -67,6 +69,7 @@ public:
   void CacheForCleanup(TargetPhraseCollection* tpc);
   void CleanUp(const InputType &source);
   virtual std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
+  std::vector<float> Optimize(OptimizationObjective * ObjectiveFunction, size_t numModels);
   // functions below required by base class
   virtual const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
   virtual void InitializeForInput(InputType const&) {
@@ -97,11 +100,18 @@ protected:
 
 };
 
-class PerplexityFunction
+class OptimizationObjective 
 {
 public:
 
-    PerplexityFunction (
+    virtual double operator() ( const dlib::matrix<double,0,1>& arg) const {};
+};
+
+class CrossEntropy: public OptimizationObjective
+{
+public:
+
+    CrossEntropy (
         std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
         std::map<std::pair<std::string, std::string>, multiModelStatistics*>* optimizerStats,
         PhraseDictionaryMultiModel * model,

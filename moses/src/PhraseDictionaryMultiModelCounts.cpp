@@ -445,37 +445,16 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     vector<float> ret (m_numModels*4);
     for (size_t iFeature=0; iFeature < 4; iFeature++) {
 
-        dlib::matrix<double,0,1> starting_point;
-        starting_point.set_size(m_numModels);
-        starting_point = 1.0;
+        CrossEntropyCounts * ObjectiveFunction = new CrossEntropyCounts(phrase_pair_map, optimizerStats, this, iFeature);
 
-        try {
-            dlib::find_min_bobyqa(PerplexityFunctionCounts(phrase_pair_map, optimizerStats, this, iFeature),
-                            starting_point,
-                            2*m_numModels+1,    // number of interpolation points
-                            dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
-                            dlib::uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
-                            1.0,    // initial trust region radius
-                            1e-5,  // stopping trust region radius
-                            10000    // max number of objective function evaluations
-            );
-        }
-        catch (dlib::bobyqa_failure& e)
-        {
-            cerr << e.what() << endl;
-        }
+        vector<float> weight_vector = Optimize(ObjectiveFunction, m_numModels);
 
-        vector<float> weight_vector (m_numModels);
-
-        for (int i=0; i < starting_point.nr(); i++) {
-            weight_vector[i] = starting_point(i);
-        }
         if (m_mode == "interpolate") {
             weight_vector = normalizeWeights(weight_vector);
         }
         else if (m_mode == "instance_weighting") {
             float first_value = weight_vector[0];
-            for (int i=0; i < starting_point.nr(); i++) {
+            for (size_t i=0; i < m_numModels; i++) {
                 weight_vector[i] = weight_vector[i]/first_value;
             }
         }
@@ -485,8 +464,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
             cerr << weight_vector[i] << " ";
         }
         cerr << endl;
-
-        cerr << "Cross-entropy: " << PerplexityFunctionCounts(phrase_pair_map, optimizerStats, this, iFeature)(starting_point) << endl;
+        delete ObjectiveFunction;
     }
 
     for ( map<pair<string, string>, multiModelCountsOptimizationCache*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {

@@ -40,7 +40,7 @@ extern std::vector<std::string> tokenize( const char*);
 namespace Moses
 {
 
-  struct multiModelCountsStatistics {
+  struct multiModelCountsStatistics{
     TargetPhrase *targetPhrase;
     std::vector<float> fst, ft;
   };
@@ -67,7 +67,7 @@ namespace Moses
  */
 class PhraseDictionaryMultiModelCounts: public PhraseDictionaryMultiModel
 {
-friend class PerplexityFunctionCounts;
+friend class CrossEntropyCounts;
 
 typedef std::vector< std::set<size_t> > AlignVector;
 
@@ -102,11 +102,11 @@ private:
   double (*m_combineFunction) (std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
 };
 
-class PerplexityFunctionCounts
+class CrossEntropyCounts: public OptimizationObjective
 {
 public:
 
-    PerplexityFunctionCounts (
+    CrossEntropyCounts (
         std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
         std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats,
         PhraseDictionaryMultiModelCounts * model,

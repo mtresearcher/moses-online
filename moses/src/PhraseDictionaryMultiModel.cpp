@@ -363,31 +363,10 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
     vector<float> ret (m_numModels*numWeights);
     for (size_t iFeature=0; iFeature < numWeights; iFeature++) {
 
-        dlib::matrix<double,0,1> starting_point;
-        starting_point.set_size(m_numModels);
-        starting_point = 1.0;
+        CrossEntropy * ObjectiveFunction = new CrossEntropy(phrase_pair_map, optimizerStats, this, iFeature);
 
-        try {
-            dlib::find_min_bobyqa(PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature),
-                            starting_point,
-                            2*m_numModels+1,    // number of interpolation points
-                            dlib::uniform_matrix<double>(m_numModels,1, 1e-09),  // lower bound constraint
-                            dlib::uniform_matrix<double>(m_numModels,1, 1e100),   // upper bound constraint
-                            1.0,    // initial trust region radius
-                            1e-5,  // stopping trust region radius
-                            10000    // max number of objective function evaluations
-            );
-        }
-        catch (dlib::bobyqa_failure& e)
-        {
-            cerr << e.what() << endl;
-        }
+        vector<float> weight_vector = Optimize(ObjectiveFunction, m_numModels);
 
-        vector<float> weight_vector (m_numModels);
-
-        for (int i=0; i < starting_point.nr(); i++) {
-            weight_vector[i] = starting_point(i);
-        }
         if (m_mode == "interpolate") {
             weight_vector = normalizeWeights(weight_vector);
         }
@@ -398,8 +377,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
             cerr << weight_vector[i] << " ";
         }
         cerr << endl;
-
-        cerr << "Cross-entropy: " << PerplexityFunction(phrase_pair_map, optimizerStats, this, iFeature)(starting_point) << endl;
+        delete ObjectiveFunction;
     }
 
     for ( map<pair<string, string>, multiModelStatistics*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
@@ -409,6 +387,38 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
     delete optimizerStats;
     return ret;
 
+}
+
+vector<float> PhraseDictionaryMultiModel::Optimize(Objective *ObjectiveFunction, size_t numModels) {
+
+        dlib::matrix<double,0,1> starting_point;
+        starting_point.set_size(numModels);
+        starting_point = 1.0;
+
+        try {
+            dlib::find_min_bobyqa(*ObjectiveFunction,
+                            starting_point,
+                            2*numModels+1,    // number of interpolation points
+                            dlib::uniform_matrix<double>(numModels,1, 1e-09),  // lower bound constraint
+                            dlib::uniform_matrix<double>(numModels,1, 1e100),   // upper bound constraint
+                            1.0,    // initial trust region radius
+                            1e-5,  // stopping trust region radius
+                            10000    // max number of objective function evaluations
+            );
+        }
+        catch (dlib::bobyqa_failure& e)
+        {
+            cerr << e.what() << endl;
+        }
+
+        vector<float> weight_vector (numModels);
+
+        for (int i=0; i < starting_point.nr(); i++) {
+            weight_vector[i] = starting_point(i);
+        }
+
+        cerr << "Cross-entropy: " << (*ObjectiveFunction)(starting_point) << endl;
+        return weight_vector;
 }
 
 } //namespace
