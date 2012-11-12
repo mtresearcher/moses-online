@@ -38,16 +38,16 @@ extern std::vector<std::string> tokenize( const char*);
 namespace Moses
 {
 
-  struct multiModelCountsStatistics{
-    TargetPhrase *targetPhrase;
+  struct multiModelCountsStatistics : multiModelStatistics {
     std::vector<float> fst, ft;
   };
 
-  struct multiModelCountsOptimizationCache {
-    TargetPhrase *targetPhrase;
-    std::vector<float> fst, ft, fs;
+  struct multiModelCountsStatisticsOptimization: multiModelCountsStatistics {
+    std::vector<float> fs;
+    std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > lexCachee2f, lexCachef2e;
     std::pair<std::vector< std::set<size_t> >, std::vector< std::set<size_t> > > alignment;
     Phrase sourcePhrase;
+    size_t f;
   };
 
   typedef boost::unordered_map<std::string, double > lexicalMap;
@@ -88,7 +88,11 @@ public:
   float GetTargetCount(const Phrase& target, size_t modelIndex) const;
   double GetLexicalProbability( std::string &inner, std::string &outer, const std::vector<lexicalTable*> &tables, std::vector<float> &multimodelweights ) const;
   double ComputeWeightedLexicalTranslation( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const std::vector<lexicalTable*> &tables, std::vector<float> &multimodelweights, const std::vector<FactorType> &input_factors, const std::vector<FactorType> &output_factors ) const;
+  double ComputeWeightedLexicalTranslationFromCache( std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > &cache, std::vector<float> &weights ) const;
   std::pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiModelCounts::AlignVector> GetAlignmentsForLexWeights(const Phrase &phraseS, const Phrase &phraseT, const AlignmentInfo &alignment) const;
+  std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > CacheLexicalStatistics( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const std::vector<lexicalTable*> &tables, const std::vector<FactorType> &input_factors, const std::vector<FactorType> &output_factors );
+  void FillLexicalCountsJoint(std::string &wordS, std::string &wordT, std::vector<float> &count, const std::vector<lexicalTable*> &tables) const;
+  void FillLexicalCountsMarginal(std::string &wordS, std::vector<float> &count, const std::vector<lexicalTable*> &tables) const;
   void LoadLexicalTable( std::string &fileName, lexicalTable* ltable);
   const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
   std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
@@ -109,13 +113,11 @@ class CrossEntropyCounts: public OptimizationObjective
 public:
 
     CrossEntropyCounts (
-        std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
-        std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* optimizerStats,
+        std::vector<multiModelCountsStatisticsOptimization*> &optimizerStats,
         PhraseDictionaryMultiModelCounts * model,
         size_t iFeature
     )
     {
-        m_phrase_pairs = phrase_pairs;
         m_optimizerStats = optimizerStats;
         m_model = model;
         m_iFeature = iFeature;
@@ -134,18 +136,11 @@ public:
             weight_vector = m_model->normalizeWeights(weight_vector);
         }
 
-        for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = m_phrase_pairs.begin(); iter != m_phrase_pairs.end(); ++iter ) {
-            std::pair<std::string, std::string> phrase_pair = iter->first;
-            std::string source_string = phrase_pair.first;
-            std::string target_string = phrase_pair.second;
-            size_t f = iter->second;
+        for ( std::vector<multiModelCountsStatisticsOptimization*>::const_iterator iter = m_optimizerStats.begin(); iter != m_optimizerStats.end(); ++iter ) {
+            multiModelCountsStatisticsOptimization* statistics = *iter;
+            size_t f = statistics->f;
 
-            //ignore unseen phrase pairs
-            if (m_optimizerStats->find(phrase_pair) == m_optimizerStats->end()) {
-                continue;
-            }
             double score;
-            multiModelCountsOptimizationCache* statistics = (*m_optimizerStats)[phrase_pair];
             if (m_iFeature == 0) {
                 score = m_model->m_combineFunction(statistics->fst, statistics->ft, weight_vector);
             }
@@ -170,8 +165,7 @@ public:
     }
 
 private:
-    std::map<std::pair<std::string, std::string>, size_t> m_phrase_pairs;
-    std::map<std::pair<std::string, std::string>, multiModelCountsOptimizationCache*>* m_optimizerStats;
+    std::vector<multiModelCountsStatisticsOptimization*> m_optimizerStats;
     PhraseDictionaryMultiModelCounts * m_model;
     size_t m_iFeature;
 };

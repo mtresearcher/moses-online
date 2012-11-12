@@ -46,6 +46,10 @@ namespace Moses
     std::vector<std::vector<float> > p;
   };
 
+  struct multiModelStatisticsOptimization: multiModelStatistics {
+    size_t f;
+  };
+
 class OptimizationObjective;
 
 /** Implementation of a virtual phrase table constructed from multiple component phrase tables.
@@ -111,7 +115,7 @@ class OptimizationObjective
 {
 public:
 
-    virtual double operator() ( const dlib::matrix<double,0,1>& arg) const {};
+    virtual double operator() ( const dlib::matrix<double,0,1>& arg) const = 0;
 };
 
 class CrossEntropy: public OptimizationObjective
@@ -119,13 +123,11 @@ class CrossEntropy: public OptimizationObjective
 public:
 
     CrossEntropy (
-        std::map<std::pair<std::string, std::string>, size_t> &phrase_pairs,
-        std::map<std::pair<std::string, std::string>, multiModelStatistics*>* optimizerStats,
+        std::vector<multiModelStatisticsOptimization*> &optimizerStats,
         PhraseDictionaryMultiModel * model,
         size_t iFeature
     )
     {
-        m_phrase_pairs = phrase_pairs;
         m_optimizerStats = optimizerStats;
         m_model = model;
         m_iFeature = iFeature;
@@ -144,16 +146,11 @@ public:
             weight_vector = m_model->normalizeWeights(weight_vector);
         }
 
-        for ( std::map<std::pair<std::string, std::string>, size_t>::const_iterator iter = m_phrase_pairs.begin(); iter != m_phrase_pairs.end(); ++iter ) {
-            std::pair<std::string, std::string> phrase_pair = iter->first;
-            size_t f = iter->second;
+        for ( std::vector<multiModelStatisticsOptimization*>::const_iterator iter = m_optimizerStats.begin(); iter != m_optimizerStats.end(); ++iter ) {
+            multiModelStatisticsOptimization* statistics = *iter;
+            size_t f = statistics->f;
 
-            //ignore unseen phrase pairs
-            if (m_optimizerStats->find(phrase_pair) == m_optimizerStats->end()) {
-                continue;
-            }
             double score;
-            multiModelStatistics* statistics = (*m_optimizerStats)[phrase_pair];
             score = std::inner_product(statistics->p[m_iFeature].begin(), statistics->p[m_iFeature].end(), weight_vector.begin(), 0.0);
 
             total -= (FloorScore(TransformScore(score))/TransformScore(2))*f;
@@ -163,8 +160,7 @@ public:
     }
 
 protected:
-    std::map<std::pair<std::string, std::string>, size_t> m_phrase_pairs;
-    std::map<std::pair<std::string, std::string>, multiModelStatistics*>* m_optimizerStats;
+    std::vector<multiModelStatisticsOptimization*> m_optimizerStats;
     PhraseDictionaryMultiModel * m_model;
     size_t m_iFeature;
 };

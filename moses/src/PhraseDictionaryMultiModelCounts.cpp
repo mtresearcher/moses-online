@@ -330,28 +330,98 @@ double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslation( cons
   return lexScore;
 }
 
+
+vector<vector<pair<vector<float>, vector<float> > > > PhraseDictionaryMultiModelCounts::CacheLexicalStatistics( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const vector<lexicalTable*> &tables, const vector<FactorType> &input_factors, const vector<FactorType> &output_factors ) {
+//do all the necessary lexical table lookups and get counts, but don't apply weights yet
+
+  string null = "NULL";
+  vector<vector<pair<vector<float>, vector<float> > > > ret;
+
+  // all target words have to be explained
+  for(size_t ti=0; ti<alignment.size(); ti++) {
+    const set< size_t > & srcIndices = alignment[ ti ];
+    Word t_word = phraseT.GetWord(ti);
+    string ti_str = t_word.GetString(output_factors, false);
+
+    vector<pair<vector<float>, vector<float> > > ti_vector;
+    if (srcIndices.empty()) {
+      // explain unaligned word by NULL
+      vector<float> joint_count (m_numModels);
+      vector<float> marginals (m_numModels);
+
+      FillLexicalCountsJoint(null, ti_str, joint_count, tables);
+      FillLexicalCountsMarginal(null, marginals, tables);
+
+      ti_vector.push_back(make_pair(joint_count, marginals));
+
+    } else {
+      for (set< size_t >::const_iterator si(srcIndices.begin()); si != srcIndices.end(); ++si) {
+        string s_str = phraseS.GetWord(*si).GetString(input_factors, false);
+        vector<float> joint_count (m_numModels);
+        vector<float> marginals (m_numModels);
+
+        FillLexicalCountsJoint(s_str, ti_str, joint_count, tables);
+        FillLexicalCountsMarginal(s_str, marginals, tables);
+
+        ti_vector.push_back(make_pair(joint_count, marginals));
+      }
+    }
+    ret.push_back(ti_vector);
+  }
+  return ret;
+}
+
+
+double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslationFromCache( vector<vector<pair<vector<float>, vector<float> > > > &cache, vector<float> &weights ) const {
+  // lexical translation probability
+
+  double lexScore = 1.0;
+
+  for (vector<vector<pair<vector<float>, vector<float> > > >::iterator iter = cache.begin();  iter != cache.end(); ++iter) {
+      vector<pair<vector<float>, vector<float> > > t_vector = *iter;
+      double thisWordScore = 0;
+      for ( vector<pair<vector<float>, vector<float> > >::iterator iter2 = t_vector.begin();  iter2 != t_vector.end(); ++iter2) {
+          vector<float> joint_count = iter2->first;
+          vector<float> marginal = iter2->second;
+          thisWordScore += m_combineFunction(joint_count, marginal, weights);
+      }
+      lexScore *= thisWordScore / (double)t_vector.size();
+  }
+  return lexScore;
+}
+
 // get lexical probability for single word alignment pair
 double PhraseDictionaryMultiModelCounts::GetLexicalProbability( string &wordS, string &wordT, const vector<lexicalTable*> &tables, vector<float> &multimodelweights ) const {
     vector<float> joint_count (m_numModels);
     vector<float> marginals (m_numModels);
 
-    for (size_t i=0;i < m_numModels;i++) {
-        lexicalMapJoint::iterator joint_s = tables[i]->joint.find( wordS );
-        if (joint_s == tables[i]->joint.end()) joint_count[i] = 0.0;
-        else {
-            lexicalMap::iterator joint_t = joint_s->second.find( wordT );
-            if (joint_t == joint_s->second.end()) joint_count[i] = 0.0;
-            else joint_count[i] = joint_t->second;
-        }
-
-        lexicalMap::iterator marginal_s = tables[i]->marginal.find( wordS );
-        if (marginal_s == tables[i]->marginal.end()) marginals[i] = 0.0;
-        else marginals[i] = marginal_s->second;
-        }
+    FillLexicalCountsJoint(wordS, wordT, joint_count, tables);
+    FillLexicalCountsMarginal(wordS, marginals, tables);
 
     double lexProb = m_combineFunction(joint_count, marginals, multimodelweights);
 
   return lexProb;
+}
+
+
+void PhraseDictionaryMultiModelCounts::FillLexicalCountsJoint(string &wordS, string &wordT, vector<float> &count, const vector<lexicalTable*> &tables) const {
+    for (size_t i=0;i < m_numModels;i++) {
+        lexicalMapJoint::iterator joint_s = tables[i]->joint.find( wordS );
+        if (joint_s == tables[i]->joint.end()) count[i] = 0.0;
+        else {
+            lexicalMap::iterator joint_t = joint_s->second.find( wordT );
+            if (joint_t == joint_s->second.end()) count[i] = 0.0;
+            else count[i] = joint_t->second;
+        }
+    }
+}
+
+void PhraseDictionaryMultiModelCounts::FillLexicalCountsMarginal(string &wordS, vector<float> &count, const vector<lexicalTable*> &tables) const {
+    for (size_t i=0;i < m_numModels;i++) {
+        lexicalMap::iterator marginal_s = tables[i]->marginal.find( wordS );
+        if (marginal_s == tables[i]->marginal.end()) count[i] = 0.0;
+        else count[i] = marginal_s->second;
+    }
 }
 
 
@@ -406,9 +476,9 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         phrase_pair_map[*iter] += 1;
     }
 
-    map<pair<string, string>, multiModelCountsOptimizationCache*>* optimizerStats = new(map<pair<string, string>, multiModelCountsOptimizationCache*>);
+    vector<multiModelCountsStatisticsOptimization*> optimizerStats;
 
-    for ( map<pair<string, string>, size_t>::const_iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
+    for ( map<pair<string, string>, size_t>::iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
 
         pair<string, string> phrase_pair = iter->first;
         string source_string = phrase_pair.first;
@@ -416,7 +486,6 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
 
         vector<float> fs(m_numModels);
         map<string,multiModelCountsStatistics*>* allStats = new(map<string,multiModelCountsStatistics*>);
-        multiModelCountsOptimizationCache * cache = new multiModelCountsOptimizationCache;
 
         Phrase sourcePhrase(0);
         sourcePhrase.CreateFromString(m_input, source_string, factorDelimiter);
@@ -429,23 +498,24 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
             continue;
         }
 
-        multiModelCountsStatistics * targetStatistics = (*allStats)[target_string];
-        cache->sourcePhrase = sourcePhrase;
-        cache->fs = fs;
-        cache->ft = targetStatistics->ft;
-        cache->fst = targetStatistics->fst;
-        cache->targetPhrase = targetStatistics->targetPhrase;
+        multiModelCountsStatisticsOptimization * targetStatistics = new multiModelCountsStatisticsOptimization();
+        targetStatistics->targetPhrase = (*allStats)[target_string]->targetPhrase;
+        targetStatistics->sourcePhrase = sourcePhrase;
+        targetStatistics->fs = fs;
+        targetStatistics->fst = (*allStats)[target_string]->fst;
+        targetStatistics->ft = (*allStats)[target_string]->ft;
         pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
-        cache->alignment = alignment;
+        targetStatistics->alignment = alignment;
+        targetStatistics->f = iter->second;
 
-        (*optimizerStats)[phrase_pair] = cache;
+        optimizerStats.push_back(targetStatistics);
         delete allStats;
         }
 
     vector<float> ret (m_numModels*4);
     for (size_t iFeature=0; iFeature < 4; iFeature++) {
 
-        CrossEntropyCounts * ObjectiveFunction = new CrossEntropyCounts(phrase_pair_map, optimizerStats, this, iFeature);
+        CrossEntropyCounts * ObjectiveFunction = new CrossEntropyCounts(optimizerStats, this, iFeature);
 
         vector<float> weight_vector = Optimize(ObjectiveFunction, m_numModels);
 
@@ -467,11 +537,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         delete ObjectiveFunction;
     }
 
-    for ( map<pair<string, string>, multiModelCountsOptimizationCache*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
-        multiModelCountsOptimizationCache * cache = iter->second;
-        delete cache;
-    }
-    delete optimizerStats;
+    RemoveAllInColl(optimizerStats);
     return ret;
 
 }

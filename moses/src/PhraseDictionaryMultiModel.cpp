@@ -328,9 +328,9 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         phrase_pair_map[*iter] += 1;
     }
 
-    map<pair<string, string>, multiModelStatistics*>* optimizerStats = new(map<pair<string, string>, multiModelStatistics*>);
+    vector<multiModelStatisticsOptimization*> optimizerStats;
 
-    for ( map<pair<string, string>, size_t>::const_iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
+    for ( map<pair<string, string>, size_t>::iterator iter = phrase_pair_map.begin(); iter != phrase_pair_map.end(); ++iter ) {
 
         pair<string, string> phrase_pair = iter->first;
         string source_string = phrase_pair.first;
@@ -350,7 +350,12 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
             continue;
         }
 
-        (*optimizerStats)[phrase_pair] = (*allStats)[target_string];
+        multiModelStatisticsOptimization* targetStatistics = new multiModelStatisticsOptimization();
+        targetStatistics->targetPhrase = (*allStats)[target_string]->targetPhrase;
+        targetStatistics->p = (*allStats)[target_string]->p;
+        targetStatistics->f = iter->second;
+        optimizerStats.push_back(targetStatistics);
+
         delete allStats;
         }
 
@@ -363,7 +368,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
     vector<float> ret (m_numModels*numWeights);
     for (size_t iFeature=0; iFeature < numWeights; iFeature++) {
 
-        CrossEntropy * ObjectiveFunction = new CrossEntropy(phrase_pair_map, optimizerStats, this, iFeature);
+        CrossEntropy * ObjectiveFunction = new CrossEntropy(optimizerStats, this, iFeature);
 
         vector<float> weight_vector = Optimize(ObjectiveFunction, m_numModels);
 
@@ -380,11 +385,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         delete ObjectiveFunction;
     }
 
-    for ( map<pair<string, string>, multiModelStatistics*>::const_iterator iter = optimizerStats->begin(); iter != optimizerStats->end(); ++iter ) {
-        multiModelStatistics * cache = iter->second;
-        delete cache;
-    }
-    delete optimizerStats;
+    RemoveAllInColl(optimizerStats);
     return ret;
 
 }

@@ -172,7 +172,13 @@ public:
         phrase_pairs.push_back(make_pair(L1,L2));
     }
 
-    vector<float> weight_vector = pdmm->MinimizePerplexity(phrase_pairs);
+    vector<float> weight_vector;
+#ifdef WITH_DLIB
+    weight_vector = pdmm->MinimizePerplexity(phrase_pairs);
+#else
+    cerr << "Error: Perplexity minimization requires DLIB path to be set in PhraseDictionaryMultiModel.h" << endl;
+#endif
+
     vector<xmlrpc_c::value> weight_vector_ret;
     for (size_t i=0;i < weight_vector.size();i++) {
         weight_vector_ret.push_back(xmlrpc_c::value_double(weight_vector[i]));
@@ -440,6 +446,9 @@ int main(int argc, char** argv)
   if (!StaticData::LoadDataStatic(params, argv[0])) {
     exit(1);
   }
+
+  //512 MB data limit (512KB is not enough for optimization)
+  xmlrpc_limit_set(XMLRPC_XML_SIZE_LIMIT_ID, 512*1024*1024);
 
   xmlrpc_c::registry myRegistry;
 
