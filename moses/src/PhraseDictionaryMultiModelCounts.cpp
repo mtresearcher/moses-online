@@ -394,7 +394,7 @@ void PhraseDictionaryMultiModelCounts::LoadLexicalTable( string &fileName, lexic
 
 }
 
-
+#ifdef WITH_DLIB
 vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<string, string> > &phrase_pair_vector) {
 
     const StaticData &staticData = StaticData::Instance();
@@ -475,7 +475,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     return ret;
 
 }
-
+#endif
 
 // calculate weighted probability based on instance weighting of joint counts and marginal counts
 double InstanceWeighting(vector<float> &joint_counts, vector<float> &marginals, vector<float> &multimodelweights) {

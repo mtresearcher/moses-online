@@ -33,8 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Util.h"
 #include "UserMessage.h"
 
-#include "/home/rico/smtworkspace/online/lbfgs/dlib-17.47/dlib/optimization.h"
-
 extern std::vector<std::string> tokenize( const char*);
 
 namespace Moses
@@ -67,7 +65,10 @@ namespace Moses
  */
 class PhraseDictionaryMultiModelCounts: public PhraseDictionaryMultiModel
 {
+
+#ifdef WITH_DLIB
 friend class CrossEntropyCounts;
+#endif
 
 typedef std::vector< std::set<size_t> > AlignVector;
 
@@ -102,6 +103,7 @@ private:
   double (*m_combineFunction) (std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
 };
 
+#ifdef WITH_DLIB
 class CrossEntropyCounts: public OptimizationObjective
 {
 public:
@@ -173,7 +175,7 @@ private:
     PhraseDictionaryMultiModelCounts * m_model;
     size_t m_iFeature;
 };
-
+#endif
 
 } // end namespace
 

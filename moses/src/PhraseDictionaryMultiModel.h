@@ -33,7 +33,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Util.h"
 #include "UserMessage.h"
 
+#define WITH_DLIB
+#ifdef WITH_DLIB
 #include "/home/rico/smtworkspace/online/lbfgs/dlib-17.47/dlib/optimization.h"
+#endif
 
 namespace Moses
 {
@@ -49,8 +52,9 @@ class OptimizationObjective;
  */
 class PhraseDictionaryMultiModel: public PhraseDictionary
 {
-
+#ifdef WITH_DLIB
 friend class CrossEntropy;
+#endif
 
 public:
   PhraseDictionaryMultiModel(size_t m_numScoreComponent, PhraseDictionaryFeature* feature);
@@ -69,7 +73,9 @@ public:
   void CacheForCleanup(TargetPhraseCollection* tpc);
   void CleanUp(const InputType &source);
   virtual std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
+#ifdef WITH_DLIB
   std::vector<float> Optimize(OptimizationObjective * ObjectiveFunction, size_t numModels);
+#endif
   // functions below required by base class
   virtual const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
   virtual void InitializeForInput(InputType const&) {
@@ -100,6 +106,7 @@ protected:
 
 };
 
+#ifdef WITH_DLIB
 class OptimizationObjective 
 {
 public:
@@ -161,6 +168,7 @@ protected:
     PhraseDictionaryMultiModel * m_model;
     size_t m_iFeature;
 };
+#endif
 
 } // end namespace
 

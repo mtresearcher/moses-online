@@ -316,7 +316,7 @@ void PhraseDictionaryMultiModel::CleanUp(const InputType &source) {
   (const_cast<StaticData&>(staticData)).SetTemporaryMultiModelWeightsVector(empty_vector);
 }
 
-
+#ifdef WITH_DLIB
 vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string, string> > &phrase_pair_vector) {
 
     const StaticData &staticData = StaticData::Instance();
@@ -389,7 +389,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
 
 }
 
-vector<float> PhraseDictionaryMultiModel::Optimize(Objective *ObjectiveFunction, size_t numModels) {
+vector<float> PhraseDictionaryMultiModel::Optimize(OptimizationObjective *ObjectiveFunction, size_t numModels) {
 
         dlib::matrix<double,0,1> starting_point;
         starting_point.set_size(numModels);
@@ -420,5 +420,6 @@ vector<float> PhraseDictionaryMultiModel::Optimize(Objective *ObjectiveFunction,
         cerr << "Cross-entropy: " << (*ObjectiveFunction)(starting_point) << endl;
         return weight_vector;
 }
+#endif
 
 } //namespace
