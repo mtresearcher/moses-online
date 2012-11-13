@@ -544,6 +544,48 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
     return ret;
 
 }
+
+double CrossEntropyCounts::operator() ( const dlib::matrix<double,0,1>& arg) const
+{
+    double total = 0.0;
+    double n = 0.0;
+    std::vector<float> weight_vector (m_model->m_numModels);
+
+    for (int i=0; i < arg.nr(); i++) {
+        weight_vector[i] = arg(i);
+    }
+    if (m_model->m_mode == "interpolate") {
+        weight_vector = m_model->normalizeWeights(weight_vector);
+    }
+
+    for ( std::vector<multiModelCountsStatisticsOptimization*>::const_iterator iter = m_optimizerStats.begin(); iter != m_optimizerStats.end(); ++iter ) {
+        multiModelCountsStatisticsOptimization* statistics = *iter;
+        size_t f = statistics->f;
+
+        double score;
+        if (m_iFeature == 0) {
+            score = m_model->m_combineFunction(statistics->fst, statistics->ft, weight_vector);
+        }
+        else if (m_iFeature == 1) {
+            score = m_model->ComputeWeightedLexicalTranslationFromCache(statistics->lexCachee2f, weight_vector);
+        }
+        else if (m_iFeature == 2) {
+            score = m_model->m_combineFunction(statistics->fst, statistics->fs, weight_vector);
+        }
+        else if (m_iFeature == 3) {
+            score = m_model->ComputeWeightedLexicalTranslationFromCache(statistics->lexCachef2e, weight_vector);
+        }
+        else {
+            score = 0;
+            UserMessage::Add("Trying to optimize feature that I don't know. Aborting");
+            CHECK(false);
+        }
+        total -= (FloorScore(TransformScore(score))/TransformScore(2))*f;
+        n += f;
+    }
+    return total/n;
+}
+
 #endif
 
 // calculate weighted probability based on instance weighting of joint counts and marginal counts
@@ -572,5 +614,6 @@ double LinearInterpolationFromCounts(vector<float> &joint_counts, vector<float> 
 
     return p_weighted;
 }
+
 
 } //namespace
