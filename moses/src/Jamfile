@@ -2,7 +2,14 @@ max-factors = [ option.get "max-factors" : 4 : 4 ] ;
 path-constant FACTOR-LOG : bin/factor.log ;
 update-if-changed $(FACTOR-LOG) $(max-factors) ;
 
-alias headers : ../../util//kenutil : : : <include>. <define>MAX_NUM_FACTORS=$(max-factors) <dependency>$(FACTOR-LOG) ;
+with-dlib = [ option.get "with-dlib" ] ;
+if $(with-dlib) {
+  dlib = <define>WITH_DLIB <include>$(with-dlib) ;
+} else {
+  dlib = ;
+}
+
+alias headers : ../../util//kenutil : : : <include>. <define>MAX_NUM_FACTORS=$(max-factors) <dependency>$(FACTOR-LOG) $(dlib) ;
 
 alias ThreadPool : ThreadPool.cpp ;
 

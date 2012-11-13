@@ -149,6 +149,7 @@ public:
   void
   execute(xmlrpc_c::paramList const& paramList,
           xmlrpc_c::value *   const  retvalP) {
+#ifdef WITH_DLIB
     const params_t params = paramList.getStruct(0);
     const TranslationSystem& system = getTranslationSystem(params);
     const PhraseDictionaryFeature* pdf = system.GetPhraseDictionaries()[0];
@@ -173,17 +174,18 @@ public:
     }
 
     vector<float> weight_vector;
-#ifdef WITH_DLIB
     weight_vector = pdmm->MinimizePerplexity(phrase_pairs);
-#else
-    cerr << "Error: Perplexity minimization requires DLIB path to be set in PhraseDictionaryMultiModel.h" << endl;
-#endif
 
     vector<xmlrpc_c::value> weight_vector_ret;
     for (size_t i=0;i < weight_vector.size();i++) {
         weight_vector_ret.push_back(xmlrpc_c::value_double(weight_vector[i]));
     }
     *retvalP = xmlrpc_c::value_array(weight_vector_ret);
+#else
+    string errmsg = "Error: Perplexity minimization requires dlib (compilation option --with-dlib)";
+    cerr << errmsg << endl;
+    *retvalP = xmlrpc_c::value_string(errmsg);
+#endif
   }
 };
 
