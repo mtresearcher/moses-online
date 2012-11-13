@@ -263,9 +263,9 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
     statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
 
     ret->Add(statistics->targetPhrase);
-
-    delete statistics;
   }
+
+  RemoveAllInMap(*allStats);
   delete allStats;
   return ret;
 }
@@ -324,7 +324,7 @@ double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslation( cons
         string s_str = phraseS.GetWord(*si).GetString(input_factors, false);
         thisWordScore += GetLexicalProbability( s_str, ti_str, tables, multimodelweights );
       }
-      lexScore *= thisWordScore / (double)srcIndices.size();
+      lexScore *= thisWordScore / srcIndices.size();
     }
   }
   return lexScore;
@@ -343,7 +343,7 @@ lexicalCache PhraseDictionaryMultiModelCounts::CacheLexicalStatistics( const Phr
     Word t_word = phraseT.GetWord(ti);
     string ti_str = t_word.GetString(output_factors, false);
 
-    vector<pair<vector<float>, vector<float> > > ti_vector;
+    vector<lexicalPair> ti_vector;
     if (srcIndices.empty()) {
       // explain unaligned word by NULL
       vector<float> joint_count (m_numModels);
@@ -377,15 +377,15 @@ double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslationFromCa
 
   double lexScore = 1.0;
 
-  for (lexicalCache::iterator iter = cache.begin();  iter != cache.end(); ++iter) {
-      vector<pair<vector<float>, vector<float> > > t_vector = *iter;
+  for (lexicalCache::const_iterator iter = cache.begin();  iter != cache.end(); ++iter) {
+      vector<lexicalPair> t_vector = *iter;
       double thisWordScore = 0;
-      for ( vector<pair<vector<float>, vector<float> > >::iterator iter2 = t_vector.begin();  iter2 != t_vector.end(); ++iter2) {
+      for ( vector<lexicalPair>::const_iterator iter2 = t_vector.begin();  iter2 != t_vector.end(); ++iter2) {
           vector<float> joint_count = iter2->first;
           vector<float> marginal = iter2->second;
           thisWordScore += m_combineFunction(joint_count, marginal, weights);
       }
-      lexScore *= thisWordScore / (double)t_vector.size();
+      lexScore *= thisWordScore / t_vector.size();
   }
   return lexScore;
 }
@@ -494,6 +494,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
 
         //phrase pair not found; leave cache empty
         if (allStats->find(target_string) == allStats->end()) {
+            RemoveAllInMap(*allStats);
             delete allStats;
             continue;
         }
@@ -510,6 +511,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         targetStatistics->lexCachef2e = CacheLexicalStatistics(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), alignment.first, m_lexTable_f2e, m_input, m_output );
 
         optimizerStats.push_back(targetStatistics);
+        RemoveAllInMap(*allStats);
         delete allStats;
         }
 

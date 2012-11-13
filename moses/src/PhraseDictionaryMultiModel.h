@@ -48,6 +48,7 @@ namespace Moses
 
   struct multiModelStatisticsOptimization: multiModelStatistics {
     size_t f;
+    ~multiModelStatisticsOptimization() {delete targetPhrase;};
   };
 
 class OptimizationObjective;

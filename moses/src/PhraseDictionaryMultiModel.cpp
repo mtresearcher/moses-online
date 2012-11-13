@@ -127,6 +127,7 @@ const TargetPhraseCollection *PhraseDictionaryMultiModel::GetTargetPhraseCollect
 
   ret->NthElement(m_tableLimit); // sort the phrases for pruning later
   const_cast<PhraseDictionaryMultiModel*>(this)->CacheForCleanup(ret);
+  RemoveAllInMap(*allStats);
   delete allStats;
 
   return ret;
@@ -202,8 +203,6 @@ TargetPhraseCollection* PhraseDictionaryMultiModel::CreateTargetPhraseCollection
         statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
 
         ret->Add(statistics->targetPhrase);
-
-        delete statistics;
     }
     return ret;
 }
@@ -346,6 +345,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
 
         //phrase pair not found; leave cache empty
         if (allStats->find(target_string) == allStats->end()) {
+            RemoveAllInMap(*allStats);
             delete allStats;
             continue;
         }
@@ -356,6 +356,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         targetStatistics->f = iter->second;
         optimizerStats.push_back(targetStatistics);
 
+        RemoveAllInMap(*allStats);
         delete allStats;
         }
 

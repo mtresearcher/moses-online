@@ -40,7 +40,8 @@ namespace Moses
 
   typedef boost::unordered_map<std::string, double > lexicalMap;
   typedef boost::unordered_map<std::string, lexicalMap > lexicalMapJoint;
-  typedef std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > lexicalCache;
+  typedef std::pair<std::vector<float>, std::vector<float> > lexicalPair;
+  typedef std::vector<std::vector<lexicalPair> > lexicalCache;
 
   struct multiModelCountsStatistics : multiModelStatistics {
     std::vector<float> fst, ft;
@@ -50,6 +51,7 @@ namespace Moses
     std::vector<float> fs;
     lexicalCache lexCachee2f, lexCachef2e;
     size_t f;
+    ~multiModelCountsStatisticsOptimization() {delete targetPhrase;};
   };
 
   struct lexicalTable {
