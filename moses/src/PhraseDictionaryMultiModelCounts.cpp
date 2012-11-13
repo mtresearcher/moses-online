@@ -331,11 +331,11 @@ double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslation( cons
 }
 
 
-vector<vector<pair<vector<float>, vector<float> > > > PhraseDictionaryMultiModelCounts::CacheLexicalStatistics( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const vector<lexicalTable*> &tables, const vector<FactorType> &input_factors, const vector<FactorType> &output_factors ) {
+lexicalCache PhraseDictionaryMultiModelCounts::CacheLexicalStatistics( const Phrase &phraseS, const Phrase &phraseT, AlignVector &alignment, const vector<lexicalTable*> &tables, const vector<FactorType> &input_factors, const vector<FactorType> &output_factors ) {
 //do all the necessary lexical table lookups and get counts, but don't apply weights yet
 
   string null = "NULL";
-  vector<vector<pair<vector<float>, vector<float> > > > ret;
+  lexicalCache ret;
 
   // all target words have to be explained
   for(size_t ti=0; ti<alignment.size(); ti++) {
@@ -372,12 +372,12 @@ vector<vector<pair<vector<float>, vector<float> > > > PhraseDictionaryMultiModel
 }
 
 
-double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslationFromCache( vector<vector<pair<vector<float>, vector<float> > > > &cache, vector<float> &weights ) const {
+double PhraseDictionaryMultiModelCounts::ComputeWeightedLexicalTranslationFromCache( lexicalCache &cache, vector<float> &weights ) const {
   // lexical translation probability
 
   double lexScore = 1.0;
 
-  for (vector<vector<pair<vector<float>, vector<float> > > >::iterator iter = cache.begin();  iter != cache.end(); ++iter) {
+  for (lexicalCache::iterator iter = cache.begin();  iter != cache.end(); ++iter) {
       vector<pair<vector<float>, vector<float> > > t_vector = *iter;
       double thisWordScore = 0;
       for ( vector<pair<vector<float>, vector<float> > >::iterator iter2 = t_vector.begin();  iter2 != t_vector.end(); ++iter2) {
@@ -500,13 +500,14 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
 
         multiModelCountsStatisticsOptimization * targetStatistics = new multiModelCountsStatisticsOptimization();
         targetStatistics->targetPhrase = (*allStats)[target_string]->targetPhrase;
-        targetStatistics->sourcePhrase = sourcePhrase;
         targetStatistics->fs = fs;
         targetStatistics->fst = (*allStats)[target_string]->fst;
         targetStatistics->ft = (*allStats)[target_string]->ft;
-        pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
-        targetStatistics->alignment = alignment;
         targetStatistics->f = iter->second;
+
+        pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
+        targetStatistics->lexCachee2f = CacheLexicalStatistics(static_cast<const Phrase&>(*targetStatistics->targetPhrase), sourcePhrase, alignment.second, m_lexTable_e2f, m_output, m_input );
+        targetStatistics->lexCachef2e = CacheLexicalStatistics(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), alignment.first, m_lexTable_f2e, m_input, m_output );
 
         optimizerStats.push_back(targetStatistics);
         delete allStats;

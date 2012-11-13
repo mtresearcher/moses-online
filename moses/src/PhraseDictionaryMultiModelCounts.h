@@ -38,20 +38,19 @@ extern std::vector<std::string> tokenize( const char*);
 namespace Moses
 {
 
+  typedef boost::unordered_map<std::string, double > lexicalMap;
+  typedef boost::unordered_map<std::string, lexicalMap > lexicalMapJoint;
+  typedef std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > lexicalCache;
+
   struct multiModelCountsStatistics : multiModelStatistics {
     std::vector<float> fst, ft;
   };
 
   struct multiModelCountsStatisticsOptimization: multiModelCountsStatistics {
     std::vector<float> fs;
-    std::vector<std::vector<std::pair<std::vector<float>, std::vector<float> > > > lexCachee2f, lexCachef2e;
-    std::pair<std::vector< std::set<size_t> >, std::vector< std::set<size_t> > > alignment;
-    Phrase sourcePhrase;
+    lexicalCache lexCachee2f, lexCachef2e;
     size_t f;
   };
-
-  typedef boost::unordered_map<std::string, double > lexicalMap;
-  typedef boost::unordered_map<std::string, lexicalMap > lexicalMapJoint;
 
   struct lexicalTable {
     lexicalMapJoint joint;
@@ -145,13 +144,13 @@ public:
                 score = m_model->m_combineFunction(statistics->fst, statistics->ft, weight_vector);
             }
             else if (m_iFeature == 1) {
-                score = m_model->ComputeWeightedLexicalTranslation(static_cast<const Phrase&>(*statistics->targetPhrase), statistics->sourcePhrase, statistics->alignment.second, m_model->m_lexTable_e2f, weight_vector, m_model->m_output, m_model->m_input );
+                score = m_model->ComputeWeightedLexicalTranslationFromCache(statistics->lexCachee2f, weight_vector);
             }
             else if (m_iFeature == 2) {
                 score = m_model->m_combineFunction(statistics->fst, statistics->fs, weight_vector);
             }
             else if (m_iFeature == 3) {
-                score = m_model->ComputeWeightedLexicalTranslation(statistics->sourcePhrase, static_cast<const Phrase&>(*statistics->targetPhrase), statistics->alignment.first, m_model->m_lexTable_f2e, weight_vector, m_model->m_input, m_model->m_output );
+                score = m_model->ComputeWeightedLexicalTranslationFromCache(statistics->lexCachef2e, weight_vector);
             }
             else {
                 score = 0;
