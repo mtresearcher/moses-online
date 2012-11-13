@@ -51,7 +51,6 @@ namespace Moses
     std::vector<float> fs;
     lexicalCache lexCachee2f, lexCachef2e;
     size_t f;
-    ~multiModelCountsStatisticsOptimization() {delete targetPhrase;};
   };
 
   struct lexicalTable {

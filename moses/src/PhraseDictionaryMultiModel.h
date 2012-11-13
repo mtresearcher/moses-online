@@ -44,11 +44,11 @@ namespace Moses
   struct multiModelStatistics {
     TargetPhrase *targetPhrase;
     std::vector<std::vector<float> > p;
+    ~multiModelStatistics() {delete targetPhrase;};
   };
 
   struct multiModelStatisticsOptimization: multiModelStatistics {
     size_t f;
-    ~multiModelStatisticsOptimization() {delete targetPhrase;};
   };
 
 class OptimizationObjective;

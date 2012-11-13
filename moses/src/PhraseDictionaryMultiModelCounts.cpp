@@ -262,7 +262,7 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
 
     statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
 
-    ret->Add(statistics->targetPhrase);
+    ret->Add(new TargetPhrase(*statistics->targetPhrase));
   }
 
   RemoveAllInMap(*allStats);
@@ -500,7 +500,7 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         }
 
         multiModelCountsStatisticsOptimization * targetStatistics = new multiModelCountsStatisticsOptimization();
-        targetStatistics->targetPhrase = (*allStats)[target_string]->targetPhrase;
+        targetStatistics->targetPhrase = new TargetPhrase(*(*allStats)[target_string]->targetPhrase);
         targetStatistics->fs = fs;
         targetStatistics->fst = (*allStats)[target_string]->fst;
         targetStatistics->ft = (*allStats)[target_string]->ft;

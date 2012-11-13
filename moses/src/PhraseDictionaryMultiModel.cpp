@@ -201,8 +201,7 @@ TargetPhraseCollection* PhraseDictionaryMultiModel::CreateTargetPhraseCollection
         scoreVector[m_numScoreComponent-1] = 1.0;
 
         statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
-
-        ret->Add(statistics->targetPhrase);
+        ret->Add(new TargetPhrase(*statistics->targetPhrase));
     }
     return ret;
 }
@@ -351,7 +350,7 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         }
 
         multiModelStatisticsOptimization* targetStatistics = new multiModelStatisticsOptimization();
-        targetStatistics->targetPhrase = (*allStats)[target_string]->targetPhrase;
+        targetStatistics->targetPhrase = new TargetPhrase(*(*allStats)[target_string]->targetPhrase);
         targetStatistics->p = (*allStats)[target_string]->p;
         targetStatistics->f = iter->second;
         optimizerStats.push_back(targetStatistics);
