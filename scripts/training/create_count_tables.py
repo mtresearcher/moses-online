@@ -100,7 +100,7 @@ def create_count_lines(fobj, countobj, countobj_target, prune=0):
                 store_lines = set()
                 original_pos = 0
 
-            store_lines.add((int(fst), original_pos, b' ||| '.join(line)))
+            store_lines.add((float(fst), original_pos, b' ||| '.join(line)))
             original_pos += 1
 
         else:
