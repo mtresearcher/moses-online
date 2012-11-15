@@ -3,16 +3,16 @@
 #include <iostream>
 
 
-#include "ChartManager.h"
-#include "Hypothesis.h"
-#include "Manager.h"
-#include "StaticData.h"
-#include "PhraseDictionaryDynSuffixArray.h"
-#include "PhraseDictionaryMultiModelCounts.h"
-#include "TranslationSystem.h"
-#include "TreeInput.h"
-#include "LMList.h"
-#include "LM/ORLM.h"
+#include "moses/ChartManager.h"
+#include "moses/Hypothesis.h"
+#include "moses/Manager.h"
+#include "moses/StaticData.h"
+#include "moses/PhraseDictionaryDynSuffixArray.h"
+#include "moses/PhraseDictionaryMultiModelCounts.h"
+#include "moses/TranslationSystem.h"
+#include "moses/TreeInput.h"
+#include "moses/LMList.h"
+#include "moses/LM/ORLM.h"
 
 #ifdef WITH_THREADS
 #include <boost/thread.hpp>
