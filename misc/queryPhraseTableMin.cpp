@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   StaticData::InstanceNonConst().LoadData(parameter);
 
   SparsePhraseDictionaryFeature *spdf = NULL;
-  PhraseDictionaryFeature pdf(Compact, spdf, nscores, nscores, input, output, ttable, weight, 0, 0, "", "", allPaths));
+  PhraseDictionaryFeature pdf(Compact, spdf, nscores, nscores, input, output, ttable, weight, 0, 0, "", "", allPaths);
   PhraseDictionaryCompact pdc(nscores, Compact, &pdf, false, useAlignments);
   bool ret = pdc.Load(input, output, ttable, weight, 0, lmList, 0);                                                                           
   assert(ret);
