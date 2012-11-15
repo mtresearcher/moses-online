@@ -46,8 +46,19 @@ rule test_header ( name ) {
   return [ test_flags "-include $(name)" ] ;
 }
 
+requirements = ;
+
+FORCE-STATIC = [ option.get "static" : : "yes" ] ;
+if $(FORCE-STATIC) {
+  requirements += <link>static <runtime-link>static ;
+}
+
 rule test_library ( name ) {
-  return [ test_flags "-l$(name)" ] ;
+  if $(FORCE-STATIC) {
+    return [ test_flags "-l$(name) -static" ] ;
+  } else {
+    return [ test_flags "-l$(name)" ] ;
+  }
 }
 
 {
@@ -57,13 +68,6 @@ rule test_library ( name ) {
     cleaning = yes ;
   }
   constant CLEANING : $(cleaning) ;
-}
-
-requirements = ;
-
-FORCE-STATIC = [ option.get "static" : : "yes" ] ;
-if $(FORCE-STATIC) {
-  requirements += <link>static <runtime-link>static ;
 }
 
 #Determine if a library can be compiled statically.  
@@ -259,6 +263,24 @@ if [ option.get "sanity-test" : : "yes" ] {
   } else {
     EXIT "Bad" : 1 ;
   }
+}
+
+#Hack to act like alias in the sense that no lib is built, but only build cpp files once.  
+import type ;
+rule fakelib ( name : deps * : requirements * : default-build * : usage-requirements * ) {
+  local c-files = ;
+  local real-deps = ;
+  for local c in $(deps) {
+    if [ type.type $(c) ] = CPP {
+      c-files += $(c) ;
+    } else {
+      real-deps += $(c) ;
+    }
+  }
+  for local c in $(c-files) {
+    obj $(c:B).o : $(c) $(real-deps) : $(requirements) : $(default-build) : $(usage_requirements) ;
+  }
+  alias $(name) : $(c-files:B).o $(real-deps) : $(requirements) : $(default-build) : $(usage-requirements) ;
 }
 
 use-project /top : . ;
