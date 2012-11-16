@@ -82,14 +82,14 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
 
             PhraseDictionaryMemory* pdm = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm->SetNumScoreComponentMultiModel(numPtScores); //instead of complaining about inequal number of scores, silently fill up the score vector with zeroes
-            pdm->Load( input, output, file, weight, m_componentTableLimit, languageModels, weightWP);
+            pdm->Load( input, output, file, m_weight, m_componentTableLimit, languageModels, m_weightWP);
             m_pd.push_back(pdm);
       }
       else if (implementation == Compact) {
 #ifndef WIN32
             PhraseDictionaryCompact* pdc = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc->SetNumScoreComponentMultiModel(m_numScoreComponent); //for compact models, we need to pass number of log-linear components to correctly resize the score vector
-            pdc->Load( input, output, file, weight, m_componentTableLimit, languageModels, weightWP);
+            pdc->Load( input, output, file, m_weight, m_componentTableLimit, languageModels, m_weightWP);
             m_pd.push_back(pdc);
 #else
             CHECK(false);

@@ -117,24 +117,24 @@ bool PhraseDictionaryMultiModelCounts::Load(const vector<FactorType> &input
 
             PhraseDictionaryMemory* pdm = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm->SetNumScoreComponentMultiModel(numScoresCounts); //instead of complaining about inequal number of scores, silently fill up the score vector with zeroes
-            pdm->Load( input, output, main_table, weight, componentTableLimit, languageModels, weightWP);
+            pdm->Load( input, output, main_table, m_weight, componentTableLimit, languageModels, m_weightWP);
             m_pd.push_back(pdm);
 
             PhraseDictionaryMemory* pdm_inverse = new PhraseDictionaryMemory(m_numScoreComponent, m_feature_load);
             pdm_inverse->SetNumScoreComponentMultiModel(numScoresTargetCounts);
-            pdm_inverse->Load( input, output, target_table, weight, componentTableLimit, languageModels, weightWP);
+            pdm_inverse->Load( input, output, target_table, m_weight, componentTableLimit, languageModels, m_weightWP);
             m_inverse_pd.push_back(pdm_inverse);
       }
       else if (implementation == Compact) {
 #ifndef WIN32
             PhraseDictionaryCompact* pdc = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc->SetNumScoreComponentMultiModel(m_numScoreComponent); //for compact models, we need to pass number of log-linear components to correctly resize the score vector
-            pdc->Load( input, output, main_table, weight, componentTableLimit, languageModels, weightWP);
+            pdc->Load( input, output, main_table, m_weight, componentTableLimit, languageModels, m_weightWP);
             m_pd.push_back(pdc);
 
             PhraseDictionaryCompact* pdc_inverse = new PhraseDictionaryCompact(m_numScoreComponent, implementation, m_feature_load);
             pdc_inverse->SetNumScoreComponentMultiModel(m_numScoreComponent);
-            pdc_inverse->Load( input, output, target_table, weight, componentTableLimit, languageModels, weightWP);
+            pdc_inverse->Load( input, output, target_table, m_weight, componentTableLimit, languageModels, m_weightWP);
             m_inverse_pd.push_back(pdc_inverse);
 #else
             CHECK(false);
@@ -243,7 +243,7 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
     multiModelCountsStatistics * statistics = iter->second;
 
     if (statistics->targetPhrase->GetAlignTerm().GetSize() == 0) {
-        UserMessage::Add("models need to include alignment information for computation of lexical weights.\nUse --phrase-word-alignment during training; for on-disk tables, also set -alignment-info when creating on-disk tables, and -use-alignment-info during decoding.");
+        UserMessage::Add(" alignment information empty\ncount-tables need to include alignment information for computation of lexical weights.\nUse --phrase-word-alignment during training; for on-disk tables, also set -alignment-info when creating on-disk tables.");
         CHECK(false);
     }
 

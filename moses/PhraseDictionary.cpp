@@ -266,6 +266,8 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
       CHECK(false);
     }
 
+    (const_cast<StaticData&>(staticData)).SetNeedAlignmentInfo(true); //needed for lexical weight computation
+
     PhraseDictionaryMultiModelCounts* pd  = new PhraseDictionaryMultiModelCounts(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
                          , m_allPaths

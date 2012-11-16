@@ -749,6 +749,9 @@ public:
 #endif
   }
 
+  void SetNeedAlignmentInfo(bool needAlignmentInfo) {
+      m_needAlignmentInfo = needAlignmentInfo;
+  }
   bool NeedAlignmentInfo() const {
     return m_needAlignmentInfo; }
   const std::string &GetAlignmentOutputFile() const {
