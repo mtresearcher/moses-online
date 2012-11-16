@@ -697,6 +697,7 @@ void PhraseTableCreator::EncodeAlignment(std::set<AlignPoint>& alignment,
   for(std::set<AlignPoint>::iterator it = alignment.begin();
     it != alignment.end(); it++)
   {
+      std::cerr << "x" << it->first << it->second << std::endl;
     os.write((char*)&(*it), sizeof(AlignPoint));
     m_alignCounter.Increase(*it);
   }
@@ -711,6 +712,8 @@ std::string PhraseTableCreator::EncodeLine(std::vector<std::string>& tokens, siz
   std::string targetPhraseStr = tokens[1];
   std::string scoresStr = tokens[2];
   
+  std::cerr << "a" << sourcePhraseStr << std::endl;
+  std::cerr << "b" << targetPhraseStr << std::endl;
   std::string alignmentStr = "";
   if(tokens.size() > 3)
     alignmentStr = tokens[3];
@@ -735,10 +738,14 @@ std::string PhraseTableCreator::EncodeLine(std::vector<std::string>& tokens, siz
   if(m_coding != None || m_useAlignmentInfo)
   {
     std::vector<size_t> positions = Tokenize<size_t>(alignmentStr, " \t-");
+    std::cerr << "alignment: " << alignmentStr << std::endl;
+    std::cerr << "positions: " << positions.size() << std::endl;
     for(size_t i = 0; i < positions.size(); i += 2)
     {
+      std::cerr << "x " << positions[i] << positions[i+1] << std::endl;
       a.insert(AlignPoint(positions[i], positions[i+1]));
     }
+    std::cerr << "alignments 1: " << a.size() << std::endl;
   }
   
   std::stringstream encodedTargetPhrase;
@@ -759,6 +766,7 @@ std::string PhraseTableCreator::EncodeLine(std::vector<std::string>& tokens, siz
   EncodeScores(scores, encodedTargetPhrase);
   
   if(m_useAlignmentInfo)
+    std::cerr << "alignments 2: " << a.size() << std::endl;
     EncodeAlignment(a, encodedTargetPhrase);
   
   return encodedTargetPhrase.str();
