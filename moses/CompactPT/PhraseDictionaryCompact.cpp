@@ -51,22 +51,31 @@ bool PhraseDictionaryCompact::Load(const std::vector<FactorType> &input
 {
   m_input = &input;
   m_output = &output;
-  m_weight = &weight;
+  m_weight = new std::vector<float>(weight);
   m_tableLimit = tableLimit;
   m_languageModels = &languageModels; 
   m_weightWP = weightWP;
  
   std::string tFilePath = filePath;
- 
-  if(!FileExists(tFilePath))
+  
+  std::string suffix = ".minphr";
+  if(tFilePath.substr(tFilePath.length() - suffix.length(), suffix.length()) == suffix)
   {
-    if(FileExists(tFilePath + ".minphr"))
+    if(!FileExists(tFilePath))
     {
-      tFilePath += ".minphr";
+      std::cerr << "Error: File " << tFilePath << " does not exit." << std::endl;
+      exit(1);
+    }
+  }
+  else 
+  {
+    if(FileExists(tFilePath + suffix))
+    {
+      tFilePath += suffix;
     }
     else
     {
-       std::cerr << "Error: File " + tFilePath + "(.minphr) does not exit." << std::endl;
+       std::cerr << "Error: File " << tFilePath << ".minphr does not exit." << std::endl;
        exit(1);
     }
   }
@@ -152,6 +161,8 @@ PhraseDictionaryCompact::GetTargetPhraseCollectionRaw(const Phrase &sourcePhrase
 PhraseDictionaryCompact::~PhraseDictionaryCompact() {
   if(m_phraseDecoder)
     delete m_phraseDecoder;
+  if(m_weight)
+    delete m_weight;
 }
 
 //TO_STRING_BODY(PhraseDictionaryCompact)
