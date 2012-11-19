@@ -60,7 +60,7 @@ class PhraseDictionary: public Dictionary
 {
 public:
   PhraseDictionary(size_t numScoreComponent, const PhraseDictionaryFeature* feature):
-    Dictionary(numScoreComponent), m_tableLimit(0), m_feature(feature) {}
+    Dictionary(numScoreComponent), m_tableLimit(0), m_feature(feature), m_numScoreComponentMultiModel(0) {}
   //! table limit number.
   size_t GetTableLimit() const {
     return m_tableLimit;
