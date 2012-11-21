@@ -76,6 +76,7 @@ public:
   std::vector<float> normalizeWeights(std::vector<float> &weights) const;
   void CacheForCleanup(TargetPhraseCollection* tpc);
   void CleanUp(const InputType &source);
+  virtual void CleanUpComponentModels(const InputType &source);
 #ifdef WITH_DLIB
   virtual std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
   std::vector<float> Optimize(OptimizationObjective * ObjectiveFunction, size_t numModels);

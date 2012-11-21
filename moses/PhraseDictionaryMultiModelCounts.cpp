@@ -476,6 +476,15 @@ void PhraseDictionaryMultiModelCounts::LoadLexicalTable( string &fileName, lexic
 
 }
 
+
+void  PhraseDictionaryMultiModelCounts::CleanUpComponentModels(const InputType &source)  {
+  for(size_t i = 0; i < m_numModels; ++i){
+    m_pd[i]->CleanUp(source);
+    m_inverse_pd[i]->CleanUp(source);
+  }
+}
+
+
 #ifdef WITH_DLIB
 vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<string, string> > &phrase_pair_vector) {
 

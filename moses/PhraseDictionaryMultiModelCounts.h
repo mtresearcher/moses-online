@@ -104,6 +104,7 @@ public:
   void FillLexicalCountsMarginal(std::string &wordS, std::vector<float> &count, const std::vector<lexicalTable*> &tables) const;
   void LoadLexicalTable( std::string &fileName, lexicalTable* ltable);
   const TargetPhraseCollection* GetTargetPhraseCollection(const Phrase& src) const;
+  void CleanUpComponentModels(const InputType &source);
 #ifdef WITH_DLIB
   std::vector<float> MinimizePerplexity(std::vector<std::pair<std::string, std::string> > &phrase_pair_vector);
 #endif

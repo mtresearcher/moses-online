@@ -309,10 +309,20 @@ void PhraseDictionaryMultiModel::CleanUp(const InputType &source) {
   PhraseCache temp;
   temp.swap(ref);
 
+  CleanUpComponentModels(source);
+
   const StaticData &staticData = StaticData::Instance();
   std::vector<float> empty_vector;
   (const_cast<StaticData&>(staticData)).SetTemporaryMultiModelWeightsVector(empty_vector);
 }
+
+
+void  PhraseDictionaryMultiModel::CleanUpComponentModels(const InputType &source) {
+  for(size_t i = 0; i < m_numModels; ++i){
+    m_pd[i]->CleanUp(source);
+  }
+}
+
 
 #ifdef WITH_DLIB
 vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string, string> > &phrase_pair_vector) {
