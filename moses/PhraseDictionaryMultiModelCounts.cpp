@@ -247,20 +247,25 @@ TargetPhraseCollection* PhraseDictionaryMultiModelCounts::CreateTargetPhraseColl
         CHECK(false);
     }
 
-    pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(src, static_cast<const Phrase&>(*statistics->targetPhrase), statistics->targetPhrase->GetAlignTerm());
-    vector< set<size_t> > alignedToT = alignment.first;
-    vector< set<size_t> > alignedToS = alignment.second;
-    double lexst = ComputeWeightedLexicalTranslation(static_cast<const Phrase&>(*statistics->targetPhrase), src, alignedToS, m_lexTable_e2f, multimodelweights[1], m_output, m_input );
-    double lexts = ComputeWeightedLexicalTranslation(src, static_cast<const Phrase&>(*statistics->targetPhrase), alignedToT, m_lexTable_f2e, multimodelweights[3], m_input, m_output );
+    try {
+        pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(src, static_cast<const Phrase&>(*statistics->targetPhrase), statistics->targetPhrase->GetAlignTerm());
+        vector< set<size_t> > alignedToT = alignment.first;
+        vector< set<size_t> > alignedToS = alignment.second;
+        double lexst = ComputeWeightedLexicalTranslation(static_cast<const Phrase&>(*statistics->targetPhrase), src, alignedToS, m_lexTable_e2f, multimodelweights[1], m_output, m_input );
+        double lexts = ComputeWeightedLexicalTranslation(src, static_cast<const Phrase&>(*statistics->targetPhrase), alignedToT, m_lexTable_f2e, multimodelweights[3], m_input, m_output );
 
-    Scores scoreVector(5);
-    scoreVector[0] = FloorScore(TransformScore(m_combineFunction(statistics->fst, statistics->ft, multimodelweights[0])));
-    scoreVector[1] = FloorScore(TransformScore(lexst));
-    scoreVector[2] = FloorScore(TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[2])));
-    scoreVector[3] = FloorScore(TransformScore(lexts));
-    scoreVector[4] = FloorScore(TransformScore(2.718));
+        Scores scoreVector(5);
+        scoreVector[0] = FloorScore(TransformScore(m_combineFunction(statistics->fst, statistics->ft, multimodelweights[0])));
+        scoreVector[1] = FloorScore(TransformScore(lexst));
+        scoreVector[2] = FloorScore(TransformScore(m_combineFunction(statistics->fst, fs, multimodelweights[2])));
+        scoreVector[3] = FloorScore(TransformScore(lexts));
+        scoreVector[4] = FloorScore(TransformScore(2.718));
 
-    statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
+        statistics->targetPhrase->SetScore(m_feature, scoreVector, ScoreComponentCollection(), m_weight, m_weightWP, *m_languageModels);
+    }
+    catch (AlignmentException& e) {
+        continue;
+    }
 
     ret->Add(new TargetPhrase(*statistics->targetPhrase));
   }
@@ -288,14 +293,21 @@ float PhraseDictionaryMultiModelCounts::GetTargetCount(const Phrase &target, siz
 
 pair<PhraseDictionaryMultiModelCounts::AlignVector,PhraseDictionaryMultiModelCounts::AlignVector> PhraseDictionaryMultiModelCounts::GetAlignmentsForLexWeights(const Phrase &phraseS, const Phrase &phraseT, const AlignmentInfo &alignment) const {
 
-    AlignVector alignedToT (phraseT.GetSize());
-    AlignVector alignedToS (phraseS.GetSize());
+    size_t tsize = phraseT.GetSize();
+    size_t ssize = phraseS.GetSize();
+    AlignVector alignedToT (tsize);
+    AlignVector alignedToS (ssize);
     AlignmentInfo::const_iterator iter;
 
     for (iter = alignment.begin(); iter != alignment.end(); ++iter) {
     const pair<size_t,size_t> &alignPair = *iter;
         size_t s = alignPair.first;
         size_t t = alignPair.second;
+        if (s >= ssize || t >= tsize) {
+            cerr << "Error: inconsistent alignment for phrase pair: " << phraseS << " - " << phraseT << endl;
+            cerr << "phrase pair will be discarded" << endl;
+            throw AlignmentException();
+        }
         alignedToT[t].insert( s );
         alignedToS[s].insert( t );
   }
@@ -506,14 +518,18 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         targetStatistics->ft = (*allStats)[target_string]->ft;
         targetStatistics->f = iter->second;
 
-        pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
-        targetStatistics->lexCachee2f = CacheLexicalStatistics(static_cast<const Phrase&>(*targetStatistics->targetPhrase), sourcePhrase, alignment.second, m_lexTable_e2f, m_output, m_input );
-        targetStatistics->lexCachef2e = CacheLexicalStatistics(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), alignment.first, m_lexTable_f2e, m_input, m_output );
+        try {
+            pair<vector< set<size_t> >, vector< set<size_t> > > alignment = GetAlignmentsForLexWeights(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), targetStatistics->targetPhrase->GetAlignTerm());
+            targetStatistics->lexCachee2f = CacheLexicalStatistics(static_cast<const Phrase&>(*targetStatistics->targetPhrase), sourcePhrase, alignment.second, m_lexTable_e2f, m_output, m_input );
+            targetStatistics->lexCachef2e = CacheLexicalStatistics(sourcePhrase, static_cast<const Phrase&>(*targetStatistics->targetPhrase), alignment.first, m_lexTable_f2e, m_input, m_output );
 
-        optimizerStats.push_back(targetStatistics);
+            optimizerStats.push_back(targetStatistics);
+        }
+        catch (AlignmentException& e) {}
+
         RemoveAllInMap(*allStats);
         delete allStats;
-        }
+    }
 
     vector<float> ret (m_numModels*4);
     for (size_t iFeature=0; iFeature < 4; iFeature++) {

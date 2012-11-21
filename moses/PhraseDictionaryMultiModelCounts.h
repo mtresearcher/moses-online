@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "TargetPhrase.h"
 #include "Util.h"
 #include "UserMessage.h"
+#include <exception>
 
 extern std::vector<std::string> tokenize( const char*);
 
@@ -60,6 +61,14 @@ namespace Moses
 
   double InstanceWeighting(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
   double LinearInterpolationFromCounts(std::vector<float> &joint_counts, std::vector<float> &marginals, std::vector<float> &multimodelweights);
+
+
+//thrown if alignment information does not match phrase pair (out-of-bound alignment points)
+class AlignmentException : public std::runtime_error {
+public:
+  AlignmentException() : std::runtime_error("AlignmentException") { }
+};
+
 
 /** Implementation of a phrase table with raw counts.
  */
