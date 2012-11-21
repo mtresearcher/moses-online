@@ -369,6 +369,9 @@ vector<float> PhraseDictionaryMultiModel::MinimizePerplexity(vector<pair<string,
         delete allStats;
         }
 
+    Sentence sentence;
+    CleanUp(sentence); // free memory used by compact phrase tables
+
     size_t numWeights = m_numScoreComponent;
     if (m_mode == "interpolate") {
         //interpolation of phrase penalty is skipped, and fixed-value (2.718) is used instead. results will be screwed up if phrase penalty is not last feature

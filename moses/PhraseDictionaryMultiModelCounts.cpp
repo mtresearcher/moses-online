@@ -540,6 +540,9 @@ vector<float> PhraseDictionaryMultiModelCounts::MinimizePerplexity(vector<pair<s
         delete allStats;
     }
 
+    Sentence sentence;
+    CleanUp(sentence); // free memory used by compact phrase tables
+
     vector<float> ret (m_numModels*4);
     for (size_t iFeature=0; iFeature < 4; iFeature++) {
 
