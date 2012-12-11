@@ -622,7 +622,12 @@ double InstanceWeighting(vector<float> &joint_counts, vector<float> &marginals, 
     double joint_counts_weighted =  inner_product(joint_counts.begin(), joint_counts.end(), multimodelweights.begin(), 0.0);
     double marginals_weighted = inner_product(marginals.begin(), marginals.end(), multimodelweights.begin(), 0.0);
 
-    return joint_counts_weighted/marginals_weighted;
+    if (marginals_weighted == 0) {
+        return 0;
+    }
+    else {
+        return joint_counts_weighted/marginals_weighted;
+    }
 }
 
 
