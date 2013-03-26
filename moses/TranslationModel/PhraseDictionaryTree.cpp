@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <list>
 
 
 namespace Moses
@@ -171,19 +172,22 @@ public:
   WordVoc sv;
   WordVoc tv;
 
-  ObjectPool<PPimp> pPool;
+  std::list<PPimp*> *pPool;
+  //ObjectPool<PPimp> pPool;
   // a comparison with the Boost MemPools might be useful
 
   bool needwordalign, haswordAlign;
   bool printwordalign;
 
   PDTimp() : os(0),ot(0), printwordalign(false) {
+	pPool = new std::list<PPimp*>;
     PTF::setDefault(InvalidOffT);
   }
   ~PDTimp() {
     if(os) fClose(os);
     if(ot) fClose(ot);
     FreeMemory();
+    delete pPool;
   }
 
   inline void NeedAlignmentInfo(bool a) {
@@ -208,7 +212,15 @@ public:
 
   void FreeMemory() {
     for(Data::iterator i=data.begin(); i!=data.end(); ++i) (*i).free();
-    pPool.reset();
+
+    std::list<PPimp*>::iterator iter;
+    for (iter = pPool->begin(); iter != pPool->end(); ++iter) {
+      PPimp *obj = *iter;
+      delete obj;
+    }
+    delete pPool;
+
+    pPool = new std::list<PPimp*>;
   }
 
   int Read(const std::string& fn);
@@ -266,7 +278,9 @@ public:
   }
 
   PPtr GetRoot() {
-    return PPtr(pPool.get(PPimp(0,0,1)));
+    PPimp *obj = new PPimp(0,0,1);
+    pPool->push_back(obj);
+    return PPtr(obj);
   }
 
   PPtr Extend(PPtr p,const std::string& w) {
@@ -280,10 +294,14 @@ public:
       if(wi<data.size() && data[wi]) {
         const void* ptr = data[wi]->findKeyPtr(wi);
         CHECK(ptr);
-        return PPtr(pPool.get(PPimp(data[wi],data[wi]->findKey(wi),0)));
+        PPimp *obj = new PPimp(data[wi],data[wi]->findKey(wi),0);
+        pPool->push_back(obj);
+        return PPtr(obj);
       }
     } else if(PTF const* nextP=p.imp->ptr()->getPtr(p.imp->idx)) {
-      return PPtr(pPool.get(PPimp(nextP,nextP->findKey(wi),0)));
+      PPimp *obj = new PPimp(PPimp(nextP,nextP->findKey(wi),0));
+      pPool->push_back(obj);
+      return PPtr(obj);
     }
 
     return PPtr();
