@@ -63,6 +63,23 @@ void Candidates::readBin(FILE* f)
 const LabelId PrefixTreeMap::MagicWord = std::numeric_limits<LabelId>::max() - 1;
 
 
+PrefixTreeMap::~PrefixTreeMap() {
+  if(m_FileSrc) {
+    fClose(m_FileSrc);
+  }
+  if(m_FileTgt) {
+    fClose(m_FileTgt);
+  }
+  FreeMemory();
+
+  std::map<std::string,WordVoc*>::const_iterator iter;
+  for (iter = vocs.begin(); iter != vocs.end(); ++iter) {
+	const WordVoc *voc = iter->second;
+	delete voc;
+  }
+  vocs.clear();
+}
+
 void PrefixTreeMap::FreeMemory()
 {
   for(Data::iterator i = m_Data.begin(); i != m_Data.end(); ++i) {
@@ -75,9 +92,8 @@ void PrefixTreeMap::FreeMemory()
   m_PtrPool.reset();
 }
 
-static WordVoc* ReadVoc(const std::string& filename)
+WordVoc* PrefixTreeMap::ReadVoc(const std::string& filename)
 {
-  static std::map<std::string,WordVoc*> vocs;
 #ifdef WITH_THREADS
   boost::mutex mutex;
   boost::mutex::scoped_lock lock(mutex);
