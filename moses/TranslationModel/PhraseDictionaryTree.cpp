@@ -173,7 +173,6 @@ public:
   WordVoc tv;
 
   std::list<PPimp*> *pPool;
-  //ObjectPool<PPimp> pPool;
   // a comparison with the Boost MemPools might be useful
 
   bool needwordalign, haswordAlign;

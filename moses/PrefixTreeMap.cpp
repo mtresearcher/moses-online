@@ -62,6 +62,13 @@ void Candidates::readBin(FILE* f)
 
 const LabelId PrefixTreeMap::MagicWord = std::numeric_limits<LabelId>::max() - 1;
 
+PrefixTreeMap::PrefixTreeMap()
+: m_FileSrc(0)
+, m_FileTgt(0)
+{
+  pPool = new std::list<PPimp*>;
+  PTF::setDefault(InvalidOffT);
+}
 
 PrefixTreeMap::~PrefixTreeMap() {
   if(m_FileSrc) {
@@ -71,6 +78,7 @@ PrefixTreeMap::~PrefixTreeMap() {
     fClose(m_FileTgt);
   }
   FreeMemory();
+  delete pPool;
 
   std::map<std::string,WordVoc*>::const_iterator iter;
   for (iter = vocs.begin(); iter != vocs.end(); ++iter) {
@@ -85,11 +93,15 @@ void PrefixTreeMap::FreeMemory()
   for(Data::iterator i = m_Data.begin(); i != m_Data.end(); ++i) {
     i->free();
   }
-  /*for(size_t i = 0; i < m_Voc.size(); ++i){
-  delete m_Voc[i];
-  m_Voc[i] = 0;
-  }*/
-  m_PtrPool.reset();
+
+  std::list<PPimp*>::iterator iter;
+  for (iter = pPool->begin(); iter != pPool->end(); ++iter) {
+    PPimp *obj = *iter;
+    delete obj;
+  }
+  delete pPool;
+
+  pPool = new std::list<PPimp*>;
 }
 
 WordVoc* PrefixTreeMap::ReadVoc(const std::string& filename)
@@ -229,7 +241,9 @@ std::string PrefixTreeMap::ConvertWord(LabelId w, unsigned int voc) const
 
 PPimp* PrefixTreeMap::GetRoot()
 {
-  return m_PtrPool.get(PPimp(0,0,1));
+  PPimp *obj = new PPimp(0,0,1);
+  pPool->push_back(obj);
+  return obj;
 }
 
 PPimp* PrefixTreeMap::Extend(PPimp* p, LabelId wi)
@@ -243,10 +257,14 @@ PPimp* PrefixTreeMap::Extend(PPimp* p, LabelId wi)
     if(wi < m_Data.size() && m_Data[wi]) {
       const void* ptr = m_Data[wi]->findKeyPtr(wi);
       CHECK(ptr);
-      return m_PtrPool.get(PPimp(m_Data[wi],m_Data[wi]->findKey(wi),0));
+      PPimp *obj = new PPimp(m_Data[wi],m_Data[wi]->findKey(wi),0);
+      pPool->push_back(obj);
+      return obj;
     }
   } else if(PTF const* nextP = p->ptr()->getPtr(p->idx)) {
-    return m_PtrPool.get(PPimp(nextP, nextP->findKey(wi),0));
+	PPimp *obj = new PPimp(nextP, nextP->findKey(wi),0);
+	pPool->push_back(obj);
+	return obj;
   }
   return 0; // should never get here, return invalid pointer
 

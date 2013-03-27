@@ -96,9 +96,7 @@ public:
 class PrefixTreeMap
 {
 public:
-  PrefixTreeMap() : m_FileSrc(0), m_FileTgt(0) {
-    PTF::setDefault(InvalidOffT);
-  }
+  PrefixTreeMap();
   ~PrefixTreeMap();
 
 public:
@@ -126,10 +124,10 @@ private:
   FILE* m_FileSrc;
   FILE* m_FileTgt;
 
-  std::vector<WordVoc*> m_Voc;
-  ObjectPool<PPimp>     m_PtrPool;
-
   std::map<std::string,WordVoc*> vocs;
+  std::vector<WordVoc*> m_Voc;
+
+  std::list<PPimp*> *pPool;
 
   WordVoc* ReadVoc(const std::string& filename);
 };
