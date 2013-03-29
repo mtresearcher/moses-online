@@ -124,8 +124,18 @@ public:
     // execute the translation
     // note: this executes the search, resulting in a search graph
     //       we still need to apply the decision rule (MAP, MBR, ...)
+    cerr << "HIEU 2.1.1 :";
+	  util::PrintUsage(std::cerr);
+
     Manager manager(m_lineNumber, *m_source,staticData.GetSearchAlgorithm(), &system);
+
+    cerr << "HIEU 2.1.2 :";
+	  util::PrintUsage(std::cerr);
+
     manager.ProcessSentence();
+
+    cerr << "HIEU 2.1.3 :";
+	  util::PrintUsage(std::cerr);
 
     // output word graph
     if (m_wordGraphCollector) {
@@ -708,10 +718,16 @@ int main(int argc, char** argv)
     ThreadPool pool(staticData.ThreadCount());
 #endif
   
+    cerr << "HIEU BEFORE ENTERING LOOP :";
+    util::PrintUsage(std::cerr);
+
     // main loop over set of input sentences
     InputType* source = NULL;
     size_t lineCount = staticData.GetStartTranslationId();
     while(ReadInput(*ioWrapper,staticData.GetInputType(),source)) {
+    	cerr << "HIEU 1 " << lineCount << ":";
+    	util::PrintUsage(std::cerr);
+
       IFVERBOSE(1) {
         ResetUserTime();
       }
@@ -727,14 +743,31 @@ int main(int argc, char** argv)
                             unknownsCollector.get(),
 			    staticData.GetOutputSearchGraphSLF(),
 			    staticData.GetOutputSearchGraphHypergraph());
+
+      cerr << "HIEU 2 " << lineCount << ":";
+  	  util::PrintUsage(std::cerr);
+
       // execute task
 #ifdef WITH_THREADS
     pool.Submit(task);
 #else
-      task->Run();
+      cerr << "HIEU 2.1 " << lineCount << ":";
+	  util::PrintUsage(std::cerr);
+
+	  task->Run();
+
+      cerr << "HIEU 2.2 " << lineCount << ":";
+  	  util::PrintUsage(std::cerr);
+
       delete task;
+
+      cerr << "HIEU 2.3 " << lineCount << ":";
+  	  util::PrintUsage(std::cerr);
+
 #endif
-  
+      cerr << "HIEU 3 " << lineCount << ":";
+      util::PrintUsage(std::cerr);
+
       source = NULL; //make sure it doesn't get deleted
       ++lineCount;
     }

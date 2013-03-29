@@ -645,9 +645,7 @@ public:
     return m_outputSearchGraphPB;
   }
 #endif
-  const std::string& GetOutputUnknownsFile() const {
-    return m_outputUnknownsFile;
-  }
+  const std::string& GetOutputUnknownsFile() const;
 
   bool GetUnprunedSearchGraph() const {
     return m_unprunedSearchGraph;

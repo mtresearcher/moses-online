@@ -42,6 +42,8 @@ void PrintUsage(std::ostream &out) {
       break;
     } else if (!strncmp(line.c_str(), "VmPeak:\t", 8)) {
       out << "VmPeak: " << (line.c_str() + 8) << '\n';
+    } else if (!strncmp(line.c_str(), "VmSize:\t", 8)) {
+      out << "VmSize: " << (line.c_str() + 8) << '\n';
     }
   }
 #endif

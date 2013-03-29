@@ -66,6 +66,21 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.656913512.887027901" name="FuzzyMatchWrapper.cpp" rcbsApplicability="disable" resourcePath="TranslationModel/fuzzy-match/FuzzyMatchWrapper.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1774992327.552467219">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1774992327.552467219" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1774992327">
+							<option id="gnu.cpp.compiler.option.preprocessor.def.1779791325" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+								<listOptionValue builtIn="false" value="IS_ECLIPSE"/>
+								<listOptionValue builtIn="false" value="HAVE_BOOST"/>
+								<listOptionValue builtIn="false" value="MAX_NUM_FACTORS=4"/>
+								<listOptionValue builtIn="false" value="KENLM_MAX_ORDER=7"/>
+								<listOptionValue builtIn="false" value="TRACE_ENABLE"/>
+								<listOptionValue builtIn="false" value="LM_IRST"/>
+								<listOptionValue builtIn="false" value="_FILE_OFFSET_BIT=64"/>
+								<listOptionValue builtIn="false" value="_LARGE_FILES"/>
+							</option>
+							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.980040005" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+						</tool>
+					</fileInfo>
 					<sourceEntries>
 						<entry excluding="LM/ParallelBackoff.h|LM/ParallelBackoff.cpp|LM/SRI.h|LM/SRI.cpp|src/SyntacticLanguageModelState.h|src/SyntacticLanguageModelFiles.h|src/SyntacticLanguageModel.h|src/SyntacticLanguageModel.cpp|src/LM/SRI.h|src/LM/SRI.cpp|src/LM/Rand.h|src/LM/Rand.cpp|src/LM/LDHT.h|src/LM/LDHT.cpp|SyntacticLanguageModelState.h|SyntacticLanguageModelFiles.h|SyntacticLanguageModel.h|SyntacticLanguageModel.cpp|LM/Rand.h|LM/Rand.cpp|LM/LDHT.h|LM/LDHT.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>

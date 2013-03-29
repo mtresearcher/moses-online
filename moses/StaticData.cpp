@@ -2111,6 +2111,11 @@ const string &StaticData::GetBinDirectory() const
   return m_binPath;
 }
 
+const std::string& StaticData::GetOutputUnknownsFile() const {
+	  std::cerr << m_outputUnknownsFile << std::endl;
+  return m_outputUnknownsFile;
+}
+
 }
 
 
