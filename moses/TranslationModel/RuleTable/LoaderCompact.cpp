@@ -169,8 +169,8 @@ void RuleTableLoaderCompact::LoadAlignmentSection(
     	}
 
     }
-    alignmentSets[i*2] = AlignmentInfoCollection::Instance().Add(alignNonTerm);
-    alignmentSets[i*2 + 1] = AlignmentInfoCollection::Instance().Add(alignTerm);
+    alignmentSets[i*2] = &AlignmentInfoCollection::Instance().Add(alignNonTerm);
+    alignmentSets[i*2 + 1] = &AlignmentInfoCollection::Instance().Add(alignTerm);
   }
 }
 

@@ -311,15 +311,15 @@ void TargetPhrase::SetAlignmentInfo(const StringPiece &alignString)
 
 void TargetPhrase::SetAlignTerm(const AlignmentInfo::CollType &coll)
 {
-	const AlignmentInfo *alignmentInfo = AlignmentInfoCollection::Instance().Add(coll);
-	m_alignTerm = alignmentInfo;
+	const AlignmentInfo &alignmentInfo = AlignmentInfoCollection::Instance().Add(coll);
+	m_alignTerm = &alignmentInfo;
 
 }
 
 void TargetPhrase::SetAlignNonTerm(const AlignmentInfo::CollType &coll)
 {
-	const AlignmentInfo *alignmentInfo = AlignmentInfoCollection::Instance().Add(coll);
-	m_alignNonTerm = alignmentInfo;
+	const AlignmentInfo &alignmentInfo = AlignmentInfoCollection::Instance().Add(coll);
+	m_alignNonTerm = &alignmentInfo;
 }
 
 TO_STRING_BODY(TargetPhrase);
