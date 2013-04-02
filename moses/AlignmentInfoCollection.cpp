@@ -41,7 +41,8 @@ const AlignmentInfo &AlignmentInfoCollection::GetEmptyAlignmentInfo() const
 const AlignmentInfo &AlignmentInfoCollection::Add(
     const std::set<std::pair<size_t,size_t> > &pairs)
 {
-
+  return *m_emptyAlignmentInfo;
+ /*
   AlignmentInfo pairsAlignmentInfo(pairs);
 #ifdef WITH_THREADS
   {
@@ -55,7 +56,7 @@ const AlignmentInfo &AlignmentInfoCollection::Add(
   std::pair<AlignmentInfoSet::iterator, bool> ret =
     m_collection.insert(pairsAlignmentInfo);
   return *ret.first;
-
+*/
 }
 
 

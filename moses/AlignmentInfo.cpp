@@ -26,9 +26,9 @@
 namespace Moses
 {
 AlignmentInfo::AlignmentInfo(const std::set<std::pair<size_t,size_t> > &pairs)
-  : m_collection(pairs)
+//  : m_collection(pairs)
 {
-  BuildNonTermIndexMap();
+//  BuildNonTermIndexMap();
 }
 
 void AlignmentInfo::BuildNonTermIndexMap()
