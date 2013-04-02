@@ -53,6 +53,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "moses/Timer.h"
 #include "moses/ThreadPool.h"
 #include "moses/OutputCollector.h"
+#include "moses/AlignmentInfoCollection.h"
 
 #ifdef HAVE_PROTOBUF
 #include "hypergraph.pb.h"
@@ -136,6 +137,8 @@ public:
 
     cerr << "HIEU 2.1.3 :";
 	  util::PrintUsage(std::cerr);
+
+  	cerr << "align coll size=" << AlignmentInfoCollection::Instance().GetSize() << endl;
 
     // output word graph
     if (m_wordGraphCollector) {

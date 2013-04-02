@@ -45,10 +45,13 @@ class AlignmentInfoCollection
     * contains such an object then returns a pointer to it; otherwise a new
     * one is inserted.
    */
-  const AlignmentInfo *Add(const std::set<std::pair<size_t,size_t> > &);
+  const AlignmentInfo &Add(const std::set<std::pair<size_t,size_t> > &);
 
   //! Returns a pointer to an empty AlignmentInfo object.
   const AlignmentInfo &GetEmptyAlignmentInfo() const;
+
+  size_t GetSize() const
+  { return m_collection.size(); }
 
  private:
   typedef std::set<AlignmentInfo, AlignmentInfoOrderer> AlignmentInfoSet;

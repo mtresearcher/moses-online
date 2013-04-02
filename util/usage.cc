@@ -31,21 +31,23 @@ void PrintUsage(std::ostream &out) {
     perror("getrusage");
     return;
   }
-  out << "user\t" << FloatSec(usage.ru_utime) << "\nsys\t" << FloatSec(usage.ru_stime) << '\n';
+  out << "user:" << FloatSec(usage.ru_utime) << " sys:" << FloatSec(usage.ru_stime) << ' ';
 
   // Linux doesn't set memory usage :-(.  
   std::ifstream status("/proc/self/status", std::ios::in);
   std::string line;
   while (getline(status, line)) {
     if (!strncmp(line.c_str(), "VmRSS:\t", 7)) {
-      out << "VmRSS:  " << (line.c_str() + 7) << '\n';
+      out << "VmRSS:" << (line.c_str() + 7) << ' ';
       break;
     } else if (!strncmp(line.c_str(), "VmPeak:\t", 8)) {
-      out << "VmPeak: " << (line.c_str() + 8) << '\n';
+      out << "VmPeak:" << (line.c_str() + 8) << ' ';
     } else if (!strncmp(line.c_str(), "VmSize:\t", 8)) {
-      out << "VmSize: " << (line.c_str() + 8) << '\n';
+      out << "VmSize:" << (line.c_str() + 8) << ' ';
     }
   }
+
+  out << std::endl;
 #endif
 }
 
