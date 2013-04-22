@@ -28,7 +28,6 @@ PhraseDictionaryMultiModel::PhraseDictionaryMultiModel(size_t numScoreComponent,
     PhraseDictionaryFeature* feature): PhraseDictionary(numScoreComponent, feature)
 {
     m_feature_load = feature;
-    m_mode = "interpolate"; //TODO: set this in config
 }
 
 PhraseDictionaryMultiModel::~PhraseDictionaryMultiModel()
@@ -38,7 +37,7 @@ PhraseDictionaryMultiModel::~PhraseDictionaryMultiModel()
 
 bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
                                   , const std::vector<FactorType> &output
-                                  , const std::vector<std::string> &files
+                                  , const std::vector<std::string> &config
                                   , const vector<float> &weight
                                   , size_t tableLimit
                                   , const LMList &languageModels
@@ -50,6 +49,10 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
   m_input = input;
   m_output = output;
   m_tableLimit = tableLimit;
+
+  m_mode = config[4];
+  std::vector<std::string> files(config.begin()+5,config.end());
+
   m_numModels = files.size();
 
   // since the top X target phrases of the final model are not the same as the top X phrases of each component model,
@@ -59,6 +62,12 @@ bool PhraseDictionaryMultiModel::Load(const std::vector<FactorType> &input
   //how many actual scores there are in the phrase tables
   //so far, equal to number of log-linear scores, but it is allowed to be smaller (for other combination types)
   size_t numPtScores = m_numScoreComponent;
+
+  if (m_mode != "interpolate") {
+    ostringstream msg;
+    msg << "combination mode unknown: " << m_mode;
+    throw runtime_error(msg.str());
+  }
 
   for(size_t i = 0; i < m_numModels; ++i){
 

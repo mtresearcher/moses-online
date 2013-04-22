@@ -70,7 +70,7 @@ PhraseDictionaryMultiModelCounts::~PhraseDictionaryMultiModelCounts()
 
 bool PhraseDictionaryMultiModelCounts::Load(const vector<FactorType> &input
                                   , const vector<FactorType> &output
-                                  , const vector<string> &files
+                                  , const vector<string> &config
                                   , const vector<float> &weight
                                   , size_t tableLimit
                                   , const LMList &languageModels
@@ -83,7 +83,20 @@ bool PhraseDictionaryMultiModelCounts::Load(const vector<FactorType> &input
   m_output = output;
   m_tableLimit = tableLimit;
 
+  m_mode = config[4];
+  std::vector<std::string> files(config.begin()+5,config.end());
+
   m_numModels = files.size();
+
+  if (m_mode == "instance_weighting")
+    m_combineFunction = InstanceWeighting;
+  else if (m_mode == "interpolate")
+    m_combineFunction = LinearInterpolationFromCounts;
+  else {
+    ostringstream msg;
+    msg << "combination mode unknown: " << m_mode;
+    throw runtime_error(msg.str());
+  }
 
   for(size_t i = 0; i < m_numModels; ++i){
 
@@ -154,6 +167,7 @@ bool PhraseDictionaryMultiModelCounts::Load(const vector<FactorType> &input
       m_lexTable_f2e.push_back(f2e);
 
   }
+
   return true;
 }
 

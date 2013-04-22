@@ -244,8 +244,6 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
     CHECK(false);
 #endif
   } else if (m_implementation == MultiModel ) {
-    std::vector<std::string> allPaths(m_config.begin()+4,m_config.end());
-
     // memory phrase table
     VERBOSE(2,"multi-model mode" << std::endl);
     if (staticData.GetInputType() != SentenceInput) {
@@ -255,7 +253,7 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
 
     PhraseDictionaryMultiModel* pd  = new PhraseDictionaryMultiModel(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
-                         , allPaths
+                         , m_config
                          , weightT
                          , m_tableLimit
                          , system->GetLanguageModels()
@@ -263,7 +261,6 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
     CHECK(ret);
     return pd;
   } else if (m_implementation == MultiModelCounts) {
-    std::vector<std::string> allPaths(m_config.begin()+4,m_config.end());
     // memory phrase table
     VERBOSE(2,"multi-model mode (count tables)" << std::endl);
     if (staticData.GetInputType() != SentenceInput) {
@@ -275,7 +272,7 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
 
     PhraseDictionaryMultiModelCounts* pd  = new PhraseDictionaryMultiModelCounts(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
-                         , allPaths
+                         , m_config
                          , weightT
                          , m_tableLimit
                          , system->GetLanguageModels()
