@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "moses/TranslationModel/PhraseDictionary.h"
 #include "moses/TranslationModel/PhraseDictionaryTreeAdaptor.h"
+#include "moses/TranslationModel/PhraseDictionaryInterpolated.h"
 #include "moses/TranslationModel/RuleTable/PhraseDictionarySCFG.h"
 #include "moses/TranslationModel/RuleTable/PhraseDictionaryOnDisk.h"
 #include "moses/TranslationModel/RuleTable/PhraseDictionaryALSuffixArray.h"
@@ -66,19 +67,15 @@ PhraseDictionaryFeature::PhraseDictionaryFeature
  , const std::vector<float> &weight
  , size_t dictIndex
  , size_t tableLimit
- , const std::string &targetFile  // default param
- , const std::string &alignmentsFile // default param
- , const std::vector<std::string> &allPaths)
+ , const std::vector<std::string>& config)
   :DecodeFeature("PhraseModel",numScoreComponent,input,output),
   m_dictIndex(dictIndex),
   m_numInputScores(numInputScores),
   m_filePath(filePath),
   m_tableLimit(tableLimit),
   m_implementation(implementation),
-  m_targetFile(targetFile),
-  m_alignmentsFile(alignmentsFile),
-  m_sparsePhraseDictionaryFeature(spdf),
-  m_allPaths(allPaths)
+  m_config(config),
+  m_sparsePhraseDictionaryFeature(spdf)
 {
   if (implementation == Memory || implementation == SCFG || implementation == SuffixArray ||
       implementation==Compact || implementation==FuzzyMatch || implementation == MultiModel || implementation == MultiModelCounts) {
@@ -125,6 +122,18 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
                , system->GetWeightWordPenalty());
     CHECK(ret);
     return pdta;
+  } else if (m_implementation == Interpolated) {
+    PhraseDictionaryInterpolated* pdi = new PhraseDictionaryInterpolated(GetNumScoreComponents(), m_numInputScores,this);
+    bool ret = pdi->Load(
+                 GetInput()
+               , GetOutput()
+               , m_config
+               , weightT
+               , m_tableLimit
+               , system->GetLanguageModels()
+               , system->GetWeightWordPenalty());
+    CHECK(ret);
+    return pdi;
   } else if (m_implementation == SCFG || m_implementation == Hiero) {
     // memory phrase table
     if (m_implementation == Hiero) {
@@ -185,12 +194,13 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
   } else if (m_implementation == SuffixArray) {
 #ifndef WIN32
     PhraseDictionaryDynSuffixArray *pd = new PhraseDictionaryDynSuffixArray(GetNumScoreComponents(), this);
+    CHECK(m_config.size() >= 7);
     if(!(pd->Load(
            GetInput()
            ,GetOutput()
            ,m_filePath
-           ,m_targetFile
-           ,m_alignmentsFile
+           ,m_config[5]
+           ,m_config[6]
            ,weightT, m_tableLimit
            ,system->GetLanguageModels()
 	   ,system->GetWeightWordPenalty()))) {
@@ -234,6 +244,8 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
     CHECK(false);
 #endif
   } else if (m_implementation == MultiModel ) {
+    std::vector<std::string> allPaths(m_config.begin()+4,m_config.end());
+
     // memory phrase table
     VERBOSE(2,"multi-model mode" << std::endl);
     if (staticData.GetInputType() != SentenceInput) {
@@ -243,7 +255,7 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
 
     PhraseDictionaryMultiModel* pd  = new PhraseDictionaryMultiModel(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
-                         , m_allPaths
+                         , allPaths
                          , weightT
                          , m_tableLimit
                          , system->GetLanguageModels()
@@ -251,6 +263,7 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
     CHECK(ret);
     return pd;
   } else if (m_implementation == MultiModelCounts) {
+    std::vector<std::string> allPaths(m_config.begin()+4,m_config.end());
     // memory phrase table
     VERBOSE(2,"multi-model mode (count tables)" << std::endl);
     if (staticData.GetInputType() != SentenceInput) {
@@ -262,7 +275,7 @@ PhraseDictionary* PhraseDictionaryFeature::LoadPhraseTable(const TranslationSyst
 
     PhraseDictionaryMultiModelCounts* pd  = new PhraseDictionaryMultiModelCounts(GetNumScoreComponents(),this);
     bool ret = pd->Load(GetInput(), GetOutput()
-                         , m_allPaths
+                         , allPaths
                          , weightT
                          , m_tableLimit
                          , system->GetLanguageModels()

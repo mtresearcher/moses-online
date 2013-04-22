@@ -47,7 +47,6 @@ int main(int argc, char **argv)
   std::vector<FactorType> input(1, 0);
   std::vector<FactorType> output(1, 0);
   std::vector<float> weight(nscores, 0);
-  std::vector<std::string> allPaths;
   
   LMList lmList;
   
@@ -61,7 +60,7 @@ int main(int argc, char **argv)
   StaticData::InstanceNonConst().LoadData(parameter);
 
   SparsePhraseDictionaryFeature *spdf = NULL;
-  PhraseDictionaryFeature pdf(Compact, spdf, nscores, nscores, input, output, ttable, weight, 0, 0, "", "", allPaths);
+  PhraseDictionaryFeature pdf(Compact, spdf, nscores, nscores, input, output, ttable, weight, 0, 0, std::vector<std::string>());
   PhraseDictionaryCompact pdc(nscores, Compact, &pdf, false, useAlignments);
   bool ret = pdc.Load(input, output, ttable, weight, 0, lmList, 0);                                                                           
   assert(ret);

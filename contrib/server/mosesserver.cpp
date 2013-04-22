@@ -8,6 +8,7 @@
 #include "moses/ChartManager.h"
 #include "moses/Hypothesis.h"
 #include "moses/Manager.h"
+#include "moses/Phrase.h"
 #include "moses/StaticData.h"
 #include "moses/TranslationModel/PhraseDictionaryDynSuffixArray.h"
 #include "moses/TranslationModel/PhraseDictionaryMultiModelCounts.h"
@@ -44,7 +45,7 @@ const TranslationSystem& getTranslationSystem(params_t params)
 class Updater: public xmlrpc_c::method
 {
 public:
-  Updater() {
+  Updater() : bounded_(false), add2ORLM_(false) {
     // signature and help strings are documentation -- the client
     // can query this information with a system.methodSignature and
     // system.methodHelp RPC.
@@ -93,7 +94,7 @@ public:
     // insert BOS and EOS
     vl.insert(vl.begin(), sBOS);
     vl.insert(vl.end(), sEOS);
-    for(int j=0; j < vl.size(); ++j) {
+    for(int j=0; j < (int) vl.size(); ++j) {
       int i = (j<ngOrder) ? 0 : j-ngOrder+1;
       for(int t=j; t >= i; --t) {
         vector<string> ngVec;
@@ -109,7 +110,7 @@ public:
     cerr << "Inserting " << ngSet.size() << " ngrams into ORLM...\n";
     for(int i=1; i <= ngOrder; ++i) {
       iterate(ngSet, it) {
-        if(it->first.size() == i)
+        if((int) it->first.size() == i)
           orlm->UpdateORLM(it->first, it->second);
       }
     }
@@ -227,6 +228,10 @@ public:
     bool addTopts = (si != params.end());
     si = params.find("report-all-factors");
     bool reportAllFactors = (si != params.end());
+    si = params.find("nbest");
+    int nbest_size = (si == params.end()) ? 0 : int(xmlrpc_c::value_int(si->second));
+    si = params.find("nbest-distinct");
+    bool nbest_distinct = (si != params.end());
 
     vector<float> multiModelWeights;
     si = params.find("weight-t-multimodel");
@@ -254,11 +259,9 @@ public:
     const TranslationSystem& system = getTranslationSystem(params);
     stringstream out, graphInfo, transCollOpts;
     map<string, xmlrpc_c::value> retData;
-
     if (staticData.IsChart()) {
-       TreeInput tinput;
-        const vector<FactorType> &inputFactorOrder =
-          staticData.GetInputFactorOrder();
+        TreeInput tinput;
+        const vector<FactorType> &inputFactorOrder = staticData.GetInputFactorOrder();
         stringstream in(source + "\n");
         tinput.Read(in,inputFactorOrder);
         ChartManager manager(tinput, &system);
@@ -267,11 +270,12 @@ public:
         outputChartHypo(out,hypo);
     } else {
         Sentence sentence;
-        const vector<FactorType> &inputFactorOrder =
-          staticData.GetInputFactorOrder();
+        const vector<FactorType> &inputFactorOrder = staticData.GetInputFactorOrder();
         stringstream in(source + "\n");
         sentence.Read(in,inputFactorOrder);
-	size_t lineNumber = 0; // TODO: Include sentence request number here?
+        size_t lineNumber = 0; // TODO: Include sentence request number here?
+        const string passthrough_data = sentence.GetPassthroughInformation();
+        out << passthrough_data;
         Manager manager(lineNumber, sentence, staticData.GetSearchAlgorithm(), &system);
         manager.ProcessSentence();
         const Hypothesis* hypo = manager.GetBestHypothesis();
@@ -289,9 +293,11 @@ public:
         if (addTopts) {
           insertTranslationOptions(manager,retData);
         }
+        if (nbest_size>0) {
+          outputNBest(manager, system, retData, nbest_size, nbest_distinct, reportAllFactors);
+        }
     }
-    pair<string, xmlrpc_c::value>
-    text("text", xmlrpc_c::value_string(out.str()));
+    pair<string, xmlrpc_c::value> text("text", xmlrpc_c::value_string(out.str()));
     retData.insert(text);
     cerr << "Output: " << out.str() << endl;
     *retvalP = xmlrpc_c::value_struct(retData);
@@ -339,7 +345,6 @@ public:
 
   }
 
-
   bool compareSearchGraphNode(const SearchGraphNode& a, const SearchGraphNode b) {
     return a.hypo->GetId() < b.hypo->GetId();
   }
@@ -372,6 +377,46 @@ public:
       searchGraphXml.push_back(xmlrpc_c::value_struct(searchGraphXmlNode));
     }
     retData.insert(pair<string, xmlrpc_c::value>("sg", xmlrpc_c::value_array(searchGraphXml)));
+  }
+
+  void outputNBest(const Manager& manager,
+                   const TranslationSystem& system,
+                   map<string, xmlrpc_c::value>& retData,
+                   const int n=100,
+                   const bool distinct=false,
+                   const bool reportAllFactors=false)
+  {
+    TrellisPathList nBestList;
+    manager.CalcNBest(n, nBestList, distinct);
+
+    vector<xmlrpc_c::value> nBestXml;
+    TrellisPathList::const_iterator iter;
+    for (iter = nBestList.begin() ; iter != nBestList.end() ; ++iter) {
+      const TrellisPath &path = **iter;
+      const std::vector<const Hypothesis *> &edges = path.GetEdges();
+      map<string, xmlrpc_c::value> nBestXMLItem;
+
+      // output surface
+      ostringstream out;
+      for (int currEdge = (int)edges.size() - 1 ; currEdge >= 0 ; currEdge--) {
+        const Hypothesis &edge = *edges[currEdge];
+        const Phrase& phrase = edge.GetCurrTargetPhrase();
+        if(reportAllFactors) {
+          out << phrase << " ";
+        } else {
+          for (size_t pos = 0 ; pos < phrase.GetSize() ; pos++) {
+            const Factor *factor = phrase.GetFactor(pos, 0);
+            out << *factor << " ";
+          }
+        }
+      }
+      nBestXMLItem["hyp"] = xmlrpc_c::value_string(out.str());
+
+      // weighted score
+      nBestXMLItem["totalScore"] = xmlrpc_c::value_double(path.GetTotalScore());
+      nBestXml.push_back(xmlrpc_c::value_struct(nBestXMLItem));
+    }
+    retData.insert(pair<string, xmlrpc_c::value>("nbest", xmlrpc_c::value_array(nBestXml)));
   }
 
   void insertTranslationOptions(Manager& manager, map<string, xmlrpc_c::value>& retData) {

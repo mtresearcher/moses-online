@@ -197,7 +197,7 @@ public:
 	string nbestFile = staticData.GetNBestFilePath();
 	if ( ! nbestFile.empty() && nbestFile!="-" && !boost::starts_with(nbestFile,"/dev/stdout") ) {
 	  boost::filesystem::path nbestPath(nbestFile);
-	  hypergraphDir = nbestPath.parent_path().filename().native();
+	  //hypergraphDir = nbestPath.parent_path().filename().native();
 	} else {
 	  stringstream hypergraphDirName;
 	  hypergraphDirName << boost::filesystem::current_path() << "/hypergraph";
@@ -431,7 +431,7 @@ static void PrintFeatureWeight(const FeatureFunction* ff)
     vector<float> values = StaticData::Instance().GetAllWeights().GetScoresForProducer(ff);
     for (size_t i = 0; i < numScoreComps; ++i) 
       cout << ff->GetScoreProducerDescription() <<  " "
-           << ff->GetScoreProducerWeightShortName() << " "
+           << ff->GetScoreProducerWeightShortName(i) << " "
            << values[i] << endl;
   }
   else {
@@ -686,7 +686,7 @@ int main(int argc, char** argv)
       detailedTranslationCollector.reset(new OutputCollector(&(ioWrapper->GetDetailedTranslationReportingStream())));
     }
   
-    // initialize stram for word alignment between input and output
+    // initialize stream for word alignment between input and output
     auto_ptr<OutputCollector> alignmentInfoCollector;
     if (!staticData.GetAlignmentOutputFile().empty()) {
       alignmentInfoCollector.reset(new OutputCollector(ioWrapper->GetAlignmentOutputStream()));

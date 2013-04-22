@@ -181,7 +181,7 @@ Parameter::Parameter()
   AddParam("minlexr-memory", "Load lexical reordering table in minlexr format into memory");                                          
   AddParam("minphr-memory", "Load phrase table in minphr format into memory");
 
-  AddParam("print-alignment-info", "Output word-to-word alignment into the log file. Word-to-word alignments are takne from the phrase table if any. Default is false");
+  AddParam("print-alignment-info", "Output word-to-word alignment to standard out, separated from translation by |||. Word-to-word alignments are takne from the phrase table if any. Default is false");
   AddParam("include-segmentation-in-n-best", "include phrasal segmentation in the n-best list. default is false");
   AddParam("print-alignment-info-in-n-best", "Include word-to-word alignment in the n-best list. Word-to-word alignments are takne from the phrase table if any. Default is false");
   AddParam("alignment-output-file", "print output word alignments into given file");
@@ -189,6 +189,8 @@ Parameter::Parameter()
 
   AddParam("report-segmentation", "t", "report phrase segmentation in the output");
   AddParam("print-id", "prefix translations with id. Default if false");
+  AddParam("print-passthrough", "output the sgml tag <passthrough> without any computation on that. Default is false");
+  AddParam("print-passthrough-in-n-best", "output the sgml tag <passthrough> without any computation on that in each entry of the n-best-list. Default is false");
 
 
 }

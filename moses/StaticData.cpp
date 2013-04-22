@@ -186,6 +186,9 @@ bool StaticData::LoadData(Parameter *parameter)
     m_needAlignmentInfo = true;
   }
 
+  SetBooleanParameter( &m_PrintPassthroughInformation, "print-passthrough", false );
+  SetBooleanParameter( &m_PrintPassthroughInformationInNBest, "print-passthrough-in-n-best", false );
+
   if (m_parameter->GetParam("alignment-output-file").size() > 0) {
     m_alignmentOutputFile = Scan<std::string>(m_parameter->GetParam("alignment-output-file")[0]);
     m_needAlignmentInfo = true;
@@ -1353,14 +1356,6 @@ bool StaticData::LoadPhraseTables()
       weightAllOffset += numScoreComponent;
       numScoreComponent += tableInputScores;
 
-      std::vector<std::string> allPaths(token.begin()+4,token.end());
-
-      string targetPath, alignmentsFile;
-      if (implementation == SuffixArray) {
-        targetPath		= token[5];
-        alignmentsFile= token[6];
-      }
-
       CHECK(numScoreComponent==weight.size());
 
 
@@ -1389,9 +1384,7 @@ bool StaticData::LoadPhraseTables()
         , weight
        	, currDict
         , maxTargetPhrase[index]
-        , targetPath
-        , alignmentsFile
-        , allPaths);
+        , token);
 
       m_phraseDictionary.push_back(pdf);
 
