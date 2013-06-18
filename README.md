@@ -1,4 +1,3 @@
-
 Extra Implementations in "moses_onlinelearning" branch. 
 
 For computer assisted translation, we have implemented a online learning feature that learns from the corrections by the translator.
@@ -14,11 +13,11 @@ These parameters can be passed as
 
 	3. "w_learningrate <rate>" : is the learning rate for online algorithm to update the weight of online feature
 
-There are different online learning algorithms implemented to update the feature weights. 
+There are different online learning algorithms implemented to update the features and feature weights. 
 
-	1. features : Perceptron 
-
-	2. weights : MIRA("-w_algorithm mira"), SparseMira ("-w_algorithm mira -use_sparse_features")
+	1. update only additional feature : Perceptron 
+	2. update features and weights : MIRA("-w_algorithm mira"), SparseMira ("-w_algorithm mira -use_sparse_features")
+	3. update only feature weights with MIRA : "-w_algorithm onlyMira"
 
 Input can be of two types.
 
