@@ -1425,24 +1425,27 @@ namespace Moses {
     bool StaticData::LoadOnlineLearningModel() {
         const std::string w_algorithm = (m_parameter->GetParam("w_algorithm").size() > 0) ? Scan<std::string>(m_parameter->GetParam("w_algorithm")[0]) : "NULL";
         bool normaliseScore = (m_parameter->isParamSpecified("normaliseScore")) ? true : false;
-        const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-ol"));
+        const float weight = (m_parameter->GetParam("weight-ol").size() > 0) ?
+                Scan<float>(m_parameter->GetParam("weight-ol")[0]) : 0;
         const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
                 Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0;
         const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 0;
         OnlineAlgorithm setAlgo = FOnlyPerceptron;
         if (w_learningrate > 0) setAlgo = FPercepWMira;
         
-        if (weights.size() > 1) {
-            UserMessage::Add("Can only specify one weight for the online learning feature");
-            return false;
-        } else if (weights.size() == 1 && w_algorithm.compare("NULL") == 0) {
+        if (weight != 0 && w_algorithm.compare("NULL") == 0) {
             m_onlinelearner = new OnlineLearner(FOnlyPerceptron, w_learningrate, f_learningrate, normaliseScore);
-            SetWeight(m_onlinelearner, weights[0]);
+            SetWeight(m_onlinelearner, weight);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron");
 
             return true;
-        } else if (weights.size() == 1 && w_algorithm.compare("alsoMira") == 0) {
+        } else if (weight != 0 && w_algorithm.compare("alsoMira") == 0) {
+            if(f_learningrate==0)
+            {
+                UserMessage::Add("You have to specify non-zero feature learning rate");
+                return false;
+            }
             const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
@@ -1454,12 +1457,17 @@ namespace Moses {
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
             m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
                     scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            SetWeight(m_onlinelearner, weights[0]);
+            SetWeight(m_onlinelearner, weight);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron\tWeights : MIRA");
 
             return true;
         } else if (w_algorithm.compare("onlyMira") == 0) {
+            if(f_learningrate!=0)
+            {
+                UserMessage::Add("You cannot specify feature learning rate and onlyMIRA algorithm together");
+                return false;
+            }
             if (w_learningrate != 0) {
                 setAlgo = Mira;
                 const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
@@ -1473,7 +1481,7 @@ namespace Moses {
                 const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
                 m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
                         scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-                SetWeight(m_onlinelearner, weights[0]);
+                SetWeight(m_onlinelearner, weight);
                 return true;
             }
             else
@@ -1487,7 +1495,7 @@ namespace Moses {
             UserMessage::Add("The name of algorithm doesn't match. options 1. alsoMira 2. onlyMira");
             return false;
         }
-
+        UserMessage::Add("You did something wrong. Please recheck your options.");
         return false;
     }
 
