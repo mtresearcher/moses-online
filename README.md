@@ -1,9 +1,10 @@
 Extra Implementations in "moses_onlinelearning" branch. 
 
-For computer assisted translation, we have implemented a online learning feature that learns from the corrections by the translator.
-This feature stores the phrase pairs which occurs in Oracle translation (the closest translation to a post edited sentence).
-These phrase pairs get rewarded if they are seen to be translated again in the future.
-The feature also stores the phrase pairs in non-oracles and penalize them if they are used in the future translations.
+For computer assisted translation, we have implemented a online learning feature that learns from the corrections by the translator and an online algorithm MIRA for updating the feature weights on the fly using the information provided by postedited sentences.
+For details on the algorithm, please check this paper and if you use this branch please cite it too :) 
+
+"Online Learning Approaches in Computer Assisted Translation, WMT 2013. To appear"
+
 This system has additional parameters, a weight for the online feature, and a learning rate for online algorithm. 
 These parameters can be passed as
 
