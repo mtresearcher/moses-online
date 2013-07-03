@@ -17,6 +17,13 @@ There are different online learning algorithms implemented to update the feature
 	2. update features using Perceptron and feature weights using MIRA : "-w_algorithm alsoMira" will active this algorithm
 	3. just feature weights update with MIRA : "-w_algorithm onlyMira" will activate this algorithm
 
+Additional options
+	1. normalise feature score : "-normaliseScore" bounds the score of online feature between -1 and 1 (default false)
+	2. slack : "-slack <slack value>"  (default is 0.001)
+	3. normalise margin in MIRA : "-normaliseMargin" (default false)
+	4. additional options are "scale_margin", "scale_margin_precision", "scale_update", "scale_update_precision", "boost" 
+		- most of these options are borrowed from MIRA implementation in moses by Hasler et. al. 2011.
+
 Input can be of two types.
 
 	1. A source sentence one wants to translate. 
