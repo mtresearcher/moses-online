@@ -34,3 +34,8 @@ Input can be of two types.
 
 The decoder detects the delimiter "_#_" and automatically splits it based on the delimiter, and updates the models and weights.
 
+Personal Experience :
+	
+	1. normalise score of online feature : more consistent and stable.
+	2. don't normalise margin : not useful at all.
+	3. combination of online feature and MIRA gives fantastic results.
