@@ -1463,6 +1463,11 @@ namespace Moses {
 
             return true;
         } else if (w_algorithm.compare("onlyMira") == 0) {
+            if(weight!=0)
+            {
+                UserMessage::Add("Don't specify the weight for online feature.");
+                return false;
+            }
             if(f_learningrate!=0)
             {
                 UserMessage::Add("You cannot specify feature learning rate and onlyMIRA algorithm together");
