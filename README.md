@@ -7,15 +7,15 @@ The feature also stores the phrase pairs in non-oracles and penalize them if the
 This system has additional parameters, a weight for the online feature, and a learning rate for online algorithm. 
 These parameters can be passed as
 
-	1. "weight-ol <weight>" : is the initial weight of the online feature function
-	2. "f_learningrate <rate>" : is the learning rate for online algorithm to update the feature 
-	3. "w_learningrate <rate>" : is the learning rate for online algorithm to update the weight of online feature
+	1. "weight-ol <weight>" : is the initial weight of the online feature function (default 0)
+	2. "f_learningrate <rate>" : is the learning rate for online algorithm to update the feature (default 0)
+	3. "w_learningrate <rate>" : is the learning rate for online algorithm to update the weight of online feature (default 0)
 
 There are different online learning algorithms implemented to update the features and feature weights. 
 
-	1. update only additional feature : Perceptron 
-	2. update features and weights : MIRA("-w_algorithm mira"), SparseMira ("-w_algorithm mira -use_sparse_features")
-	3. update only feature weights with MIRA : "-w_algorithm onlyMira"
+	1. update only additional feature with Perceptron : "-weight-ol <online learner weight>" will activate this algorithm
+	2. update features using Perceptron and feature weights using MIRA : "-w_algorithm alsoMira" will active this algorithm
+	3. just feature weights update with MIRA : "-w_algorithm onlyMira" will activate this algorithm
 
 Input can be of two types.
 
