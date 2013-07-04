@@ -10,7 +10,7 @@
 using namespace Optimizer;
 
 namespace Moses {
-
+    
 void OnlineLearner::chop(string &str) {
 	int i = 0;
 	while (isspace(str[i]) != 0) {
