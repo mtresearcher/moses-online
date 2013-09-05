@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "TranslationOptionList.h"
 #include "TranslationSystem.h"
 #include "ScoreComponentCollection.h"
+#include "SingleTriggerModel.h"
 
 namespace Moses
 {
@@ -72,6 +73,7 @@ class TargetBigramFeature;
 class TargetNgramFeature;
 class CacheBasedLanguageModel;
 class OnlineLearner;
+class SingleTriggerModel;
 #ifdef HAVE_SYNLM
 class SyntacticLanguageModel;
 #endif
@@ -106,6 +108,7 @@ protected:
 #endif
   CacheBasedLanguageModel* m_CacheBasedLanguageModel;
   OnlineLearner* m_onlinelearner;
+  SingleTriggerModel* m_singletriggermodel;
   std::vector<DecodeGraph*> m_decodeGraphs;
   std::vector<size_t> m_decodeGraphBackoff;
   // Initial	= 0 = can be used when creating poss trans
@@ -276,6 +279,7 @@ protected:
   //! load decoding steps
   bool LoadDecodeGraphs();
   bool LoadLexicalReorderingModel();
+  bool LoadSingleTriggerModel();
   bool LoadGlobalLexicalModel();
   bool LoadGlobalLexicalModelUnlimited();
   //References used for scoring feature (eg BleuScoreFeature) for online training

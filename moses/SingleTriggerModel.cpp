@@ -9,28 +9,35 @@
 
 using namespace Moses;
 
-SingleTriggerModel::SingleTriggerModel() : StatefulFeatureFunction("SingleTriggerModel",1) {
-    
+SingleTriggerModel::SingleTriggerModel() : StatelessFeatureFunction("SingleTriggerModel", 1) {
+
 }
 
 SingleTriggerModel::~SingleTriggerModel() {
 }
 
-FFState* SingleTriggerModel::Evaluate(const Hypothesis& hypo,
-                                     const FFState* prev_state,
-                                     ScoreComponentCollection* out) const
+void SingleTriggerModel::Read(const std::string filename)
 {
-  Scores score(GetNumScoreComponents(), 0);
-//  const LexicalReorderingState *prev = dynamic_cast<const LexicalReorderingState *>(prev_state);
-//  LexicalReorderingState *next_state = prev->Expand(hypo.GetTranslationOption(), score);
-
-  out->PlusEquals(this, score);
-
-  return next_state;
+    
 }
 
-const FFState* SingleTriggerModel::EmptyHypothesisState(const InputType &input) const
+void SingleTriggerModel::SetSentence(std::string sent)
 {
-  return ;
+    m_sentence = sent;
 }
+
+void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
+
+}
+
+void SingleTriggerModel::Evaluate(const PhraseBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {
+    const TargetPhrase& tp = context.GetTargetPhrase();
+    Evaluate(tp, accumulator);
+}
+
+void SingleTriggerModel::EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {
+    const TargetPhrase& tp = context.GetTargetPhrase();
+    Evaluate(tp, accumulator);
+}
+
 

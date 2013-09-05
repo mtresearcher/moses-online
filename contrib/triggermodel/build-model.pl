@@ -3,6 +3,7 @@
 #******************************************************************************
 # Prashant Mathur @ FBK-irst. September 2013
 #******************************************************************************
+# Interlingual single trigger model
 # build-model.pl <corpus>
 
 
@@ -18,18 +19,23 @@ sub main {
 my $__usage = "
 USAGE
 -----
-perl build.pl --corpus=name.trgln --omodel=filename
+perl build.pl --corpus=name --srcln=en --trgln=fr --omodel=filename
 -----
 ";
 
 my $__debug;
 my $__corpus="";
+my $__srcln="";
+my $__trgln="";
 my $__omodel="";
 my $__help;
 my %model=();
 my $__counter=0;
+my (%srcfreq, %trgfreq)=();
 GetOptions ('debug' => \$__debug, 
 				'corpus=s' => \$__corpus,
+				'srcln=s' => \$__srcln,
+				'trgln=s' => \$__trgln,
 				'omodel=s' => \$__omodel,
             'help' => \$__help);
 
@@ -38,22 +44,70 @@ if($__help) { die "$__usage\n\n"; }
 print STDERR "
 ******************************
 CORPUS = $__corpus
+Cleaning the corpus...";
+open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
+open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
+
+while(my $__src=<__SRCCORPUS>)
+{
+	my $__trg=<__TRGCORPUS>;
+	chop($__src);
+	chop($__trg);
+	my @__TOKENS_SRC = split(/ /,$__src);
+	my @__TOKENS_TRG = split(/ /,$__trg);
+	for(my $i=0;$i<@__TOKENS_SRC; $i++)
+	{
+		$srcfreq{$__TOKENS_SRC[$i]}++;
+	}
+	for(my $i=0;$i<@__TOKENS_TRG; $i++)
+	{
+		$trgfreq{$__TOKENS_TRG[$i]}++;
+	}
+}
+my $count=0;
+foreach my $key(sort {$srcfreq{$b} <=> $srcfreq{$a}} keys %srcfreq)
+{
+	delete $srcfreq{$key};
+	$count++;
+	if($count>100) {last;}
+}
+$count=0;
+foreach my $key(sort {$trgfreq{$b} <=> $trgfreq{$a}} keys %trgfreq)
+{
+	delete $trgfreq{$key};
+	$count++;
+	if($count>100) {last;}
+}
+
+
+close(__SRCCORPUS);
+close(__TRGCORPUS);
+
+print STDERR "
+******************************
+CORPUS = $__corpus
 Building the model...";
 
-open __CORP, "$__corpus" or die "OOPS! Couldn't open the file\n";
+open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
+open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
 
-while(<__CORP>)
+
+while(my $__src=<__SRCCORPUS>)
 {
+	my $__trg=<__TRGCORPUS>;
+	chop($__src);
+	chop($__trg);
 	$__counter++;
 	if($__counter%1000==0){print STDERR ".";}
-	chop();
-	my @__TOKENS = split(/ /);
-	for(my $i=0;$i<@__TOKENS; $i++)
+	my @__TOKENS_SRC = split(/ /,$__src);
+	my @__TOKENS_TRG = split(/ /,$__trg);
+	for(my $i=0;$i<@__TOKENS_SRC; $i++)
 	{
-		for(my $j=$i+1;$j<@__TOKENS; $j++)
+		for(my $j=0;$j<@__TOKENS_TRG; $j++)
 		{
-			$model{$__TOKENS[$i]}{$__TOKENS[$j]}++;
-			$model{$__TOKENS[$j]}{$__TOKENS[$i]}++;
+			if(exists $srcfreq{$__TOKENS_SRC[$i]} && exists $trgfreq{$__TOKENS_TRG[$j]}){
+				$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}++;#=SigMod(abs($i-$j));
+			}
 		}
 	}
 }
@@ -64,7 +118,6 @@ print STDERR "
 &DumpModel(\%model, $__omodel);
 
 }
-
 sub normalize{
 print STDERR "
 ******************************
@@ -77,7 +130,7 @@ Normalizing the values ..
 		{
 			my $temp1=$model->{$__token1}->{$__token2};
 			my $temp2=scalar keys (\%{$model->{$__token1}});
-			$model->{$__token1}->{$__token2}=sprintf '%.3f',($temp1/$temp2);
+			$model->{$__token1}->{$__token2}=($temp1/$temp2);
 		}
 	}
 print STDERR "
@@ -93,9 +146,15 @@ sub DumpModel
 	{
 		foreach my $__token2(keys \%{$model->{$__token1}})
 		{
-			print MODEL $__token1,"|||",$__token2,"|||",$model->{$__token1}->{$__token2},"\n";
+			print MODEL $__token2,"|||",$__token1,"|||",$model->{$__token1}->{$__token2},"\n";
 		}
 	}
+}
+
+sub SigMod
+{
+	my $i=shift;
+	return ($i/1+abs($i));
 }
 
 &main();

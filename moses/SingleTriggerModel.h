@@ -15,18 +15,17 @@ typedef string word;
 
 namespace Moses {
 
-    class SingleTriggerModel : public StatefulFeatureFunction {
+    class SingleTriggerModel : public StatelessFeatureFunction {
     public:
         SingleTriggerModel();
         virtual ~SingleTriggerModel();
-        
-        FFState* Evaluate(const Hypothesis& hypo,
-                                     const FFState* prev_state,
-                                     ScoreComponentCollection* out) const;
-        const FFState* SingleTriggerModel::EmptyHypothesisState(const InputType &input) const;
-        
+        void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
+	void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
+        void Read(const std::string filename);
+        void SetSentence(std::string sent);
     private:
         std::map<word, trigger> m_w2t;
+        std::string m_sentence;
     };
 }
 #endif	/* SINGLETRIGGERMODEL_H */
