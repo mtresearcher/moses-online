@@ -18,7 +18,7 @@ SingleTriggerModel::~SingleTriggerModel() {
 
 void SingleTriggerModel::Read(const std::string filename)
 {
-    
+    // read the trigger model
 }
 
 void SingleTriggerModel::SetSentence(std::string sent)
