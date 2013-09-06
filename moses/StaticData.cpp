@@ -1416,6 +1416,7 @@ namespace Moses {
         const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-stm"));
         const vector<std::string> &files = m_parameter->GetParam("stm-file");
         
+        
     }
 
     OnlineLearner* StaticData::GetOnlineLearningModel() const {
