@@ -10,11 +10,25 @@
 #include<sstream>
 using namespace Moses;
 
-SingleTriggerModel::SingleTriggerModel() : StatelessFeatureFunction("SingleTriggerModel", 1) {
+inline int SingleTriggerModel::split_marker_perl(string str, string marker, vector<string> &array) {
+	int found = str.find(marker), prev = 0;
+	while (found != string::npos) // warning!
+	{
+		array.push_back(str.substr(prev, found - prev));
+		prev = found + marker.length();
+		found = str.find(marker, found + marker.length());
+	}
+	array.push_back(str.substr(prev));
+	return array.size() - 1;
+}
 
+SingleTriggerModel::SingleTriggerModel() : StatelessFeatureFunction("SingleTriggerModel", 1) {
+    m_sentence="";
 }
 
 SingleTriggerModel::~SingleTriggerModel() {
+    m_sentence.resize(0);
+    m_stm.empty();
 }
 
 void SingleTriggerModel::Read(const std::string filePath)
@@ -50,13 +64,29 @@ void SingleTriggerModel::Read(const std::string filePath)
     }
 }
 
+// this function should be called before decoding of a sentence starts
 void SingleTriggerModel::SetSentence(std::string sent)
 {
     m_sentence = sent;
 }
 
 void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
-
+    // for now assuming that we have m_sentence set already
+    float score = 0.0;
+    std::string t = "";
+    size_t endpos = tp.GetSize();
+    for (size_t pos = 0; pos < endpos; ++pos) {
+        t = tp.GetWord(pos).GetFactor(0)->GetString();
+        std::vector<string> array;
+        int x = split_marker_perl(m_sentence, " ", array);
+        for (int i = 0; i < x; i++) {
+            if(m_stm.find(std::pair<array[i], t>) != m_stm.end())
+            {
+                score += m_stm[std::pair<array[i], t>];
+            }
+        }
+    }
+    out->PlusEquals(this, score);
 }
 
 void SingleTriggerModel::Evaluate(const PhraseBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {
@@ -68,5 +98,3 @@ void SingleTriggerModel::EvaluateChart(const ChartBasedFeatureContext& context, 
     const TargetPhrase& tp = context.GetTargetPhrase();
     Evaluate(tp, accumulator);
 }
-
-

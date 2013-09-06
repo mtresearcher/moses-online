@@ -23,6 +23,7 @@ namespace Moses {
 	void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
         void Read(const std::string filename);
         void SetSentence(std::string sent);
+        inline int split_marker_perl(string str, string marker, vector<string> &array);
     private:
         std::string m_sentence;
         std::map<std::pair<StringPiece, StringPiece>, float> m_stm;
