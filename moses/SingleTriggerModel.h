@@ -24,8 +24,8 @@ namespace Moses {
         void Read(const std::string filename);
         void SetSentence(std::string sent);
     private:
-        std::map<word, trigger> m_w2t;
         std::string m_sentence;
+        std::map<std::pair<StringPiece, StringPiece>, float> m_stm;
     };
 }
 #endif	/* SINGLETRIGGERMODEL_H */
