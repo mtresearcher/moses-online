@@ -35,7 +35,6 @@ namespace Moses {
     }
 
     SingleTriggerModel::SingleTriggerModel(std::string file) : StatelessFeatureFunction("SingleTriggerModel", 1) {
-    	VERBOSE(1,"ENTERING THE STM constructor");
         Read(file);
         m_sentence.resize(0);
         m_stm.empty();
@@ -49,8 +48,8 @@ namespace Moses {
     void SingleTriggerModel::Read(const std::string filePath) {
         // read the trigger model
         //    
-    	PrintUserTime("Loading Interlingual Single Trigger Model...\n");
-    	VERBOSE(1, "filepath: %s"<<filePath);
+    	PrintUserTime("Start loading Interlingual Single Trigger Model...\n");
+
         const StaticData& staticData = StaticData::Instance();
         util::FilePiece inFile(filePath.c_str(), staticData.GetVerboseLevel() >= 1 ? &std::cerr : NULL);
         size_t line_num = 0;

@@ -1423,7 +1423,6 @@ namespace Moses {
     }
 
     bool StaticData::LoadSingleTriggerModel() {
-    	VERBOSE(1,"ENTERING the load STM function in StaticData");
         const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-stm"));
         std::vector<std::string> files = m_parameter->GetParam("stm-file");
         m_singletriggermodel = new SingleTriggerModel(files[0]);

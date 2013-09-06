@@ -39,6 +39,8 @@ public:
 	const float getElement(const int idx) const;
 	void coreAssign(std::valarray<float>& x);
 	float GetL1Norm();
+	void L1Regularize();
+	void L2Regularize();
 	SparseVec& operator*= (const float& rhs);
 
 };
