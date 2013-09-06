@@ -1502,7 +1502,7 @@ namespace Moses {
             return true;
         }
 
-        return false;
+        return true;
     }
 
     bool StaticData::LoadCacheBasedLanguageModel() {
