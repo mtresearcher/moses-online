@@ -46,7 +46,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "TranslationOptionList.h"
 #include "TranslationSystem.h"
 #include "ScoreComponentCollection.h"
-#include "SingleTriggerModel.h"
 
 namespace Moses
 {
@@ -301,6 +300,7 @@ public:
 
   std::string m_postedited;
   bool LoadOnlineLearningModel();
+  void SetSourceSentenceforSTM(std::string);
   OnlineLearner* GetOnlineLearningModel() const;
   int GetNumIterationsOnlineLearning() const;
 

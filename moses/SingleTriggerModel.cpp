@@ -34,8 +34,8 @@ namespace Moses {
         return array.size() - 1;
     }
 
-    SingleTriggerModel::SingleTriggerModel() : StatelessFeatureFunction("SingleTriggerModel", 1) {
-        m_sentence = "";
+    SingleTriggerModel::SingleTriggerModel(std::string file) : StatelessFeatureFunction("SingleTriggerModel", 1) {
+        Read(file);
     }
 
     SingleTriggerModel::~SingleTriggerModel() {

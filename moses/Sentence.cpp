@@ -93,7 +93,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  line=strs[0];
   }
   //get covered words - if continual-partial-translation is switched on, parse input
-
+  
   m_frontSpanCoveredLength = 0;
   m_sourceCompleted.resize(0);
   if (staticData.ContinuePartialTranslation()) {
@@ -126,9 +126,10 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 
   // remove extra spaces
   line = Trim(line);
-
+  StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
   // if sentences is specified as "<seg id=1> ... </seg>", extract id
   meta = ProcessAndStripSGML(line);
+  
   if (meta.find("id") != meta.end()) {
     this->SetTranslationId(atol(meta["id"].c_str()));
   }

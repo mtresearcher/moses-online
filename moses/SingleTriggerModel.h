@@ -24,10 +24,10 @@ typedef string word;
 
 namespace Moses {
 
-    class SingleTriggerModel : public StatelessFeatureFunction {
+class SingleTriggerModel : public StatelessFeatureFunction {
     public:
-        SingleTriggerModel();
-        virtual ~SingleTriggerModel();
+        SingleTriggerModel(std::string file);
+        ~SingleTriggerModel();
         void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
 	void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
         void Read(const std::string filename);
@@ -36,7 +36,7 @@ namespace Moses {
         void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
         std::string m_sentence;
         std::map<std::string, std::map<std::string, float> > m_stm;
-    };
+};
 }
 #endif	/* SINGLETRIGGERMODEL_H */
 

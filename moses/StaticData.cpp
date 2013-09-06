@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "DummyScoreProducers.h"
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
+#include "SingleTriggerModel.h"
 #include "StaticData.h"
 #include "Util.h"
 #include "FactorCollection.h"
@@ -91,6 +92,7 @@ namespace Moses {
     , m_phraseLengthFeature(NULL)
     , m_CacheBasedLanguageModel(NULL)
     , m_onlinelearner(NULL)
+    , m_singletriggermodel(NULL)
     , m_targetWordInsertionFeature(NULL)
     , m_sourceWordDeletionFeature(NULL)
     , m_numLinkParams(1)
@@ -553,6 +555,7 @@ namespace Moses {
         if (!LoadDecodeGraphs()) return false;
         if (!LoadCacheBasedLanguageModel()) return false;
         if (!LoadOnlineLearningModel()) return false;
+        if (!LoadSingleTriggerModel()) return false;
         if (!LoadReferences()) return false;
         if (!LoadDiscrimLMFeature()) return false;
         if (!LoadPhrasePairFeature()) return false;
@@ -720,6 +723,10 @@ namespace Moses {
                 m_translationSystems.find(config[0])->second.AddFeatureFunction(m_onlinelearner);
                 m_translationSystems.find(config[0])->second.SetOnlineLearningModel(m_onlinelearner);
             }
+            if (m_singletriggermodel != NULL) {
+                cerr << "Adding Single Trigger Model from StaticData::LoadData\n";
+                m_translationSystems.find(config[0])->second.AddFeatureFunction(m_singletriggermodel);
+            }
             for (size_t i = 0; i < m_sparsePhraseDictionary.size(); ++i) {
                 if (m_sparsePhraseDictionary[i]) {
                     m_translationSystems.find(config[0])->second.AddFeatureFunction(m_sparsePhraseDictionary[i]);
@@ -857,6 +864,9 @@ namespace Moses {
         }
         if (m_onlinelearner) {
             delete m_onlinelearner;
+        }
+        if (m_singletriggermodel) {
+            delete m_singletriggermodel;
         }
         delete m_targetBigramFeature;
         for (size_t i = 0; i < m_targetNgramFeatures.size(); ++i)
@@ -1413,12 +1423,14 @@ namespace Moses {
     }
 
     bool StaticData::LoadSingleTriggerModel() {
-        const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-stm"));
-        const vector<std::string> &files = m_parameter->GetParam("stm-file");
-        
-        
+        const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-stm"));
+        std::vector<std::string> files = m_parameter->GetParam("stm-file");
+        m_singletriggermodel = new SingleTriggerModel(files[0]);
+        SetWeight(m_singletriggermodel, weights[0]);
     }
-
+    void StaticData::SetSourceSentenceforSTM(std::string line){
+        m_singletriggermodel->SetSentence(line);
+    }
     OnlineLearner* StaticData::GetOnlineLearningModel() const {
         return m_onlinelearner;
     }
