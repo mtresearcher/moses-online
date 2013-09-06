@@ -1423,14 +1423,20 @@ namespace Moses {
     }
 
     bool StaticData::LoadSingleTriggerModel() {
+    	VERBOSE(1,"ENTERING the load STM function in StaticData");
         const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-stm"));
         std::vector<std::string> files = m_parameter->GetParam("stm-file");
         m_singletriggermodel = new SingleTriggerModel(files[0]);
         SetWeight(m_singletriggermodel, weights[0]);
+        return true;
     }
     void StaticData::SetSourceSentenceforSTM(std::string line){
         m_singletriggermodel->SetSentence(line);
     }
+    SingleTriggerModel* StaticData::GetSingleTriggerModel() const {
+    	return m_singletriggermodel;
+    }
+
     OnlineLearner* StaticData::GetOnlineLearningModel() const {
         return m_onlinelearner;
     }
