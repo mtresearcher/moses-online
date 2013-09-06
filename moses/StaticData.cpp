@@ -1425,15 +1425,23 @@ namespace Moses {
     bool StaticData::LoadSingleTriggerModel() {
         const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-stm"));
         std::vector<std::string> files = m_parameter->GetParam("stm-file");
-        m_singletriggermodel = new SingleTriggerModel(files[0]);
-        SetWeight(m_singletriggermodel, weights[0]);
+        if(files.size()>0){
+        	m_singletriggermodel = new SingleTriggerModel(files[0]);
+        }
+        if(weights.size()>0)
+        {
+        	SetWeight(m_singletriggermodel, weights[0]);
+        }
         return true;
     }
     void StaticData::SetSourceSentenceforSTM(std::string line){
         m_singletriggermodel->SetSentence(line);
     }
-    SingleTriggerModel* StaticData::GetSingleTriggerModel() const {
-    	return m_singletriggermodel;
+    bool StaticData::GetSingleTriggerModel() const {
+    	if(m_singletriggermodel!=NULL) {
+    		return true;
+    	}
+    	return false;
     }
 
     OnlineLearner* StaticData::GetOnlineLearningModel() const {

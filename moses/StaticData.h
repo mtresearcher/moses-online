@@ -301,7 +301,7 @@ public:
   std::string m_postedited;
   bool LoadOnlineLearningModel();
   void SetSourceSentenceforSTM(std::string);
-  SingleTriggerModel* GetSingleTriggerModel() const;
+  bool GetSingleTriggerModel() const;
   OnlineLearner* GetOnlineLearningModel() const;
   int GetNumIterationsOnlineLearning() const;
 

@@ -48,7 +48,7 @@ namespace Moses {
     void SingleTriggerModel::Read(const std::string filePath) {
         // read the trigger model
         //    
-    	PrintUserTime("Start loading Interlingual Single Trigger Model...\n");
+    	PrintUserTime("Start loading Interlingual Single Trigger Model...");
 
         const StaticData& staticData = StaticData::Instance();
         util::FilePiece inFile(filePath.c_str(), staticData.GetVerboseLevel() >= 1 ? &std::cerr : NULL);
@@ -77,7 +77,7 @@ namespace Moses {
             // Insertion in memory
             m_stm[sourcePhraseString.as_string()][targetPhraseString.as_string()] = score;
         }
-        PrintUserTime("Loaded Interlingual Single Trigger Model...\n");
+        PrintUserTime("Loaded Interlingual Single Trigger Model...");
     }
 
     // this function should be called before decoding of a sentence starts
