@@ -34,10 +34,11 @@ namespace Moses {
         return array.size() - 1;
     }
 
-    SingleTriggerModel::SingleTriggerModel(std::string file) : StatelessFeatureFunction("SingleTriggerModel", 1) {
+    SingleTriggerModel::SingleTriggerModel(std::string file, bool sigmoidParam) : StatelessFeatureFunction("SingleTriggerModel", 1) {
         Read(file);
         m_sentence.resize(0);
         m_stm.empty();
+        m_sigmoidParam=true;
     }
 
     SingleTriggerModel::~SingleTriggerModel() {
@@ -105,6 +106,8 @@ namespace Moses {
                 }
             }
         }
+        if(m_sigmoidParam)
+                score=(score/(1+abs(score)));
         out->PlusEquals(this, score);
     }
 

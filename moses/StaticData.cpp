@@ -1425,8 +1425,9 @@ namespace Moses {
     bool StaticData::LoadSingleTriggerModel() {
         const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-stm"));
         std::vector<std::string> files = m_parameter->GetParam("stm-file");
+        bool stm_normalizeScore = (m_parameter->isParamSpecified("stm-normalize")) ? true : false;
         if(files.size()>0){
-        	m_singletriggermodel = new SingleTriggerModel(files[0]);
+        	m_singletriggermodel = new SingleTriggerModel(files[0], stm_normalizeScore);
         }
         if(weights.size()>0)
         {
