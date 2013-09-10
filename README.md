@@ -33,10 +33,11 @@ Cross-lingual trigger model [1] : Some source words triggers particular target w
 of target and source pairs.
 
 Examples for English -> Italian
-	market ... negozio (shop)
-	food ... drogheria (grocery)
-	travel ... citta (city)
+	1. market ... negozio (shop)
+	2. food ... drogheria (grocery)
+	3. travel ... citta (city)
 
+Usage : 
 	1. "weight-stm <weight>" : weight for the single trigger model
 	2. "stm-file <filename>" : path to the stm
 
