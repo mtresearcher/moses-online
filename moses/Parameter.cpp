@@ -185,7 +185,7 @@ Parameter::Parameter()
   AddParam("report-segmentation", "t", "report phrase segmentation in the output");
 
   AddParam("stm-file", "Interlingual single trigger model");
-  AddParam("weight-stm", "weight for interlingual single trigger model");
+  AddParam("weight-stm", "stm", "weight for interlingual single trigger model");
 
   AddParam("cblm-file", "location of the initialization data for cache-based language model");
   AddParam("weight-cblm", "cblm", "weight for cache-based language model");
