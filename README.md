@@ -1,4 +1,4 @@
-Extra Implementations in "moses_onlinelearning" branch. 
+Extra Implementations in "this->master" branch. 
 
 For computer assisted translation, we have implemented a online learning feature that learns from the corrections by the translator.
 This feature stores the phrase pairs which occurs in Oracle translation (the closest translation to a post edited sentence).
@@ -14,7 +14,7 @@ These parameters can be passed as
 There are different online learning algorithms implemented to update the features and feature weights. 
 
 	1. update only additional feature : Perceptron 
-	2. update features and weights : MIRA("-w_algorithm mira"), SparseMira ("-w_algorithm mira -use_sparse_features")
+	2. update features and weights : MIRA("-w_algorithm mira")
 	3. update only feature weights with MIRA : "-w_algorithm onlyMira"
 
 Input can be of two types.
@@ -26,3 +26,18 @@ Input can be of two types.
 
 The decoder detects the delimiter "_#_" and automatically splits it based on the delimiter, and updates the models and weights.
 
+
+Interlingual Single Trigger Model 
+
+Cross-lingual trigger model [1] : Some source words triggers particular target words. We model this by calculating the PMI
+of target and source pairs.
+
+Examples for English -> Italian
+         market ... negozio (shop)
+         food ... drogheria (grocery)
+         travel ... citta (city)
+
+	1. "weight-stm <weight>" : weight for the single trigger model
+	2. "stm-file <filename>" : path to the stm
+
+[1] Using inter-lingual triggers for machine translation
