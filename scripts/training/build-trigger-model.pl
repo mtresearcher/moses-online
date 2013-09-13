@@ -19,7 +19,7 @@ sub main {
 my $__usage = "
 USAGE
 -----
-perl build.pl --corpus=name --srcln=en --trgln=fr --omodel=filename
+perl build.pl --corpus=name --srcln=en --trgln=fr --omodel=filename [--dist-normalize]
 -----
 ";
 
@@ -29,6 +29,7 @@ my $__srcln="";
 my $__trgln="";
 my $__omodel="";
 my $__help;
+my $__norm;
 my %model=();
 my $__counter=0;
 my (%srcfreq, %trgfreq)=();
@@ -37,6 +38,7 @@ GetOptions ('debug' => \$__debug,
 				'srcln=s' => \$__srcln,
 				'trgln=s' => \$__trgln,
 				'omodel=s' => \$__omodel,
+				'dist-normalize' => \$__norm,
             'help' => \$__help);
 
 if($__help) { die "$__usage\n\n"; }
@@ -106,7 +108,9 @@ while(my $__src=<__SRCCORPUS>)
 		for(my $j=0;$j<@__TOKENS_TRG; $j++)
 		{
 			if(exists $srcfreq{$__TOKENS_SRC[$i]} && exists $trgfreq{$__TOKENS_TRG[$j]}){
-				$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}++;#=SigMod(abs($i-$j));
+				if($__norm){$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}+=SigMod(abs($i-$j));}
+				else {$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}++;}
+
 			}
 		}
 	}
@@ -114,7 +118,7 @@ while(my $__src=<__SRCCORPUS>)
 print STDERR "
 ******************************
 ";
-&normalize(\%model);
+&normalize(\%model,$__norm);
 &DumpModel(\%model, $__omodel);
 
 }
@@ -123,7 +127,25 @@ print STDERR "
 ******************************
 Normalizing the values ..
 ";
-	my ($model)=@_;
+	my ($model,$__norm)=@_;
+	if($__norm)
+	{
+	foreach my $__token1(keys \%{$model})
+	{
+		my $sum=0;
+		foreach my $__token2(keys \%{$model->{$__token1}})
+		{
+			$sum+==$model->{$__token1}->{$__token2};
+		}
+		foreach my $__token2(keys \%{$model->{$__token1}})
+		{
+		  my $temp1=$model->{$__token1}->{$__token2};
+		  $model->{$__token1}->{$__token2}=($temp1/$sum);
+		}
+	}
+	}
+	else
+	{
 	foreach my $__token1(keys \%{$model})
 	{
 		foreach my $__token2(keys \%{$model->{$__token1}})
@@ -132,6 +154,7 @@ Normalizing the values ..
 			my $temp2=scalar keys (\%{$model->{$__token1}});
 			$model->{$__token1}->{$__token2}=($temp1/$temp2);
 		}
+	}
 	}
 print STDERR "
 ******************************
