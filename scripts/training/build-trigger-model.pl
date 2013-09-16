@@ -4,7 +4,7 @@
 # Prashant Mathur @ FBK-irst. September 2013
 #******************************************************************************
 # Interlingual single trigger model
-# build-model.pl <corpus>
+# build-trigger-model.pl --corpus <corpus> --srcln en --trgln fr --omodel ISTM.<corpus> 
 
 
 use strict;
@@ -19,7 +19,7 @@ sub main {
 my $__usage = "
 USAGE
 -----
-perl build.pl --corpus=name --srcln=en --trgln=fr --omodel=filename [--dist-normalize]
+perl build-trigger-model.pl --corpus=name --srcln=en --trgln=fr --omodel=filename [--prune]
 -----
 ";
 
@@ -29,16 +29,20 @@ my $__srcln="";
 my $__trgln="";
 my $__omodel="";
 my $__help;
-my $__norm;
-my %model=();
+my $__prune;
+my %__model=(); #store the model here
+my %__joint_counts=();
+my $__pairwise_counts=0;
+my $__src_counts=0;
+my $__trg_counts=0;
 my $__counter=0;
-my (%srcfreq, %trgfreq)=();
+my (%__srcfreq, %__trgfreq)=();
 GetOptions ('debug' => \$__debug, 
 				'corpus=s' => \$__corpus,
 				'srcln=s' => \$__srcln,
 				'trgln=s' => \$__trgln,
 				'omodel=s' => \$__omodel,
-				'dist-normalize' => \$__norm,
+				'prune' => \$__prune,
             'help' => \$__help);
 
 if($__help) { die "$__usage\n\n"; }
@@ -46,116 +50,129 @@ if($__help) { die "$__usage\n\n"; }
 print STDERR "
 ******************************
 CORPUS = $__corpus
-Cleaning the corpus...";
+Collecting counts";
 open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
 open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
 
 while(my $__src=<__SRCCORPUS>)
 {
 	my $__trg=<__TRGCORPUS>;
+	$__counter++;
+	if($__counter%1000==0){print STDERR ".";}
 	chop($__src);
 	chop($__trg);
 	my @__TOKENS_SRC = split(/ /,$__src);
 	my @__TOKENS_TRG = split(/ /,$__trg);
 	for(my $i=0;$i<@__TOKENS_SRC; $i++)
 	{
-		$srcfreq{$__TOKENS_SRC[$i]}++;
+		$__srcfreq{$__TOKENS_SRC[$i]}++;
+		$__pairwise_counts+=scalar(@__TOKENS_TRG);
+		$__src_counts++;
 	}
 	for(my $i=0;$i<@__TOKENS_TRG; $i++)
 	{
-		$trgfreq{$__TOKENS_TRG[$i]}++;
+		$__trgfreq{$__TOKENS_TRG[$i]}++;
+		$__pairwise_counts+=scalar(@__TOKENS_SRC);
+		$__trg_counts++;
+	}
+	if(!$__prune)
+	{
+	  for(my $i=0;$i<@__TOKENS_SRC; $i++)
+	  {
+		 for(my $j=0;$j<@__TOKENS_TRG; $j++)
+		 {
+			if(exists $__srcfreq{$__TOKENS_SRC[$i]} && exists $__trgfreq{$__TOKENS_TRG[$j]}){
+			  $__joint_counts{$__TOKENS_SRC[$i]}{$__TOKENS_TRG[$j]}++;  # joint counts  
+			}
+		 }
+	  }
 	}
 }
 my $count=0;
-foreach my $key(sort {$srcfreq{$b} <=> $srcfreq{$a}} keys %srcfreq)
-{
-	delete $srcfreq{$key};
-	$count++;
-	if($count>100) {last;}
+# -- Pruning top.k --
+if($__prune){
+  foreach my $key(sort {$__srcfreq{$b} <=> $__srcfreq{$a}} keys %__srcfreq)
+  {
+	 delete $__srcfreq{$key};
+	 $count++;
+	 if($count>100) {last;}
+  }
+  $count=0;
+  foreach my $key(sort {$__trgfreq{$b} <=> $__trgfreq{$a}} keys %__trgfreq)
+  {
+	 delete $__trgfreq{$key};
+	 $count++;
+	 if($count>100) {last;}
+  }
 }
-$count=0;
-foreach my $key(sort {$trgfreq{$b} <=> $trgfreq{$a}} keys %trgfreq)
-{
-	delete $trgfreq{$key};
-	$count++;
-	if($count>100) {last;}
-}
-
 
 close(__SRCCORPUS);
 close(__TRGCORPUS);
 
+
+if($__prune)
+{
 print STDERR "
 ******************************
-CORPUS = $__corpus
-Building the model...";
-
-open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
-open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
-
-
-while(my $__src=<__SRCCORPUS>)
-{
-	my $__trg=<__TRGCORPUS>;
-	chop($__src);
-	chop($__trg);
-	$__counter++;
-	if($__counter%1000==0){print STDERR ".";}
-	my @__TOKENS_SRC = split(/ /,$__src);
-	my @__TOKENS_TRG = split(/ /,$__trg);
-	for(my $i=0;$i<@__TOKENS_SRC; $i++)
+Pruning
+";
+	$__counter=0;
+	open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
+	open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
+	while(my $__src=<__SRCCORPUS>)
 	{
-		for(my $j=0;$j<@__TOKENS_TRG; $j++)
+		my $__trg=<__TRGCORPUS>;
+		chop($__src);
+		chop($__trg);
+		$__counter++;
+		if($__counter%1000==0){print STDERR ".";}
+		my @__TOKENS_SRC = split(/ /,$__src);
+		my @__TOKENS_TRG = split(/ /,$__trg);
+		for(my $i=0;$i<@__TOKENS_SRC; $i++)
 		{
-			if(exists $srcfreq{$__TOKENS_SRC[$i]} && exists $trgfreq{$__TOKENS_TRG[$j]}){
-				if($__norm){$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}+=SigMod(abs($i-$j));}
-				else {$model{$__TOKENS_TRG[$j]}{$__TOKENS_SRC[$i]}++;}
-
+			for(my $j=0;$j<@__TOKENS_TRG; $j++)
+			{
+				if(exists $__srcfreq{$__TOKENS_SRC[$i]} && exists $__trgfreq{$__TOKENS_TRG[$j]}){
+				  $__joint_counts{$__TOKENS_SRC[$i]}{$__TOKENS_TRG[$j]}++;	# joint counts  
+				}
 			}
 		}
 	}
-}
-print STDERR "
+	close(__SRCCORPUS);
+	close(__TRGCORPUS);
+	print STDERR "
 ******************************
 ";
-&normalize(\%model,$__norm);
-&DumpModel(\%model, $__omodel);
 
+}
+&normalize($__pairwise_counts, \%__joint_counts, \%__srcfreq, \%__trgfreq, $__src_counts, $__trg_counts, \%__model);
+&DumpModel(\%__model, $__omodel);
+system("gzip $__omodel");
 }
 sub normalize{
 print STDERR "
 ******************************
-Normalizing the values ..
+Normalizing the values
 ";
-	my ($model,$__norm)=@_;
-	if($__norm)
+	my (%__joint_prob, %__prob_x, %__prob_y)=();
+	my ($__pairwise_counts, $__joint_counts, $__srcfreq, $__trgfreq, $__src_counts, $__trg_counts, $__model)=@_;
+	foreach my $__token1(keys \%{$__srcfreq})
 	{
-	foreach my $__token1(keys \%{$model})
-	{
-		my $sum=0;
-		foreach my $__token2(keys \%{$model->{$__token1}})
-		{
-			$sum+==$model->{$__token1}->{$__token2};
-		}
-		foreach my $__token2(keys \%{$model->{$__token1}})
-		{
-		  my $temp1=$model->{$__token1}->{$__token2};
-		  $model->{$__token1}->{$__token2}=($temp1/$sum);
-		}
+		$__prob_x{$__token1}=($__srcfreq->{$__token1} * 1.0)/($__src_counts*1.0);
 	}
+	foreach my $__token2(keys \%{$__trgfreq})
+	{
+		$__prob_y{$__token2}=($__trgfreq->{$__token2}*1.0)/($__trg_counts*1.0);
 	}
-	else
+	foreach my $__token1(keys \%{$__joint_counts})
 	{
-	foreach my $__token1(keys \%{$model})
-	{
-		foreach my $__token2(keys \%{$model->{$__token1}})
+		foreach my $__token2(keys \%{$__joint_counts->{$__token1}})
 		{
-			my $temp1=$model->{$__token1}->{$__token2};
-			my $temp2=scalar keys (\%{$model->{$__token1}});
-			$model->{$__token1}->{$__token2}=($temp1/$temp2);
+			$__joint_prob{$__token1}{$__token2}=($__joint_counts->{$__token1}->{$__token2}*1.0)/($__pairwise_counts*1.0);
+			$__model->{$__token1}->{$__token2}=log($__joint_prob{$__token1}{$__token2})-(log($__prob_x{$__token1})+log($__prob_y{$__token2}));
 		}
 	}
-	}
+				
 print STDERR "
 ******************************
 ";
@@ -163,21 +180,15 @@ print STDERR "
 
 sub DumpModel
 {
-	my ($model, $output)=@_;
+	my ($__model, $output)=@_;
 	open MODEL, ">", $output or die "Cannot open the model in write mode, Do you have permissions?\n";
-	foreach my $__token1(keys \%{$model})
+	foreach my $__token1(sort keys \%{$__model})
 	{
-		foreach my $__token2(keys \%{$model->{$__token1}})
+		foreach my $__token2(sort keys \%{$__model->{$__token1}})
 		{
-			print MODEL $__token2,"|||",$__token1,"|||",$model->{$__token1}->{$__token2},"\n";
+			print MODEL $__token1," ||| ",$__token2," ||| ",$__model->{$__token1}->{$__token2},"\n";
 		}
 	}
-}
-
-sub SigMod
-{
-	my $i=shift;
-	return ($i/1+abs($i));
 }
 
 &main();
