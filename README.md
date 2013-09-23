@@ -29,10 +29,12 @@ The decoder detects the delimiter "_#_" and automatically splits it based on the
 
 Interlingual Single Trigger Model 
 
-Cross-lingual trigger model [1] : Some source words triggers particular target words. We model this by calculating the PMI
-of target and source pairs.
+Cross-lingual trigger model [1] : 
+	
+	Some source words triggers particular target words. We model this by calculating the PMI 
+	of target and source pairs.
 
-Examples for English -> Italian
+Examples for English -> Italian :
 
 	1. market ... negozio (shop)
 	2. food ... drogheria (grocery)
