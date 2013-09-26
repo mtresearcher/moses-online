@@ -33,6 +33,7 @@ class SingleTriggerModel : public StatelessFeatureFunction {
         void Read(const std::string filename);
         void SetSentence(std::string sent);
         inline std::string GetScoreProducerWeightShortName(unsigned) const { return "stm"; };
+        float getScore(std::string s, std::string t);
     private:
         void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
         std::string m_sentence;

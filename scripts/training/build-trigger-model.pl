@@ -88,16 +88,13 @@ while(my $__src=<__SRCCORPUS>)
 	  }
 	}
 }
-my $count=0;
 # -- Pruning top.k --
 if($__prune){
   foreach my $key(sort {$__srcfreq{$b} <=> $__srcfreq{$a}} keys %__srcfreq)
   {
-	 delete $__srcfreq{$key};
-	 $count++;
-	 if($count>100) {last;}
+	 if($key !~ m/^[a-zA-Z]+$/) {delete $__srcfreq{$key};}
   }
-  $count=0;
+  my $count=0;
   foreach my $key(sort {$__trgfreq{$b} <=> $__trgfreq{$a}} keys %__trgfreq)
   {
 	 delete $__trgfreq{$key};
@@ -106,19 +103,18 @@ if($__prune){
   }
 }
 
+
 close(__SRCCORPUS);
 close(__TRGCORPUS);
 
-
 if($__prune)
 {
-print STDERR "
-******************************
-Pruning
-";
 	$__counter=0;
 	open __SRCCORPUS, "$__corpus.$__srcln" or die "OOPS! Couldn't open the source corpus file\n";
 	open __TRGCORPUS, "$__corpus.$__trgln" or die "OOPS! Couldn't open the target corpus file\n";
+print STDERR "
+******************************
+Pruning";
 	while(my $__src=<__SRCCORPUS>)
 	{
 		my $__trg=<__TRGCORPUS>;
@@ -130,30 +126,40 @@ Pruning
 		my @__TOKENS_TRG = split(/ /,$__trg);
 		for(my $i=0;$i<@__TOKENS_SRC; $i++)
 		{
-			for(my $j=0;$j<@__TOKENS_TRG; $j++)
-			{
-				if(exists $__srcfreq{$__TOKENS_SRC[$i]} && exists $__trgfreq{$__TOKENS_TRG[$j]}){
-				  $__joint_counts{$__TOKENS_SRC[$i]}{$__TOKENS_TRG[$j]}++;	# joint counts  
+			if(defined $__srcfreq{$__TOKENS_SRC[$i]}){
+				for(my $j=0;$j<@__TOKENS_TRG; $j++)
+				{
+					if(defined $__trgfreq{$__TOKENS_TRG[$j]} && abs(length($__TOKENS_SRC[$i]) - length($__TOKENS_TRG[$j])) < 3 ){
+					  $__joint_counts{$__TOKENS_SRC[$i]}{$__TOKENS_TRG[$j]}++;	# joint counts  
+					}
 				}
 			}
 		}
 	}
-	close(__SRCCORPUS);
-	close(__TRGCORPUS);
 	print STDERR "
 ******************************
 ";
-
+	close(__SRCCORPUS);
+	close(__TRGCORPUS);
 }
+
 &normalize($__pairwise_counts, \%__joint_counts, \%__srcfreq, \%__trgfreq, $__src_counts, $__trg_counts, \%__model);
+
 &DumpModel(\%__model, $__omodel);
+
+print STDERR "
+******************************
+Zipping .. 
+";
 system("gzip $__omodel");
+print STDERR "
+******************************
+";
 }
 sub normalize{
 print STDERR "
 ******************************
-Normalizing the values
-";
+Calculating PMI values";
 	my (%__joint_prob, %__prob_x, %__prob_y)=();
 	my ($__pairwise_counts, $__joint_counts, $__srcfreq, $__trgfreq, $__src_counts, $__trg_counts, $__model)=@_;
 	foreach my $__token1(keys \%{$__srcfreq})
@@ -180,15 +186,23 @@ print STDERR "
 
 sub DumpModel
 {
+
+print STDERR "
+******************************
+Dumping Model 
+";
 	my ($__model, $output)=@_;
 	open MODEL, ">", $output or die "Cannot open the model in write mode, Do you have permissions?\n";
 	foreach my $__token1(sort keys \%{$__model})
 	{
 		foreach my $__token2(sort keys \%{$__model->{$__token1}})
 		{
-			print MODEL $__token1," ||| ",$__token2," ||| ",$__model->{$__token1}->{$__token2},"\n";
+			print MODEL $__token1,"|||",$__token2,"|||",$__model->{$__token1}->{$__token2},"\n";
 		}
 	}
+print STDERR "
+******************************
+";
 }
 
 &main();

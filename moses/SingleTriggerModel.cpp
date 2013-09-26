@@ -46,6 +46,10 @@ namespace Moses {
         m_stm.empty();
     }
 
+    float SingleTriggerModel::getScore(std::string s, std::string t)
+    {
+        return m_stm[s][t];
+    }
     void SingleTriggerModel::Read(const std::string filePath) {
         // read the trigger model
         //    
@@ -85,28 +89,29 @@ namespace Moses {
 
     void SingleTriggerModel::SetSentence(std::string sent) {
         m_sentence = sent;
+        VERBOSE(1, "days jours"<<getScore("days", "jours")<<endl);
     }
-
     void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
         // for now assuming that we have m_sentence set already
         float score = 0.0;
         std::vector<string> str;
-        int x = split_marker_perl(m_sentence, " ", str);
+        split_marker_perl(m_sentence, " ", str);
         std::string t = "";
         size_t endpos = tp.GetSize();
         for (size_t pos = 0; pos < endpos; ++pos) {
             t = tp.GetWord(pos).GetFactor(0)->GetString();
-            for (int i = 0; i < x; i++) {
+            for (int i = 0; i < str.size(); i++) {
                 std::map<std::string, map<std::string, float> >::const_iterator it = m_stm.find(str[i]);
                 if (it != m_stm.end()) {
-                    map<std::string, float>::const_iterator itr = it->second.find(t);
+                    map<std::string, float>::const_iterator itr = m_stm.at(str[i]).find(t);
                     if (itr != it->second.end()) {
-                        score += itr->second;
+                        score += m_stm.at(str[i]).at(t);
+                        VERBOSE(1,it->first<<" "<<itr->first<<" "<<m_stm.at(str[i]).at(t)<<endl);
                     }
                 }
             }
         }
-        if(m_sigmoidParam)
+        if(m_sigmoidParam || true)
                 score=(score/(1+abs(score)));
         out->PlusEquals(this, score);
     }

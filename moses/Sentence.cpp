@@ -127,7 +127,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
   // remove extra spaces
   line = Trim(line);
   if(staticData.GetSingleTriggerModel()){
-	  StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
+      StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
   }
   // if sentences is specified as "<seg id=1> ... </seg>", extract id
   meta = ProcessAndStripSGML(line);
