@@ -67,20 +67,25 @@ namespace Moses {
                 break;
             }
 
-            util::TokenIter<util::MultiCharacter> pipes(line, util::MultiCharacter("|||"));
-            StringPiece sourcePhraseString(GrabOrDie(pipes, filePath, line_num));
-            StringPiece targetPhraseString(GrabOrDie(pipes, filePath, line_num));
-            StringPiece scoreString(GrabOrDie(pipes, filePath, line_num));
-            char* err_ind;
-            float score = FloorScore(TransformScore(static_cast<float> (strtod(scoreString.data(), &err_ind))));
-            if (err_ind == scoreString.data()) {
-                stringstream strme;
-                strme << "Bad number " << scoreString << " on line " << line_num;
-                UserMessage::Add(strme.str());
-                abort();
-            }
+//            util::TokenIter<util::MultiCharacter> pipes(line, util::MultiCharacter("|||"));
+//            StringPiece sourcePhraseString(GrabOrDie(pipes, filePath, line_num));
+//            StringPiece targetPhraseString(GrabOrDie(pipes, filePath, line_num));
+//            StringPiece scoreString(GrabOrDie(pipes, filePath, line_num));
+//            char* err_ind;
+//            float score = FloorScore(TransformScore(static_cast<float> (strtod(scoreString.data(), &err_ind))));
+//            if (err_ind == scoreString.data()) {
+//                stringstream strme;
+//                strme << "Bad number " << scoreString << " on line " << line_num;
+//                UserMessage::Add(strme.str());
+//                abort();
+//            }
+            std::vector<std::string> blocks;
+            split_marker_perl(line.as_string(), "|||", blocks);
+            float score;
+            stringstream(blocks[2])>>score;
             // Insertion in memory
-            m_stm[sourcePhraseString.as_string()][targetPhraseString.as_string()] = score;
+            m_stm[blocks[0]][blocks[1]]=score;
+//            m_stm[sourcePhraseString.as_string()][targetPhraseString.as_string()] = score;
         }
         PrintUserTime("Loaded Interlingual Single Trigger Model...");
     }
@@ -89,7 +94,6 @@ namespace Moses {
 
     void SingleTriggerModel::SetSentence(std::string sent) {
         m_sentence = sent;
-        VERBOSE(1, "days jours"<<getScore("days", "jours")<<endl);
     }
     void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
         // for now assuming that we have m_sentence set already
@@ -106,7 +110,6 @@ namespace Moses {
                     map<std::string, float>::const_iterator itr = m_stm.at(str[i]).find(t);
                     if (itr != it->second.end()) {
                         score += m_stm.at(str[i]).at(t);
-                        VERBOSE(1,it->first<<" "<<itr->first<<" "<<m_stm.at(str[i]).at(t)<<endl);
                     }
                 }
             }
