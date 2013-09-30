@@ -52,7 +52,6 @@ namespace Moses {
     }
     void SingleTriggerModel::Read(const std::string filePath) {
         // read the trigger model
-        //    
     	PrintUserTime("Start loading Interlingual Single Trigger Model...");
 
         const StaticData& staticData = StaticData::Instance();
@@ -66,26 +65,12 @@ namespace Moses {
             } catch (util::EndOfFileException &e) {
                 break;
             }
-
-//            util::TokenIter<util::MultiCharacter> pipes(line, util::MultiCharacter("|||"));
-//            StringPiece sourcePhraseString(GrabOrDie(pipes, filePath, line_num));
-//            StringPiece targetPhraseString(GrabOrDie(pipes, filePath, line_num));
-//            StringPiece scoreString(GrabOrDie(pipes, filePath, line_num));
-//            char* err_ind;
-//            float score = FloorScore(TransformScore(static_cast<float> (strtod(scoreString.data(), &err_ind))));
-//            if (err_ind == scoreString.data()) {
-//                stringstream strme;
-//                strme << "Bad number " << scoreString << " on line " << line_num;
-//                UserMessage::Add(strme.str());
-//                abort();
-//            }
             std::vector<std::string> blocks;
             split_marker_perl(line.as_string(), "|||", blocks);
             float score;
             stringstream(blocks[2])>>score;
             // Insertion in memory
             m_stm[blocks[0]][blocks[1]]=score;
-//            m_stm[sourcePhraseString.as_string()][targetPhraseString.as_string()] = score;
         }
         PrintUserTime("Loaded Interlingual Single Trigger Model...");
     }
@@ -96,7 +81,7 @@ namespace Moses {
         m_sentence = sent;
     }
     void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
-        // for now assuming that we have m_sentence set already
+        
         float score = 0.0;
         std::vector<string> str;
         split_marker_perl(m_sentence, " ", str);
@@ -115,7 +100,7 @@ namespace Moses {
             }
         }
         if(m_sigmoidParam || true)
-                score=(score/(1+abs(score)));
+            score=(score/(1+abs(score)));
         out->PlusEquals(this, score);
     }
 
