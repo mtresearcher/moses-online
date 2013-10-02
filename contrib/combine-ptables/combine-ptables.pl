@@ -152,6 +152,8 @@ if($combination_mode eq "interp") {
 	if(scalar(@table_level_weights) != $nbtables) {
 	    die "$usage\n Invalid string for option --weights! Must be a comma-separated list of floats, one per ph.table.\n";
 	}
+	my $sum = eval join '+', @table_level_weights;
+	if($sum!=1) {for(my $i=0;$i<scalar(@table_level_weights);$i++){$table_level_weights[$i]/=$sum;}}
     }
 
     for(my $i=0; $i<$nbtables; $i++) {
