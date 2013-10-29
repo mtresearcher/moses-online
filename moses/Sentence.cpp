@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "Sentence.h"
 #include "OnlineLearner.h"
+#include "OnlineSingleTriggerModel.h"
 #include "moses/TranslationModel/PhraseDictionaryMemory.h"
 #include "TranslationOptionCollectionText.h"
 #include "StaticData.h"
@@ -69,11 +70,9 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
   const StaticData &staticData = StaticData::Instance();
   if(staticData.GetOnlineLearningModel()!=NULL)
   {
-	  VERBOSE(1,"I am in the if statement\n");
 	  std::vector<string> strs;
 	  int splits=split_marker_perl(line, "_#_", strs);
 	  OnlineLearner* ol=StaticData::InstanceNonConst().GetOnlineLearningModel();
-	  cerr<<"No of splits : "<<splits<<endl;
 	  if(splits>1){
 		  ol->SetOnlineLearningTrue();
 		  if(ol!=NULL)
@@ -92,6 +91,31 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  }
 	  line=strs[0];
   }
+
+  if(staticData.GetOnlineSingleTriggerModel()!=NULL)
+  {
+	  std::vector<string> strs;
+	  int splits=split_marker_perl(line, "_#_", strs);
+	  OnlineSingleTriggerModel* ol=StaticData::InstanceNonConst().GetOnlineSingleTriggerModel();
+	  if(splits>1){
+		  ol->SetOnlineSTMTrue();
+		  if(ol!=NULL)
+		  {
+			  if(!ol->SetPostEditedSentence(strs[1])) return 0;
+		  }
+		  else
+		  {
+			  VERBOSE(1, "online learning module not activated!!");
+			  return 0;
+		  }
+	  }
+	  else{
+		  ol->SetOnlineSTMFalse();
+		  cerr<<"There is no post edited sentence, so I am just decoding!\n";
+	  }
+	  line=strs[0];
+  }
+
   //get covered words - if continual-partial-translation is switched on, parse input
   
   m_frontSpanCoveredLength = 0;

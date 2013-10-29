@@ -1,6 +1,6 @@
 /* 
  * File:   SingleTriggerModel.h
- * Author: pmathur
+ * Author: prashant
  *
  * Created on August 13, 2013, 5:21 PM
  */

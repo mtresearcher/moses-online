@@ -1,6 +1,6 @@
 /* 
  * File:   SingleTriggerModel.cpp
- * Author: pmathur
+ * Author: prashant
  * 
  * Created on August 13, 2013, 5:21 PM
  */
@@ -68,7 +68,7 @@ namespace Moses {
             std::vector<std::string> blocks;
             split_marker_perl(line.as_string(), "|||", blocks);
             float score;
-            stringstream(blocks[2])>>score;
+            stringstream(blocks[2])>>score; // this is an interesting way to change data type!
             // Insertion in memory
             m_stm[blocks[0]][blocks[1]]=score;
         }

@@ -72,6 +72,7 @@ class TargetBigramFeature;
 class TargetNgramFeature;
 class CacheBasedLanguageModel;
 class OnlineLearner;
+class OnlineSingleTriggerModel;
 class SingleTriggerModel;
 #ifdef HAVE_SYNLM
 class SyntacticLanguageModel;
@@ -108,6 +109,7 @@ protected:
   CacheBasedLanguageModel* m_CacheBasedLanguageModel;
   OnlineLearner* m_onlinelearner;
   SingleTriggerModel* m_singletriggermodel;
+  OnlineSingleTriggerModel* m_onlinesingletriggermodel;
   std::vector<DecodeGraph*> m_decodeGraphs;
   std::vector<size_t> m_decodeGraphBackoff;
   // Initial	= 0 = can be used when creating poss trans
@@ -300,9 +302,11 @@ public:
 
   std::string m_postedited;
   bool LoadOnlineLearningModel();
+  bool LoadOnlineSingleTriggerModel();
   void SetSourceSentenceforSTM(std::string);
   bool GetSingleTriggerModel() const;
   OnlineLearner* GetOnlineLearningModel() const;
+  OnlineSingleTriggerModel* GetOnlineSingleTriggerModel() const;
   int GetNumIterationsOnlineLearning() const;
 
   bool IsAlwaysCreateDirectTranslationOption() const {
