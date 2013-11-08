@@ -30,15 +30,20 @@ class SingleTriggerModel : public StatelessFeatureFunction {
         virtual ~SingleTriggerModel();
         void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
         void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
-        void Read(const std::string filename);
-        void SetSentence(std::string sent);
+        void Read(const std::string& filename);
+        void SetSentence(std::string& sent);
+        bool SetPostEditedSentence(std::string& sent);
         inline std::string GetScoreProducerWeightShortName(unsigned) const { return "stm"; };
-        float getScore(std::string s, std::string t);
+        float getScore(std::string& s, std::string& t);
+        map<int, string> SubPhrases(const string& s1, const string& s2);
+        bool IfActive(){return m_active;}
+        void RemoveJunk();
+        void RunInstance(Manager& manager);
     private:
         void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
-        std::string m_sentence;
+        std::string m_source, m_postedited;
         std::map<std::string, std::map<std::string, float> > m_stm;
-        bool m_sigmoidParam;
+        bool m_sigmoidParam, m_active;
 };
 }
 #endif	/* SINGLETRIGGERMODEL_H */

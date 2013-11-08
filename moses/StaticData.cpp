@@ -30,7 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
 #include "SingleTriggerModel.h"
-#include "OnlineSingleTriggerModel.h"
 #include "StaticData.h"
 #include "Util.h"
 #include "FactorCollection.h"
@@ -94,7 +93,6 @@ namespace Moses {
     , m_CacheBasedLanguageModel(NULL)
     , m_onlinelearner(NULL)
     , m_singletriggermodel(NULL)
-    , m_onlinesingletriggermodel(NULL)
     , m_targetWordInsertionFeature(NULL)
     , m_sourceWordDeletionFeature(NULL)
     , m_numLinkParams(1)
@@ -558,7 +556,6 @@ namespace Moses {
         if (!LoadCacheBasedLanguageModel()) return false;
         if (!LoadOnlineLearningModel()) return false;
         if (!LoadSingleTriggerModel()) return false;
-        if (!LoadOnlineSingleTriggerModel()) return false;
         if (!LoadReferences()) return false;
         if (!LoadDiscrimLMFeature()) return false;
         if (!LoadPhrasePairFeature()) return false;
@@ -729,11 +726,7 @@ namespace Moses {
             if (m_singletriggermodel != NULL) {
                 cerr << "Adding Single Trigger Model from StaticData::LoadData\n";
                 m_translationSystems.find(config[0])->second.AddFeatureFunction(m_singletriggermodel);
-            }
-            if (m_onlinesingletriggermodel != NULL) {
-            	cerr << "Adding Online Single Trigger Model from StaticData::LoadData\n";
-            	m_translationSystems.find(config[0])->second.AddFeatureFunction(m_onlinesingletriggermodel);
-            	m_translationSystems.find(config[0])->second.SetOnlineSingleTriggerModel(m_onlinesingletriggermodel);
+                m_translationSystems.find(config[0])->second.SetSingleTriggerModel(m_singletriggermodel);
             }
             for (size_t i = 0; i < m_sparsePhraseDictionary.size(); ++i) {
                 if (m_sparsePhraseDictionary[i]) {
@@ -874,8 +867,6 @@ namespace Moses {
             delete m_onlinelearner;
         if (m_singletriggermodel)
             delete m_singletriggermodel;
-        if (m_onlinesingletriggermodel)
-        	delete m_onlinesingletriggermodel;
         delete m_targetBigramFeature;
         for (size_t i = 0; i < m_targetNgramFeatures.size(); ++i)
             delete m_targetNgramFeatures[i];
@@ -1447,15 +1438,15 @@ namespace Moses {
         m_singletriggermodel->SetSentence(line);
     }
 
-    bool StaticData::GetSingleTriggerModel() const {
-    	if(m_singletriggermodel!=NULL) {
-    		return true;
-    	}
-    	return false;
+    bool StaticData::IfActiveSTM() const {
+    	return m_singletriggermodel->IfActive();
     }
 
     OnlineLearner* StaticData::GetOnlineLearningModel() const {
         return m_onlinelearner;
+    }
+    SingleTriggerModel* StaticData::GetSingleTriggerModel() const {
+    	return m_singletriggermodel;
     }
     int StaticData::GetNumIterationsOnlineLearning() const {
         const int numIter = (m_parameter->GetParam("numIterations").size() > 0) ?
@@ -1522,25 +1513,7 @@ namespace Moses {
         return true;
     }
 
-    OnlineSingleTriggerModel* StaticData::GetOnlineSingleTriggerModel() const {
-    	return m_onlinesingletriggermodel;
-    }
-    bool StaticData::LoadOnlineSingleTriggerModel() { // optional model ... returns true
-    	const std::vector<float> weights = Scan<float>(m_parameter->GetParam("weight-ostm"));
-    	std::vector<std::string> files = m_parameter->GetParam("ostm-file");
-    	bool ostm_normalizeScore = (m_parameter->isParamSpecified("ostm-normalize")) ? true : false;
-    	if(files.size()>0){
-    		m_onlinesingletriggermodel = new OnlineSingleTriggerModel(files[0], ostm_normalizeScore);
-    	}
-    	else if(files.size()==0){
-    		m_onlinesingletriggermodel = new OnlineSingleTriggerModel(ostm_normalizeScore);
-    	}
-    	if(weights.size()>0)
-    	{
-    		SetWeight(m_onlinesingletriggermodel, weights[0]);
-    	}
-    	return true;
-    }
+
     bool StaticData::LoadCacheBasedLanguageModel() {
         const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-cblm"));
         const vector<std::string> &files = m_parameter->GetParam("cblm-file");

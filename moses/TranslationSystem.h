@@ -43,7 +43,7 @@ class MetaFeatureProducer;
 class GlobalLexicalModel;
 class CacheBasedLanguageModel;
 class OnlineLearner;
-class OnlineSingleTriggerModel;
+class SingleTriggerModel;
 
 /**
  * Enables the configuration of multiple translation systems.
@@ -64,7 +64,6 @@ class TranslationSystem {
       void AddGlobalLexicalModel(GlobalLexicalModel* globalLexicalModel);
       void AddCacheBasedLanguageModel(CacheBasedLanguageModel* CacheBasedLanguageModel);
       void AddOnlineLearningModel(OnlineLearner* ol);
-      void AddOnlineSingleTriggerModel(OnlineSingleTriggerModel* ol);
       
       //Insert non-core feature function
       void AddFeatureFunction(const FeatureFunction* featureFunction);
@@ -100,8 +99,8 @@ class TranslationSystem {
       OnlineLearner* GetOnlineLearningModel() const {return m_onlinelearner;}
       void SetOnlineLearningModel(OnlineLearner* ol){m_onlinelearner = ol;}
 
-      OnlineSingleTriggerModel* GetOnlineSingleTriggerModel() const {return m_onlinesingletriggermodel;}
-      void SetOnlineSingleTriggerModel(OnlineSingleTriggerModel* ol){m_onlinesingletriggermodel = ol;}
+      SingleTriggerModel* GetSingleTriggerModel() const {return m_singletriggermodel;}
+      void SetSingleTriggerModel(SingleTriggerModel* ol){m_singletriggermodel = ol;}
 
       const PhraseDictionaryFeature *GetTranslationScoreProducer(size_t index) const { return GetPhraseDictionaries().at(index); }
       
@@ -143,7 +142,7 @@ class TranslationSystem {
 	
         CacheBasedLanguageModel* m_CacheBasedLanguageModel;
         OnlineLearner* m_onlinelearner;
-        OnlineSingleTriggerModel* m_onlinesingletriggermodel;
+        SingleTriggerModel* m_singletriggermodel;
 	std::vector<const ScoreProducer*> m_producers; /**< all the score producers in this run */
 
 };

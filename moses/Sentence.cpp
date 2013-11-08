@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "Sentence.h"
 #include "OnlineLearner.h"
-#include "OnlineSingleTriggerModel.h"
+#include "SingleTriggerModel.h"
 #include "moses/TranslationModel/PhraseDictionaryMemory.h"
 #include "TranslationOptionCollectionText.h"
 #include "StaticData.h"
@@ -92,26 +92,13 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  line=strs[0];
   }
 
-  if(staticData.GetOnlineSingleTriggerModel()!=NULL)
+  if(staticData.GetSingleTriggerModel()->IfActive())
   {
 	  std::vector<string> strs;
 	  int splits=split_marker_perl(line, "_#_", strs);
-	  OnlineSingleTriggerModel* ol=StaticData::InstanceNonConst().GetOnlineSingleTriggerModel();
-	  if(splits>1){
-		  ol->SetOnlineSTMTrue();
-		  if(ol!=NULL)
-		  {
-			  if(!ol->SetPostEditedSentence(strs[1])) return 0;
-		  }
-		  else
-		  {
-			  VERBOSE(1, "online learning module not activated!!");
-			  return 0;
-		  }
-	  }
-	  else{
-		  ol->SetOnlineSTMFalse();
-		  cerr<<"There is no post edited sentence, so I am just decoding!\n";
+	  SingleTriggerModel* ol=StaticData::InstanceNonConst().GetSingleTriggerModel();
+	  if(splits>1 && ol!=NULL){
+		  if(!ol->SetPostEditedSentence(strs[1])) return 0;
 	  }
 	  line=strs[0];
   }
@@ -150,7 +137,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 
   // remove extra spaces
   line = Trim(line);
-  if(staticData.GetSingleTriggerModel()){
+  if(staticData.GetSingleTriggerModel()->IfActive()){
       StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
   }
   // if sentences is specified as "<seg id=1> ... </seg>", extract id

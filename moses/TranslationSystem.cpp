@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "GlobalLexicalModelUnlimited.h"
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
-#include "OnlineSingleTriggerModel.h"
 #include "WordTranslationFeature.h"
 #include "PhrasePairFeature.h"
 #include "LexicalReordering.h"
@@ -85,10 +84,6 @@ namespace Moses {
     void TranslationSystem::AddOnlineLearningModel(OnlineLearner* ol) {
     	m_onlinelearner = ol;
     	AddFeatureFunction(ol);
-    }
-    void TranslationSystem::AddOnlineSingleTriggerModel(OnlineSingleTriggerModel* ostm) {
-    	m_onlinesingletriggermodel = ostm;
-    	AddFeatureFunction(ostm);
     }
 
     void TranslationSystem::AddFeatureFunction(const FeatureFunction* ff) {

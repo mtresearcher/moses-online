@@ -43,6 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "moses/Manager.h"
 #include "moses/StaticData.h"
 #include "moses/OnlineLearner.h"
+#include "moses/SingleTriggerModel.h"
 #include "moses/Util.h"
 #include "moses/Timer.h"
 #include "moses/ThreadPool.h"
@@ -125,7 +126,10 @@ public:
         SD.GetOnlineLearningModel()->RemoveJunk();
     }
 
-
+    if(SD.GetSingleTriggerModel()!=NULL && SD.GetSingleTriggerModel()->IfActive()){
+    	SD.GetSingleTriggerModel()->RunInstance(manager);
+    	SD.GetSingleTriggerModel()->RemoveJunk();
+    }
     // output word graph
     if (m_wordGraphCollector) {
       ostringstream out;
