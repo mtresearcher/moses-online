@@ -1430,6 +1430,7 @@ namespace Moses {
         }
         if(weights.size()>0)
         {
+        	m_singletriggermodel = new SingleTriggerModel(stm_normalizeScore);
         	SetWeight(m_singletriggermodel, weights[0]);
         }
         return true;

@@ -92,13 +92,13 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  line=strs[0];
   }
 
-  if(staticData.GetSingleTriggerModel()->IfActive())
+  if(staticData.GetSingleTriggerModel()!=NULL)
   {
 	  std::vector<string> strs;
 	  int splits=split_marker_perl(line, "_#_", strs);
-	  SingleTriggerModel* ol=StaticData::InstanceNonConst().GetSingleTriggerModel();
-	  if(splits>1 && ol!=NULL){
-		  if(!ol->SetPostEditedSentence(strs[1])) return 0;
+	  SingleTriggerModel* stm=StaticData::InstanceNonConst().GetSingleTriggerModel();
+	  if(splits>1){
+		  if(!stm->SetPostEditedSentence(strs[1])) return 0;
 	  }
 	  line=strs[0];
   }
@@ -137,7 +137,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 
   // remove extra spaces
   line = Trim(line);
-  if(staticData.GetSingleTriggerModel()->IfActive()){
+  if(staticData.GetSingleTriggerModel()!=NULL){
       StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
   }
   // if sentences is specified as "<seg id=1> ... </seg>", extract id

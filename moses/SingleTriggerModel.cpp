@@ -50,6 +50,14 @@ namespace Moses {
         m_active=true;
     }
 
+    SingleTriggerModel::SingleTriggerModel(bool sigmoidParam) : StatelessFeatureFunction("SingleTriggerModel", 1) {
+    	m_source.resize(0);
+    	m_postedited.resize(0);
+    	m_stm.empty();
+    	m_sigmoidParam=true;
+    	m_active=true;
+    }
+
     SingleTriggerModel::~SingleTriggerModel() {
         m_postedited.resize(0);
         m_source.resize(0);
@@ -87,7 +95,7 @@ namespace Moses {
 
     // this function should be called before decoding of a sentence starts
 
-    void SingleTriggerModel::SetSentence(std::string& sent) {
+    void SingleTriggerModel::SetSentence(std::string& sent){
         m_source = sent;
     }
     void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {

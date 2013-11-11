@@ -27,6 +27,7 @@ namespace Moses {
 class SingleTriggerModel : public StatelessFeatureFunction {
     public:
         SingleTriggerModel(std::string file, bool m_param);
+        SingleTriggerModel(bool m_param);
         virtual ~SingleTriggerModel();
         void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
         void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
