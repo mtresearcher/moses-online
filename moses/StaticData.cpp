@@ -1444,7 +1444,7 @@ namespace Moses {
             if(f_learningrate==0)
             {
                 UserMessage::Add("You have to specify non-zero feature learning rate");
-                return false;
+                return true;
             }
             const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
@@ -1466,12 +1466,12 @@ namespace Moses {
             if(weight!=0)
             {
                 UserMessage::Add("Don't specify the weight for online feature.");
-                return false;
+                return true;
             }
             if(f_learningrate!=0)
             {
                 UserMessage::Add("You cannot specify feature learning rate and onlyMIRA algorithm together");
-                return false;
+                return true;
             }
             if (w_learningrate != 0) {
                 setAlgo = Mira;
@@ -1492,16 +1492,16 @@ namespace Moses {
             else
             {
                 UserMessage::Add("You did not specify the learning rate for MIRA");
-                return false;
+                return true;
             }
         }
         else if(w_algorithm.compare("onlyMira")!=0 && w_algorithm.compare("alsoMira")!=0 && w_algorithm.compare("NULL")!=0)
         {
             UserMessage::Add("The name of algorithm doesn't match. options 1. alsoMira 2. onlyMira");
-            return false;
+            return true;
         }
         UserMessage::Add("You did something wrong. Please recheck your options.");
-        return false;
+        return true;
     }
 
     bool StaticData::LoadCacheBasedLanguageModel() {
