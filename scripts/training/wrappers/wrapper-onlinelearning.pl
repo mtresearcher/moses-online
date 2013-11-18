@@ -123,8 +123,8 @@ sub findOptimalIterations
 		close(TEMPIN);
 
 # translate the temp.input
-		my $cmd = "cat temp.input | LD_LIBRARY_PATH=/research/hlt/prashant/MyInstallation/lib64 $__moses -f $__config -w_learningrate 0.05 -w_algorithm onlyMira 2> error.log";
-		$output = `$cmd`;
+		my $cmd = "cat temp.input | LD_LIBRARY_PATH=/research/hlt/prashant/MyInstallation/lib64 $__moses -f $__config -w_learningrate 0.05 -w_algorithm onlyMira > temp.output 2> error.log";
+		system($cmd);
 
 # calculate the BLEU
 		$prevBLEU=$currBLEU;
