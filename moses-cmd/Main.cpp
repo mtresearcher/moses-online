@@ -111,7 +111,6 @@ public:
 		Sentence sentence();
 		// set translation system
 		const TranslationSystem& system = staticData.GetTranslationSystem(TranslationSystem::DEFAULT);
-		int numIter=staticData.GetNumIterationsOnlineLearning();
 		Manager manager(m_lineNumber, *m_source,staticData.GetSearchAlgorithm(), &system);
 
 		// execute the translation
@@ -193,9 +192,7 @@ public:
 						debug << "BEST TRANSLATION: " << *bestHypo << endl;
 					}
 				}
-				if(SD.GetOnlineLearningModel()!=NULL && !SD.GetOnlineLearningModel()->GetOnlineLearning()){
-					out << endl;			// when learning from postedition the decoder doesn't output anything!
-				}
+				out << endl;
 			}
 
 			// MBR decoding (n-best MBR, lattice MBR, consensus)
@@ -261,7 +258,15 @@ public:
 			}
 
 			// report best translation to output collector
-			m_outputCollector->Write(m_lineNumber,out.str(),debug.str());
+//			m_outputCollector->Write(m_lineNumber,out.str(),debug.str());
+
+			// NEW: when learning from postedition the decoder doesn't output anything!
+			if(staticData.GetOnlineLearningModel()!=NULL)
+				if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==false){
+					cout<<out.str();
+				}
+
+
 		}
 
 		// output n-best list

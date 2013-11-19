@@ -87,22 +87,21 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  }
 	  else{
 		  ol->SetOnlineLearningFalse();
-		  cerr<<"There is no post edited sentence, so I am just decoding!\n";
 	  }
 	  line=strs[0];
   }
 
-//  if(staticData.GetSingleTriggerModel()!=NULL)
-  if(staticData.GetSingleTriggerModel()->IfActive())
-  {
-	  std::vector<string> strs;
-	  int splits=split_marker_perl(line, "_#_", strs);
-	  SingleTriggerModel* stm=StaticData::InstanceNonConst().GetSingleTriggerModel();
-	  if(splits>1){
-		  if(!stm->SetPostEditedSentence(strs[1])) return 0;
+  if(staticData.GetSingleTriggerModel()!=NULL)
+	  if(staticData.GetSingleTriggerModel()->IfActive())
+	  {
+		  std::vector<string> strs;
+		  int splits=split_marker_perl(line, "_#_", strs);
+		  SingleTriggerModel* stm=StaticData::InstanceNonConst().GetSingleTriggerModel();
+		  if(splits>1){
+			  if(!stm->SetPostEditedSentence(strs[1])) return 0;
+		  }
+		  line=strs[0];
 	  }
-	  line=strs[0];
-  }
 
   //get covered words - if continual-partial-translation is switched on, parse input
   
@@ -138,10 +137,11 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 
   // remove extra spaces
   line = Trim(line);
-//  if(staticData.GetSingleTriggerModel()!=NULL){
-  if(staticData.GetSingleTriggerModel()->IfActive()){
-      StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
-  }
+
+  if(staticData.GetSingleTriggerModel()!=NULL)
+	  if(staticData.GetSingleTriggerModel()->IfActive()){
+		  StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
+	  }
   // if sentences is specified as "<seg id=1> ... </seg>", extract id
   meta = ProcessAndStripSGML(line);
   

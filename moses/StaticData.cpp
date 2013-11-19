@@ -1505,7 +1505,8 @@ namespace Moses {
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
             m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
                     scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            SetWeight(m_onlinelearner, weights[0]);
+            //SetWeight(m_onlinelearner, weights[0]);
+            SetWeight(m_onlinelearner, 0);
             IFVERBOSE(1)
             PrintUserTime("Weights : MIRA");
             return true;
