@@ -61,7 +61,7 @@ namespace MosesCmd
 {
 // output floats with three significant digits
 static const size_t PRECISION = 3;
-
+std::string weights_file;
 /** Enforce rounding */
 void fix(std::ostream& stream, size_t size)
 {
@@ -265,8 +265,7 @@ public:
 				if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==false){
 					cout<<out.str();
 				}
-
-
+			ShowWeightsforOnlineLearning(weights_file);
 		}
 
 		// output n-best list
@@ -317,6 +316,62 @@ public:
 		VERBOSE(1, "Line " << m_lineNumber << ": Translation took " << translationTime << " seconds total" << endl);
 	}
 
+	void PrintFeatureWeight(const FeatureFunction* ff, ofstream& out)
+	{
+	  size_t numScoreComps = ff->GetNumScoreComponents();
+	  if (numScoreComps != ScoreProducer::unlimited) {
+	    vector<float> values = StaticData::Instance().GetAllWeights().GetScoresForProducer(ff);
+	    for (size_t i = 0; i < numScoreComps; ++i)
+	      out << ff->GetScoreProducerDescription() <<  " "
+	           << ff->GetScoreProducerWeightShortName() << " "
+	           << values[i] << endl;
+	  }
+	  else {
+	    if (ff->GetSparseProducerWeight() == 1)
+	        out << ff->GetScoreProducerDescription() << " " <<
+	        ff->GetScoreProducerWeightShortName() << " sparse" <<  endl;
+	    else
+	        out << ff->GetScoreProducerDescription() << " " <<
+	        ff->GetScoreProducerWeightShortName() << " " << ff->GetSparseProducerWeight() << endl;
+	  }
+	  return;
+	}
+
+	void ShowWeightsforOnlineLearning(std::string filename)
+	{
+	  //TODO: Find a way of ensuring this order is synced with the nbest
+	  fix(cout,6);
+	  ofstream out;
+	  out.open(filename.c_str(), ios::out);
+	  if(!out.is_open()){return;}
+	  const StaticData& staticData = StaticData::Instance();
+	  const TranslationSystem& system = staticData.GetTranslationSystem(TranslationSystem::DEFAULT);
+	  const vector<const StatelessFeatureFunction*>& slf =system.GetStatelessFeatureFunctions();
+	  const vector<const StatefulFeatureFunction*>& sff = system.GetStatefulFeatureFunctions();
+	  for (size_t i = 0; i < sff.size(); ++i) {
+	    PrintFeatureWeight(sff[i], out);
+	  }
+	  for (size_t i = 0; i < slf.size(); ++i) {
+	    if (slf[i]->GetScoreProducerWeightShortName() != "u" &&
+	          slf[i]->GetScoreProducerWeightShortName() != "tm" &&
+	          slf[i]->GetScoreProducerWeightShortName() != "I" &&
+	          slf[i]->GetScoreProducerWeightShortName() != "g")
+	    {
+	      PrintFeatureWeight(slf[i], out);
+	    }
+	  }
+	  const vector<PhraseDictionaryFeature*>& pds = system.GetPhraseDictionaries();
+	  for( size_t i=0; i<pds.size(); i++ ) {
+	    PrintFeatureWeight(pds[i], out);
+	  }
+	  const vector<GenerationDictionary*>& gds = system.GetGenerationDictionaries();
+	  for( size_t i=0; i<gds.size(); i++ ) {
+	    PrintFeatureWeight(gds[i], out);
+	  }
+	  out.close();
+	}
+
+
 	~TranslationTask() {
 		delete m_source;
 	}
@@ -336,64 +391,6 @@ private:
 
 
 };
-
-
-static void PrintFeatureWeight(const FeatureFunction* ff, std::string filename)
-{
-  size_t numScoreComps = ff->GetNumScoreComponents();
-  ofstream out;
-  out.open(filename.c_str());
-  if(out.is_open()){
-  if (numScoreComps != ScoreProducer::unlimited) {
-    vector<float> values = StaticData::Instance().GetAllWeights().GetScoresForProducer(ff);
-    for (size_t i = 0; i < numScoreComps; ++i)
-      out << ff->GetScoreProducerDescription() <<  " "
-           << ff->GetScoreProducerWeightShortName() << " "
-           << values[i] << endl;
-  }
-  else {
-    if (ff->GetSparseProducerWeight() == 1)
-        out << ff->GetScoreProducerDescription() << " " <<
-        ff->GetScoreProducerWeightShortName() << " sparse" <<  endl;
-    else
-        out << ff->GetScoreProducerDescription() << " " <<
-        ff->GetScoreProducerWeightShortName() << " " << ff->GetSparseProducerWeight() << endl;
-  }
-  out.close();
-  return;
-  }
-}
-
-static void ShowWeightsforOnlineLearning(std::string filename)
-{
-  //TODO: Find a way of ensuring this order is synced with the nbest
-  fix(cout,6);
-  const StaticData& staticData = StaticData::Instance();
-  const TranslationSystem& system = staticData.GetTranslationSystem(TranslationSystem::DEFAULT);
-  const vector<const StatelessFeatureFunction*>& slf =system.GetStatelessFeatureFunctions();
-  const vector<const StatefulFeatureFunction*>& sff = system.GetStatefulFeatureFunctions();
-  for (size_t i = 0; i < sff.size(); ++i) {
-    PrintFeatureWeight(sff[i], filename);
-  }
-  for (size_t i = 0; i < slf.size(); ++i) {
-    if (slf[i]->GetScoreProducerWeightShortName() != "u" &&
-          slf[i]->GetScoreProducerWeightShortName() != "tm" &&
-          slf[i]->GetScoreProducerWeightShortName() != "I" &&
-          slf[i]->GetScoreProducerWeightShortName() != "g")
-    {
-      PrintFeatureWeight(slf[i], filename);
-    }
-  }
-  const vector<PhraseDictionaryFeature*>& pds = system.GetPhraseDictionaries();
-  for( size_t i=0; i<pds.size(); i++ ) {
-    PrintFeatureWeight(pds[i], filename);
-  }
-  const vector<GenerationDictionary*>& gds = system.GetGenerationDictionaries();
-  for( size_t i=0; i<gds.size(); i++ ) {
-    PrintFeatureWeight(gds[i], filename);
-  }
-
-}
 
 
 static void PrintFeatureWeight(const FeatureFunction* ff)
@@ -490,8 +487,8 @@ int main(int argc, char** argv)
 		}
 
 		if (params->isParamSpecified("dump-weights-online")) {
-			const std::string filename = params->GetParam("dump-weights-online");
-			ShowWeightsforOnlineLearning(filename);
+			const vector<std::string> file = params->GetParam("dump-weights-online");
+			weights_file = file[0];
 		}
 
 		// shorthand for accessing information in StaticData
