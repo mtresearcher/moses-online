@@ -214,6 +214,8 @@ Parameter::Parameter()
   AddParam("scale-update-precision", "Scale update by precision of oracle");
   AddParam("slack", "Use slack in optimiser");
   AddParam("sigmoid-param", "y=sigmoidParam is the axis that this sigmoid approaches");
+  AddParam("dump-weights-online", "dump online weights to a file [option passed with a filename]");
+
 
 
 }
