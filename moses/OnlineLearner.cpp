@@ -140,7 +140,7 @@ OnlineLearner::OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, fl
 	m_PPindex=0;
 	m_normaliseScore=normaliseScore;
 	implementation=algorithm;
-	ReadFunctionWords();
+//	ReadFunctionWords();
 	cerr<<"Initialization Online Learning Model\n";
 }
 
@@ -160,10 +160,10 @@ OnlineLearner::OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, fl
 
 void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin)
 {
-	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
-			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
-		return;
-	}
+//	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
+//			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
+//		return;
+//	}
 	if(m_feature.find(sp)!=m_feature.end())
 	{
 		if(m_feature[sp].find(tp)!=m_feature[sp].end())
@@ -185,10 +185,10 @@ void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin)
 }
 void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin)
 {
-	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
-			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
-		return;
-	}
+//	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
+//			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
+//		return;
+//	}
 	if(m_feature.find(sp)!=m_feature.end())
 	{
 		if(m_feature[sp].find(tp)!=m_feature[sp].end())
@@ -208,10 +208,50 @@ void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin)
 	}
 	//if(m_feature[sp][tp]<0){m_feature[sp][tp]==0;}
 }
-float OnlineLearner::calcMargin(Hypothesis* oracle, Hypothesis* bestHyp)
+
+void OnlineLearner::DumpFeatures(std::string filename)
 {
-	return (oracle->GetScore()-bestHyp->GetScore());
+	ofstream file;
+	file.open(filename.c_str(), ios::out);
+	if(file.is_open())
+	{
+		pp_feature::iterator itr1=m_feature.begin();
+		while(itr1!=m_feature.end())
+		{
+			std::map<std::string, float>::iterator itr2=(*itr1).second.begin();
+			while(itr2!=(*itr1).second.end())
+			{
+				file << itr1->first <<"|||"<<itr2->first<<itr2->second<<endl;
+				itr2++;
+			}
+			itr1++;
+		}
+	}
+	file.close();
 }
+void OnlineLearner::ReadFeatures(std::string filename)
+{
+	ifstream file;
+	file.open(filename.c_str(), ios::in);
+	std::string line;
+	if(file.is_open())
+	{
+		while(getline(file, line)){
+			chop(line);
+			std::vector<string> splits;
+			split_marker_perl(line, "|||", splits);		// line:string1|||string2|||score
+			float score;
+			stringstream(splits[2])>>score;
+			m_feature[splits[0]][splits[1]] = score;
+		}
+	}
+	file.close();
+}
+
+//float OnlineLearner::calcMargin(Hypothesis* oracle, Hypothesis* bestHyp)
+//{
+//	return (oracle->GetScore()-bestHyp->GetScore());
+//}
 // clears history
 void OnlineLearner::RemoveJunk()
 {
@@ -343,7 +383,7 @@ void OnlineLearner::PrintHypo(const Hypothesis* hypo, ostream& HypothesisStringS
 		std::string sourceP = hypo->GetSourcePhraseStringRep();
 		std::string targetP = hypo->GetTargetPhraseStringRep();
 		PP_BEST[sourceP][targetP]=1;
-		Insert(sourceP, targetP);
+//		Insert(sourceP, targetP);
 	}
 }
 void OnlineLearner::Decay(int lineNum)
@@ -426,7 +466,7 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 			{
 				PP_ORACLE[sourceP][targetP]=1;	// phrase pairs in the current nbest_i
 				OracleList[whichoracle][sourceP][targetP]=1;	// list of all phrase pairs given the nbest_i
-				Insert(sourceP, targetP);	// I insert all the phrase pairs that I see in NBEST list
+//				Insert(sourceP, targetP);	// I insert all the phrase pairs that I see in NBEST list
 			}
 		}
 		oracleScore=path.GetTotalScore();

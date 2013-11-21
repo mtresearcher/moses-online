@@ -215,6 +215,8 @@ Parameter::Parameter()
   AddParam("slack", "Use slack in optimiser");
   AddParam("sigmoid-param", "y=sigmoidParam is the axis that this sigmoid approaches");
   AddParam("dump-weights-online", "dump online weights to a file [option passed with a filename]");
+  AddParam("online-learning-model", "path to online learning model");
+
 
 
 

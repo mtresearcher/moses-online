@@ -58,7 +58,7 @@ private:
 	void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
 	void ShootUp(std::string sp, std::string tp, float margin);
 	void ShootDown(std::string sp, std::string tp, float margin);
-	float calcMargin(Hypothesis* oracle, Hypothesis* bestHyp);
+//	float calcMargin(Hypothesis* oracle, Hypothesis* bestHyp);
 	void PrintHypo(const Hypothesis* hypo, ostream& HypothesisStringStream);
 	bool has_only_spaces(const std::string& str);
 	float GetBleu(std::string hypothesis, std::string reference);
@@ -69,6 +69,7 @@ private:
 	void chop(string &str);
 	void Decay(int);
 	void Insert(std::string sp, std::string tp);
+
 public:
 	SparseVec sparsefeaturevector, sparseweightvector;
 	OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, float f_learningrate, bool normaliseScore);
@@ -87,6 +88,9 @@ public:
 	inline std::string GetScoreProducerWeightShortName(unsigned) const { return "ol"; };
 	void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
 	void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
+
+	void ReadFeatures(std::string filename);
+	void DumpFeatures(std::string filename);
 
 	int RetrieveIdx(std::string sp, std::string tp);
 

@@ -1476,6 +1476,7 @@ namespace Moses {
 
             return true;
         } else if (weights.size() == 1 && w_algorithm.compare("mira") == 0) {
+        	setAlgo = FPercepWMira;
             const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;

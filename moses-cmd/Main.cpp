@@ -61,7 +61,7 @@ namespace MosesCmd
 {
 // output floats with three significant digits
 static const size_t PRECISION = 3;
-std::string weights_file;
+std::string weights_file, features_file;
 /** Enforce rounding */
 void fix(std::ostream& stream, size_t size)
 {
@@ -261,11 +261,14 @@ public:
 //			m_outputCollector->Write(m_lineNumber,out.str(),debug.str());
 
 			// NEW: when learning from postedition the decoder doesn't output anything!
-			if(staticData.GetOnlineLearningModel()!=NULL)
+			if(staticData.GetOnlineLearningModel()!=NULL){
 				if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==false){
 					cout<<out.str();
 				}
-			ShowWeightsforOnlineLearning(weights_file);
+				else if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==true){
+					ShowWeightsforOnlineLearning(weights_file);
+				}
+			}
 		}
 
 		// output n-best list
@@ -490,7 +493,12 @@ int main(int argc, char** argv)
 			const vector<std::string> file = params->GetParam("dump-weights-online");
 			weights_file = file[0];
 		}
-
+		if(params->isParamSpecified("online-learning-model")){
+			const vector<std::string> file = params->GetParam("online-learning-model");
+			features_file = file[0];
+			if(StaticData::Instance().GetOnlineLearningModel()!=NULL)
+				StaticData::InstanceNonConst().GetOnlineLearningModel()->ReadFeatures(features_file);
+		}
 		// shorthand for accessing information in StaticData
 		const StaticData& staticData = StaticData::Instance();
 
@@ -627,11 +635,17 @@ int main(int argc, char** argv)
 			source = NULL; //make sure it doesn't get deleted
 			++lineCount;
 		}
+// dump online learning model to the feature file
+		if(StaticData::Instance().GetOnlineLearningModel()!=NULL && !features_file.empty())
+			StaticData::InstanceNonConst().GetOnlineLearningModel()->ReadFeatures(features_file);
 
 		// we are done, finishing up
 		//#ifdef WITH_THREADS
 		//    pool.Stop(true); //flush remaining jobs
 		//#endif
+
+
+
 
 	} catch (const std::exception &e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
