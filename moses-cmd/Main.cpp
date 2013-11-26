@@ -61,7 +61,7 @@ namespace MosesCmd
 {
 // output floats with three significant digits
 static const size_t PRECISION = 3;
-std::string weights_file, features_file;
+std::string weights_file, read_features_file, dump_features_file;
 /** Enforce rounding */
 void fix(std::ostream& stream, size_t size)
 {
@@ -493,11 +493,12 @@ int main(int argc, char** argv)
 			const vector<std::string> file = params->GetParam("dump-weights-online");
 			weights_file = file[0];
 		}
-		if(params->isParamSpecified("online-learning-model")){
-			const vector<std::string> file = params->GetParam("online-learning-model");
-			features_file = file[0];
+		if(params->isParamSpecified("read-online-learning-model")){
+			const vector<std::string> file = params->GetParam("read-online-learning-model");
+			read_features_file = file[0];
+			cerr<<"Online learning model : "<<read_features_file<<endl;
 			if(StaticData::Instance().GetOnlineLearningModel()!=NULL)
-				StaticData::InstanceNonConst().GetOnlineLearningModel()->ReadFeatures(features_file);
+				StaticData::InstanceNonConst().GetOnlineLearningModel()->ReadFeatures(read_features_file);
 		}
 		// shorthand for accessing information in StaticData
 		const StaticData& staticData = StaticData::Instance();
@@ -636,8 +637,13 @@ int main(int argc, char** argv)
 			++lineCount;
 		}
 // dump online learning model to the feature file
-		if(StaticData::Instance().GetOnlineLearningModel()!=NULL && !features_file.empty())
-			StaticData::InstanceNonConst().GetOnlineLearningModel()->ReadFeatures(features_file);
+		if(params->isParamSpecified("dump-online-learning-model")){
+			const vector<std::string> file = params->GetParam("dump-online-learning-model");
+			dump_features_file = file[0];
+			cerr<<"Online learning model : "<<dump_features_file<<endl;
+			if(StaticData::Instance().GetOnlineLearningModel()!=NULL)
+				StaticData::InstanceNonConst().GetOnlineLearningModel()->DumpFeatures(dump_features_file);
+		}
 
 		// we are done, finishing up
 		//#ifdef WITH_THREADS

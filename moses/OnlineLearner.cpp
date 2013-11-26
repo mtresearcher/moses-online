@@ -221,7 +221,7 @@ void OnlineLearner::DumpFeatures(std::string filename)
 			std::map<std::string, float>::iterator itr2=(*itr1).second.begin();
 			while(itr2!=(*itr1).second.end())
 			{
-				file << itr1->first <<"|||"<<itr2->first<<itr2->second<<endl;
+				file << itr1->first <<"|||"<<itr2->first<<"|||"<<itr2->second<<endl;
 				itr2++;
 			}
 			itr1++;
@@ -240,9 +240,14 @@ void OnlineLearner::ReadFeatures(std::string filename)
 			chop(line);
 			std::vector<string> splits;
 			split_marker_perl(line, "|||", splits);		// line:string1|||string2|||score
-			float score;
-			stringstream(splits[2])>>score;
-			m_feature[splits[0]][splits[1]] = score;
+			if(splits.size()==3){
+				float score;
+				stringstream(splits[2])>>score;
+				m_feature[splits[0]][splits[1]] = score;
+			}
+			else{
+				TRACE_ERR("The format of feature file does not comply!");
+			}
 		}
 	}
 	file.close();
