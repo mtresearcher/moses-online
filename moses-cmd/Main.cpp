@@ -265,7 +265,7 @@ public:
 				if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==false){
 					cout<<out.str();
 				}
-				else if(staticData.GetOnlineLearningModel()->GetOnlineLearning()==true){
+				if(!weights_file.empty()){
 					ShowWeightsforOnlineLearning(weights_file);
 				}
 			}

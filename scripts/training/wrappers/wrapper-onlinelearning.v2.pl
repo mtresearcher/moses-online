@@ -79,19 +79,22 @@ Postedited : $__postedit
 	my $prevJob="trans.0";
 	my $best=0;
 	my @bestIteration=();	
+################################################
 	for(my $blockNum=0; $blockNum < $TotalBlocks; $blockNum++)
 	{
-		my $maxBLEU=0.0;
-		if($blockNum!=0){
-			$best = $bestIteration[$blockNum];
+		if($blockNum>0){
+			$best = $bestIteration[$blockNum-1];
 		}
+
+################################################
 		for(my $iter=0; $iter<=10; $iter++){
-			
 			# Prepare the optimisedHist list
 			my ($tm, $rm, $lm, $wp, $wol, $bool)=(); 
 			my $prevBlock = $blockNum-1;
 			if($blockNum>0){
-				($tm, $rm, $lm, $wp, $wol, $bool) = getWeights("$__workingDir/$prevBlock/weights.$best"); # get weights from weights.err
+    			($tm, $rm, $lm, $wp, $wol) = getWeights("$__workingDir/$prevBlock/weights.$best"); # get weights from weights.err
+                if($wol == 0) {$wol = 0.5;}
+                $bool=true;
 			}
 			else {
 				$bool = false;
@@ -102,27 +105,36 @@ Postedited : $__postedit
 			saveToFile($blockNum, $iter, $__workingDir);	# 
 			# translate the FILE using qsub
 			if($bool == true){
-				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.05 -w_algorithm onlyMira -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -read-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$best -tm $tm -d $rm -lm $lm -w $wp -weight-ol $wol < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=10G -hold_jid $prevJob -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
+				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.02 -w_algorithm mira -f_learningrate 0.566 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -read-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$best -tm $tm -d $rm -lm $lm -w $wp -weight-ol $wol < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
 			}
 			else{
-				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.05 -w_algorithm onlyMira -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -weight-ol $__initWeightOnline < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=10G -hold_jid $prevJob -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
+				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.02 -w_algorithm mira -f_learningrate 0.566 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -weight-ol $__initWeightOnline < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
 			}
 
 			print STDERR $cmd."\n\n\n";
 			system($cmd);
+		}
+################################################
 
+        CheckQsub("trans.$blockNum");
 
+################################################
 # calculate value of $best using BLEU on batch
-			my $currBLEU=`cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__multi_bleu $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'`;
+		my $maxBLEU=0.0;
+        for(my $iter=0; $iter<=10; $iter++){
+    		my $currBLEU=`cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__multi_bleu $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'`;
+            print STDERR "Running command : cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__multi_bleu $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'";
+            print STDERR "\nCurrent BLEU : $currBLEU\n";
 			if($currBLEU > $maxBLEU){
 				$best = $iter;
 				$maxBLEU=$currBLEU;
-			}
-		}
-		$bestIteration[$blockNum]=$best;
-		$prevJob = "trans.$blockNum";
-	}
-
+			} 
+        }
+################################################
+        print STDERR "best iteration was $best\n";
+        $bestIteration[$blockNum]=$best;
+    }
+################################################
 }
 
 
@@ -164,7 +176,7 @@ sub getWeights
 	$y=join(" ",@wp);
 	$z=join(" ",@ol);
 
-	return ($v, $w, $x, $y, $z, true);
+	return ($v, $w, $x, $y, $z);
 }
 
 sub saveToFile
