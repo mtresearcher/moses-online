@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /usr/bin/perl -w
 
 #******************************************************************************
 # Prashant Mathur @ FBK-irst. September 2013
@@ -38,12 +38,12 @@ my $__trg_counts=0;
 my $__counter=0;
 my (%__srcfreq, %__trgfreq)=();
 GetOptions ('debug' => \$__debug, 
-				'corpus=s' => \$__corpus,
-				'srcln=s' => \$__srcln,
-				'trgln=s' => \$__trgln,
-				'omodel=s' => \$__omodel,
-				'prune' => \$__prune,
-            'help' => \$__help);
+	'corpus=s' => \$__corpus,
+	'srcln=s' => \$__srcln,
+	'trgln=s' => \$__trgln,
+	'omodel=s' => \$__omodel,
+	'prune' => \$__prune,
+        'help' => \$__help);
 
 if($__help) { die "$__usage\n\n"; }
 
@@ -161,23 +161,23 @@ print STDERR "
 ******************************
 Calculating PMI values";
 	my (%__joint_prob, %__prob_x, %__prob_y)=();
-	my ($__pairwise_counts, $__joint_counts, $__srcfreq, $__trgfreq, $__src_counts, $__trg_counts, $__model)=@_;
-	foreach my $__token1(keys \%{$__srcfreq})
-	{
-		$__prob_x{$__token1}=($__srcfreq->{$__token1} * 1.0)/($__src_counts*1.0);
-	}
-	foreach my $__token2(keys \%{$__trgfreq})
-	{
-		$__prob_y{$__token2}=($__trgfreq->{$__token2}*1.0)/($__trg_counts*1.0);
-	}
-	foreach my $__token1(keys \%{$__joint_counts})
-	{
-		foreach my $__token2(keys \%{$__joint_counts->{$__token1}})
-		{
-			$__joint_prob{$__token1}{$__token2}=($__joint_counts->{$__token1}->{$__token2}*1.0)/($__pairwise_counts*1.0);
-			$__model->{$__token1}->{$__token2}=log($__joint_prob{$__token1}{$__token2})-(log($__prob_x{$__token1})+log($__prob_y{$__token2}));
-		}
-	}
+        my ($__pairwise_counts, $__joint_counts, $__srcfreq, $__trgfreq, $__src_counts, $__trg_counts, $__model)=@_;
+        foreach my $__token1(keys %{$__srcfreq})
+        {
+                $__prob_x{$__token1}=($__srcfreq->{$__token1} * 1.0)/($__src_counts*1.0);
+        }
+        foreach my $__token2(keys %{$__trgfreq})
+        {
+                $__prob_y{$__token2}=($__trgfreq->{$__token2}*1.0)/($__trg_counts*1.0);
+        }
+        foreach my $__token1(keys %{$__joint_counts})
+        {
+                foreach my $__token2(keys %{$__joint_counts->{$__token1}})
+                {
+                        $__joint_prob{$__token1}{$__token2}=($__joint_counts->{$__token1}->{$__token2}*1.0)/($__pairwise_counts*1.0);
+                        $__model->{$__token1}->{$__token2}=log($__joint_prob{$__token1}{$__token2})-(log($__prob_x{$__token1})+log($__prob_y{$__token2}));
+                }
+        }
 				
 print STDERR "
 ******************************
@@ -193,9 +193,9 @@ Dumping Model
 ";
 	my ($__model, $output)=@_;
 	open MODEL, ">", $output or die "Cannot open the model in write mode, Do you have permissions?\n";
-	foreach my $__token1(sort keys \%{$__model})
+	foreach my $__token1(sort keys %{$__model})
 	{
-		foreach my $__token2(sort keys \%{$__model->{$__token1}})
+		foreach my $__token2(sort keys %{$__model->{$__token1}})
 		{
 			print MODEL $__token1,"|||",$__token2,"|||",$__model->{$__token1}->{$__token2},"\n";
 		}
