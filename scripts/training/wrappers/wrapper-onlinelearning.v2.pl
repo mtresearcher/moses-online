@@ -30,9 +30,11 @@ my @__source=();
 my @__output=();
 my @__optimisedHist=();
 my $__moses="";
-my $__workingDir="";
-my $__multi_bleu="";
+my $__workingDir="/tmp";
+my $__tercom="tercom_v6b.pl";
 my $__config="";
+my $__metric="BLEU";
+my $__metric_script="multi-bleu.pl";
 my $__initWeightOnline=0.5;
 my $__BURNIN=10;	# number of sentences to leave at the start of online learning to collect statistics
 my $__initIter=10;	# initial number of iterations for the sentences under burn in case.
@@ -44,7 +46,15 @@ sub main {
 	my $__usage = "
 USAGE
 -----
-perl wrapper-onlinelearning.pl --input=<filename> --postedit=<filename> --moses=<path to moses binary> --config=<path to moses config> [--initIter=<Number of initial iterations>]
+perl wrapper-onlinelearning.pl 
+            --input=<filename> 
+            --postedit=<filename> 
+            --moses=<path to moses binary> 
+            --config=<path to moses config> 
+            --metric=X (where X = BLEU or TER)
+            --metric-script=<filename> (path to bleu script or tercom perl script)
+            --working-dir=<DIR> (default=/tmp)
+            --init-online-weight=<float> (initial online weight, default=0.5)
 -----
 ";
 
@@ -52,16 +62,15 @@ perl wrapper-onlinelearning.pl --input=<filename> --postedit=<filename> --moses=
 	my $__help;
 	my $__test="";
 	my $__postedit="";
-	my $__tempdir="/tmp";
 GetOptions ('debug' => \$__debug, 
 	'input=s' => \$__test,
 	'postedit=s' => \$__postedit,
 	'moses=s' => \$__moses,
+    'metric=s' => \$__metric,
+    'metric-script=s' => \$__metric_script,
 	'config=s' => \$__config,
-	'tempdir=s' => \$__tempdir,
 	'working-dir=s' => \$__workingDir,
 	'init-online-weight' => \$__initWeightOnline,
-	'multi-bleu=s' => \$__multi_bleu,
 	'initIter=i' => \$__initIter,
 	'help' => \$__help);
 
@@ -93,7 +102,7 @@ Postedited : $__postedit
 			my $prevBlock = $blockNum-1;
 			if($blockNum>0){
     			($tm, $rm, $lm, $wp, $wol) = getWeights("$__workingDir/$prevBlock/weights.$best"); # get weights from weights.err
-                if($wol == 0) {$wol = 0.5;}
+                if($wol == 0) {$wol = 0.09;}
                 $bool=true;
 			}
 			else {
@@ -105,13 +114,13 @@ Postedited : $__postedit
 			saveToFile($blockNum, $iter, $__workingDir);	# 
 			# translate the FILE using qsub
 			if($bool == true){
-				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.02 -w_algorithm mira -f_learningrate 0.566 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -read-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$best -tm $tm -d $rm -lm $lm -w $wp -weight-ol $wol < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
+				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.05 -w_algorithm mira -f_learningrate 0.1 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -read-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$best -tm $tm -d $rm -lm $lm -w $wp -weight-ol $wol < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
 			}
 			else{
-				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.02 -w_algorithm mira -f_learningrate 0.566 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -weight-ol $__initWeightOnline < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
+				$cmd = "echo \"$__moses -f $__config -w_learningrate 0.05 -w_algorithm mira -f_learningrate 0.1 -slack 0.001 -dump-weights-online $__workingDir/$blockNum/weights.$iter -dump-online-learning-model $__workingDir/$blockNum/online-model.$blockNum.$iter -weight-ol $__initWeightOnline < $__workingDir/$blockNum/$iter.iter.input > $__workingDir/$blockNum/$iter.iter.input.trans\" | qsub -q bld.q,bld-ib.q,mmap.q -l mf=5G -o $__workingDir/trans.$blockNum.$iter.out -e $__workingDir/trans.$blockNum.$iter.err -N trans.$blockNum -S /bin/bash";
 			}
 
-			print STDERR $cmd."\n\n\n";
+			print STDERR $cmd."\n";
 			system($cmd);
 		}
 ################################################
@@ -121,14 +130,33 @@ Postedited : $__postedit
 ################################################
 # calculate value of $best using BLEU on batch
 		my $maxBLEU=0.0;
+        $maxBLEU=200.0 if($__metric eq "TER");
+        my $currBLEU=0.0;
         for(my $iter=0; $iter<=10; $iter++){
-    		my $currBLEU=`cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__multi_bleu $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'`;
-            print STDERR "Running command : cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__multi_bleu $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'";
-            print STDERR "\nCurrent BLEU : $currBLEU\n";
-			if($currBLEU > $maxBLEU){
-				$best = $iter;
-				$maxBLEU=$currBLEU;
-			} 
+            if($__metric eq "BLEU"){
+    		    $currBLEU=`cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__metric_script $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'`;
+                print STDERR "Running command : cat $__workingDir/$blockNum/$iter.iter.input.trans | perl $__metric_script $__workingDir/$blockNum/reference | awk '{print \$3}' | perl -pe 's/,//g'";
+                print STDERR "\nCurrent BLEU : $currBLEU\n";
+            }
+            elsif($__metric eq "TER"){
+                system("sed -e 's/\$/(S-1)/' -i $__workingDir/$blockNum/$iter.iter.input.trans");
+                $currBLEU=`perl $__metric_script -r $__workingDir/$blockNum/reference -h $__workingDir/$blockNum/$iter.iter.input.trans -o doc_err | awk '{print \$1}' | perl -pe 's/\s//g'`;
+                print STDERR "Running command : perl $__metric_script -r $__workingDir/$blockNum/reference -h $__workingDir/$blockNum/$iter.iter.input.trans -o doc_err\n";
+                print STDERR "\nCurrent TER : $currBLEU\n";
+            }
+
+            if($__metric eq "TER"){
+		    	if($currBLEU < $maxBLEU){
+		     		$best = $iter;
+		    		$maxBLEU=$currBLEU;
+		    	} 
+            }
+            if($__metric eq "BLEU"){
+		    	if($currBLEU > $maxBLEU){
+		     		$best = $iter;
+		    		$maxBLEU=$currBLEU;
+		    	} 
+            }
         }
 ################################################
         print STDERR "best iteration was $best\n";
@@ -136,7 +164,6 @@ Postedited : $__postedit
     }
 ################################################
 }
-
 
 sub getWeights
 {
@@ -195,7 +222,8 @@ sub saveToFile
 	close(FILE);
 	open FILE, ">$file/$blockNum/reference" or die "Cannot write to $file/$blockNum/reference\n";
 	for(my $i=$offset; $i<$offset+$__blockSize && $i < scalar(@__source); $i++){
-		print FILE $__reference[$i]."\n";
+		print FILE $__reference[$i]."\n" if($__metric eq "BLEU");
+		print FILE $__reference[$i]." (S-$i)\n" if($__metric eq "TER");
 	}
 	close(FILE);
 }
