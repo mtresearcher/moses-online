@@ -556,6 +556,7 @@ namespace Moses {
         if (!LoadCacheBasedLanguageModel()) return false;
         if (!LoadOnlineLearningModel()) return false;
         if (!LoadSingleTriggerModel()) return false;
+        if (!LoadHyperParameters()) return false;
         if (!LoadReferences()) return false;
         if (!LoadDiscrimLMFeature()) return false;
         if (!LoadPhrasePairFeature()) return false;
@@ -1438,11 +1439,19 @@ namespace Moses {
     void StaticData::SetSourceSentenceforSTM(std::string line){
         m_singletriggermodel->SetSentence(line);
     }
-
     bool StaticData::IfActiveSTM() const {
     	return m_singletriggermodel->IfActive();
     }
-
+    bool StaticData::LoadHyperParameters(){
+    	m_C = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
+    	m_flr = (m_parameter->GetParam("f_learningrate").size() > 0) ?
+    	                        Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
+    	m_wlr = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+    	return true;
+    }
+    void StaticData::SetSourceOnlineLearning(std::string line){
+    	m_onlinelearner->SetSourceSentence(line);
+    }
     OnlineLearner* StaticData::GetOnlineLearningModel() const {
         return m_onlinelearner;
     }
@@ -1459,25 +1468,26 @@ namespace Moses {
         bool sparse_feature = (m_parameter->isParamSpecified("use_sparse_features")) ? true : false;
         bool normaliseScore = (m_parameter->isParamSpecified("normaliseScore")) ? true : false;
         const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-ol"));
-        const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
-                Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
-        const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+//        const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
+//                Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
+
+//        const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+
         OnlineAlgorithm setAlgo = FOnlyPerceptron;
-        if (!sparse_feature && w_learningrate > 0) setAlgo = FPercepWMira;
+        if (!sparse_feature && m_wlr > 0) setAlgo = FPercepWMira;
         if (sparse_feature) setAlgo = FSparsePercepWSparseMira;
         if (weights.size() > 1) {
             UserMessage::Add("Can only specify one weight for the online learning feature");
             return false;
         } else if (weights.size() == 1 && w_algorithm.compare("NULL") == 0) {
-            m_onlinelearner = new OnlineLearner(FOnlyPerceptron, w_learningrate, f_learningrate, normaliseScore);
+            m_onlinelearner = new OnlineLearner(FOnlyPerceptron, m_wlr, m_flr, normaliseScore);
             SetWeight(m_onlinelearner, weights[0]);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron");
 
             return true;
-        } else if (weights.size() == 1 && w_algorithm.compare("mira") == 0) {
+        } else if (weights.size() == 1 && w_algorithm.compare("alsoMira") == 0) {
         	setAlgo = FPercepWMira;
-            const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
             const float scale_update = (m_parameter->GetParam("scale_update").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update")[0]) : 0.0;
@@ -1486,7 +1496,7 @@ namespace Moses {
             const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
             const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
+            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
                     scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
             SetWeight(m_onlinelearner, weights[0]);
             IFVERBOSE(1)
@@ -1495,7 +1505,7 @@ namespace Moses {
             return true;
         } else if (w_algorithm.compare("onlyMira") == 0) {
             setAlgo = Mira;
-            const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
+            m_C = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
             const float scale_update = (m_parameter->GetParam("scale_update").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update")[0]) : 0.0;
@@ -1504,7 +1514,7 @@ namespace Moses {
             const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
             const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
+            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
                     scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
             //SetWeight(m_onlinelearner, weights[0]);
             SetWeight(m_onlinelearner, 0);

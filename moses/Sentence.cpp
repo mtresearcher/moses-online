@@ -68,6 +68,9 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
   if (getline(in, line, '\n').eof())
     return 0;
   const StaticData &staticData = StaticData::Instance();
+  if(staticData.GetOnlineLearningModel()!=NULL){
+  	  StaticData::InstanceNonConst().SetSourceOnlineLearning(line);
+  }
   if(staticData.GetOnlineLearningModel()!=NULL)
   {
 	  std::vector<string> strs;
@@ -142,6 +145,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 	  if(staticData.GetSingleTriggerModel()->IfActive()){
 		  StaticData::InstanceNonConst().SetSourceSentenceforSTM(line);
 	  }
+
   // if sentences is specified as "<seg id=1> ... </seg>", extract id
   meta = ProcessAndStripSGML(line);
   

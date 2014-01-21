@@ -50,7 +50,7 @@ private:
 	learningrate flr, wlr;
 	float m_weight;
 	int m_PPindex;
-	std::string m_postedited;
+	std::string m_postedited, m_source;
 	bool m_learn, m_normaliseScore;
 	MiraOptimiser* optimiser;
 	std::vector<std::string> function_words_english;
@@ -76,6 +76,8 @@ public:
 	OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, float f_learningrate, float slack, float scale_margin, float scale_margin_precision,	float scale_update,
 			float scale_update_precision, bool boost, bool normaliseMargin, bool normaliseScore, int sigmoidParam, bool onlyOnlineScoreProducerUpdate);
 	bool SetPostEditedSentence(std::string s);
+	void SetSourceSentence(std::string line){m_source=line;};
+	std::string GetSourceSentence(){return m_source;};
 	void RunOnlineLearning(Manager& manager);
 	void RemoveJunk();
 	virtual ~OnlineLearner();

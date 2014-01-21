@@ -273,12 +273,16 @@ public:
 
 		// output n-best list
 		if (m_nbestCollector && !staticData.UseLatticeMBR()) {
-			TrellisPathList nBestList;
-			ostringstream out;
-			manager.CalcNBest(staticData.GetNBestSize(), nBestList,staticData.GetDistinctNBest());
-			OutputNBest(out, nBestList, staticData.GetOutputFactorOrder(), manager.GetTranslationSystem(), m_lineNumber,
-					staticData.GetReportSegmentation());
-			m_nbestCollector->Write(m_lineNumber, out.str());
+			std::string src = staticData.GetOnlineLearningModel()->GetSourceSentence();
+			vector<string> vecstr = TokenizeMultiCharSeparator(src, "_#_");
+			if(vecstr.size()==1){ // if sentence is translatable! yeah thats a word!
+				TrellisPathList nBestList;
+				ostringstream out;
+				manager.CalcNBest(staticData.GetNBestSize(), nBestList,staticData.GetDistinctNBest());
+				OutputNBest(out, nBestList, staticData.GetOutputFactorOrder(), manager.GetTranslationSystem(), m_lineNumber,
+						staticData.GetReportSegmentation());
+				m_nbestCollector->Write(m_lineNumber, out.str());
+			}
 		}
 
 		//lattice samples
@@ -610,11 +614,18 @@ int main(int argc, char** argv)
 
 		// main loop over set of input sentences
 		InputType* source = NULL;
-		size_t lineCount = staticData.GetStartTranslationId();
+//		size_t lineCount = staticData.GetStartTranslationId();
+		size_t lineCount = 0;
 		while(ReadInput(*ioWrapper,staticData.GetInputType(),source)) {
 			IFVERBOSE(1) {
 				ResetUserTime();
 			}
+			std::string src;
+			if(staticData.GetOnlineLearningModel()!=NULL){
+				src=staticData.GetOnlineLearningModel()->GetSourceSentence();
+			}
+			VERBOSE(1, "Src : "<< src << endl);
+			vector<string> vecstr=TokenizeMultiCharSeparator(src, "_#_");
 			// set up task of translating one sentence
 			TranslationTask* task =
 					new TranslationTask(lineCount,source, outputCollector.get(),
@@ -632,9 +643,10 @@ int main(int argc, char** argv)
 			task->Run();
 			delete task;
 			//#endif
-
+			if(vecstr.size()==1){	// if the sentence is supposed to be translated then lineCount ++ else nothing
+				++lineCount;
+			}
 			source = NULL; //make sure it doesn't get deleted
-			++lineCount;
 		}
 // dump online learning model to the feature file
 		if(params->isParamSpecified("dump-online-learning-model")){

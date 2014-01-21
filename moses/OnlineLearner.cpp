@@ -618,10 +618,16 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 		BleuScores.push_back(BleuScore);
 		losses.push_back(loss);
 		oracleModelScores.push_back(maxScore);
+//------changing the hyperparameters online-----
+		wlr=staticData.m_wlr;
+		flr=staticData.m_flr;
+		optimiser->setSlack(staticData.m_C);
+//----------------------------------------------
 		cerr<<"Updating the Weights\n";
 		size_t update_status = optimiser->updateWeights(weightUpdate,sp,featureValues, losses,
 				BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,wlr);
 		StaticData::InstanceNonConst().SetAllWeights(weightUpdate);
+
 		cerr<<"\nWeight : "<<weightUpdate.GetScoreForProducer(sp)<<"\n";
 	}
 	if(implementation == FSparsePercepWSparseMira)

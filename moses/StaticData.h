@@ -71,7 +71,6 @@ class MetaScoreProducer;
 class TargetBigramFeature;
 class TargetNgramFeature;
 class CacheBasedLanguageModel;
-class OnlineLearner;
 class SingleTriggerModel;
 #ifdef HAVE_SYNLM
 class SyntacticLanguageModel;
@@ -87,6 +86,8 @@ typedef std::vector<UnknownLHSEntry>  UnknownLHSList;
  */
 class StaticData
 {
+	friend class OnlineLearner;
+	friend class HyperParameterAsWeight;
 private:
   static StaticData									s_instance;
 protected:
@@ -126,7 +127,9 @@ protected:
   m_earlyDiscardingThreshold,
   m_translationOptionThreshold,
   m_wordDeletionWeight;
-
+  float m_C,
+		  m_flr,
+		  m_wlr;
   
   // PhraseTrans, Generation & LanguageModelScore has multiple weights.
   int				m_maxDistortion;
@@ -252,6 +255,7 @@ protected:
 
   int m_threadCount;
   long m_startTranslationId;
+
   
   StaticData();
 
@@ -300,6 +304,8 @@ public:
 
   std::string m_postedited;
   bool LoadOnlineLearningModel();
+  void SetSourceOnlineLearning(std::string);
+  bool LoadHyperParameters();
   void SetSourceSentenceforSTM(std::string);
   bool IfActiveSTM() const;
   OnlineLearner* GetOnlineLearningModel() const;
