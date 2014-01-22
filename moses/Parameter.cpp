@@ -217,10 +217,8 @@ Parameter::Parameter()
   AddParam("dump-weights-online", "dump online weights to a file [option passed with a filename]");
   AddParam("read-online-learning-model", "path to read online learning model");
   AddParam("dump-online-learning-model", "path to write online learning model");
-
-
-
-
+  AddParam("use-hyper-parameters-as-weights", "do you wish to use hyper parameters as normal feature weights ? use me : don't");
+  AddParam("weight-hpw", "hyper parameters in this order : slack, feature learning rate, weight learning rate");
 }
 
 Parameter::~Parameter()

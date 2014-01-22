@@ -76,7 +76,7 @@ $SCRIPTS_ROOTDIR = $ENV{"SCRIPTS_ROOTDIR"} if defined($ENV{"SCRIPTS_ROOTDIR"});
 
 # moses.ini file uses FULL names for lambdas, while this training script
 # internally (and on the command line) uses ABBR names.
-my @ABBR_FULL_MAP = qw(d=weight-d lm=weight-l tm=weight-t w=weight-w stm=weight-stm
+my @ABBR_FULL_MAP = qw(d=weight-d lm=weight-l tm=weight-t w=weight-w stm=weight-stm hpw=weight-hpw ol=weight-ol
   g=weight-generation lex=weight-lex I=weight-i dlm=weight-dlm pp=weight-pp wt=weight-wt pb=weight-pb lex=weight-lex glm=weight-glm);
 my %ABBR2FULL = map { split /=/, $_, 2 } @ABBR_FULL_MAP;
 my %FULL2ABBR = map { my ($a, $b) = split /=/, $_, 2; ($b, $a); } @ABBR_FULL_MAP;
@@ -1316,7 +1316,7 @@ sub get_featlist_from_file {
 
   if (scalar @errs) {
     warn join("", @errs);
-    exit 1;
+#    exit 1;
   }
   return {"names"=>\@names, "values"=>\@startvalues};
 }

@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
 #include "SingleTriggerModel.h"
+#include "HyperParameterAsWeight.h"
 #include "StaticData.h"
 #include "Util.h"
 #include "FactorCollection.h"
@@ -728,6 +729,11 @@ namespace Moses {
                 cerr << "Adding Single Trigger Model from StaticData::LoadData\n";
                 m_translationSystems.find(config[0])->second.AddFeatureFunction(m_singletriggermodel);
                 m_translationSystems.find(config[0])->second.SetSingleTriggerModel(m_singletriggermodel);
+            }
+            if (m_hyperparameterasweight != NULL) {
+            	cerr << "Adding Hyper Parameters as weights from StaticData::LoadData\n";
+            	m_translationSystems.find(config[0])->second.AddFeatureFunction(m_hyperparameterasweight);
+            	m_translationSystems.find(config[0])->second.SetHyperParameterAsWeight(m_hyperparameterasweight);
             }
             for (size_t i = 0; i < m_sparsePhraseDictionary.size(); ++i) {
                 if (m_sparsePhraseDictionary[i]) {
@@ -1443,11 +1449,26 @@ namespace Moses {
     	return m_singletriggermodel->IfActive();
     }
     bool StaticData::LoadHyperParameters(){
-    	m_C = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
-    	m_flr = (m_parameter->GetParam("f_learningrate").size() > 0) ?
-    	                        Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
-    	m_wlr = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+    	bool useParameters = (m_parameter->isParamSpecified("use-hyper-parameters-as-weights")) ? true : false;
+    	if(useParameters){
+    		m_hyperparameterasweight = new HyperParameterAsWeight("hpw");
+    		const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-hpw"));
+//    		vector<float> weights;
+//    		const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
+//    		weights.push_back(slack);
+//    		const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
+//    				Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
+//    		weights.push_back(f_learningrate);
+//    		const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+//    		weights.push_back(w_learningrate);
+    		SetWeights(m_hyperparameterasweight, weights);
+    	}
     	return true;
+    }
+
+    bool StaticData::GetHyperParameterAsWeight() const {
+    	if(m_hyperparameterasweight!=NULL) return true;
+    	return false;
     }
     void StaticData::SetSourceOnlineLearning(std::string line){
     	m_onlinelearner->SetSourceSentence(line);
@@ -1468,10 +1489,10 @@ namespace Moses {
         bool sparse_feature = (m_parameter->isParamSpecified("use_sparse_features")) ? true : false;
         bool normaliseScore = (m_parameter->isParamSpecified("normaliseScore")) ? true : false;
         const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-ol"));
-//        const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
-//                Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
+        const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
+                Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0;
 
-//        const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
+        const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 0;
 
         OnlineAlgorithm setAlgo = FOnlyPerceptron;
         if (!sparse_feature && m_wlr > 0) setAlgo = FPercepWMira;
@@ -1488,6 +1509,7 @@ namespace Moses {
             return true;
         } else if (weights.size() == 1 && w_algorithm.compare("alsoMira") == 0) {
         	setAlgo = FPercepWMira;
+        	const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
             const float scale_update = (m_parameter->GetParam("scale_update").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update")[0]) : 0.0;
@@ -1496,8 +1518,14 @@ namespace Moses {
             const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
             const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
-                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
+            if(m_hyperparameterasweight == NULL){
+            	m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
+            	                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
+            }
+            else{
+            	m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
+            	                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
+            }
             SetWeight(m_onlinelearner, weights[0]);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron\tWeights : MIRA");
@@ -1505,7 +1533,7 @@ namespace Moses {
             return true;
         } else if (w_algorithm.compare("onlyMira") == 0) {
             setAlgo = Mira;
-            m_C = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
+            const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
             const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
             const float scale_update = (m_parameter->GetParam("scale_update").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update")[0]) : 0.0;

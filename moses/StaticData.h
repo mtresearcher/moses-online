@@ -109,6 +109,7 @@ protected:
   CacheBasedLanguageModel* m_CacheBasedLanguageModel;
   OnlineLearner* m_onlinelearner;
   SingleTriggerModel* m_singletriggermodel;
+  HyperParameterAsWeight* m_hyperparameterasweight;
   std::vector<DecodeGraph*> m_decodeGraphs;
   std::vector<size_t> m_decodeGraphBackoff;
   // Initial	= 0 = can be used when creating poss trans
@@ -294,7 +295,7 @@ protected:
   bool LoadTargetWordInsertionFeature();
   bool LoadSourceWordDeletionFeature();
   bool LoadWordTranslationFeature();
-
+  bool GetHyperParameterAsWeight() const;
   void ReduceTransOptCache() const;
   bool m_continuePartialTranslation;
 

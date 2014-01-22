@@ -44,6 +44,7 @@ class GlobalLexicalModel;
 class CacheBasedLanguageModel;
 class OnlineLearner;
 class SingleTriggerModel;
+class HyperParameterAsWeight;
 
 /**
  * Enables the configuration of multiple translation systems.
@@ -64,6 +65,7 @@ class TranslationSystem {
       void AddGlobalLexicalModel(GlobalLexicalModel* globalLexicalModel);
       void AddCacheBasedLanguageModel(CacheBasedLanguageModel* CacheBasedLanguageModel);
       void AddOnlineLearningModel(OnlineLearner* ol);
+      void AddHyperParameterAsWeights(HyperParameterAsWeight* hpw);
       
       //Insert non-core feature function
       void AddFeatureFunction(const FeatureFunction* featureFunction);
@@ -101,6 +103,9 @@ class TranslationSystem {
 
       SingleTriggerModel* GetSingleTriggerModel() const {return m_singletriggermodel;}
       void SetSingleTriggerModel(SingleTriggerModel* ol){m_singletriggermodel = ol;}
+
+      HyperParameterAsWeight* GetHyperParameterAsWeight() const {return m_hyperparameterasweight;}
+      void SetHyperParameterAsWeight(HyperParameterAsWeight* hpw){m_hyperparameterasweight = hpw;}
 
       const PhraseDictionaryFeature *GetTranslationScoreProducer(size_t index) const { return GetPhraseDictionaries().at(index); }
       
@@ -142,6 +147,7 @@ class TranslationSystem {
 	
         CacheBasedLanguageModel* m_CacheBasedLanguageModel;
         OnlineLearner* m_onlinelearner;
+        HyperParameterAsWeight* m_hyperparameterasweight;
         SingleTriggerModel* m_singletriggermodel;
 	std::vector<const ScoreProducer*> m_producers; /**< all the score producers in this run */
 

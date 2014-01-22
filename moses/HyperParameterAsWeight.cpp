@@ -8,10 +8,9 @@ using namespace std;
 namespace Moses
 {
 
-  HyperParameterAsWeight::HyperParameterAsWeight(const std::string &line)
+  HyperParameterAsWeight::HyperParameterAsWeight(const string str)
     :StatelessFeatureFunction("HyperParameters", 3)
   {
-//    ReadParameters();
 
     // hack into StaticData and change anything you want
     // as an example, we have 2 weights and change
@@ -28,6 +27,5 @@ namespace Moses
     staticData.m_wlr = weights[2];
 
   }
-
 
 }

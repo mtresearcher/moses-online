@@ -10,18 +10,11 @@ namespace Moses
   class HyperParameterAsWeight : public StatelessFeatureFunction
   {
   public:
-    HyperParameterAsWeight(const std::string &line);
+    HyperParameterAsWeight(const std::string);
 
-    virtual void Evaluate(const Hypothesis& hypo,
-			  ScoreComponentCollection* accumulator) const
-    {}
-
-    /**
-     * Same for chart-based features.
-     **/
-    virtual void EvaluateChart(const ChartHypothesis &hypo,
-			       ScoreComponentCollection* accumulator) const
-    {}
+    void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const {};
+    void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {};
+    inline std::string GetScoreProducerWeightShortName(unsigned) const { return "hpw"; };
 
   };
 
