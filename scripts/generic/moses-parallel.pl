@@ -518,22 +518,23 @@ while ($robust && scalar @idx_todo) {
 
  # check if some translations failed
 # my @idx_still_todo = check_translation();
-# if ($robust) {
+ my @idx_still_todo = ();
+ if ($robust) {
      # if robust, redo crashed jobs
-#     if ((scalar @idx_still_todo) == (scalar @idxlist)) {
+     if ((scalar @idx_still_todo) == (scalar @idxlist)) {
 	 # ... but not if all crashed
-#	 print STDERR "everything crashed, not trying to resubmit jobs\n";
-#         $robust = 0;
-#	 kill_all_and_quit();
-#     }
-#     @idx_todo = @idx_still_todo;
-# }
-# else {
-#     if (scalar (@idx_still_todo)) {
-#	 print STDERR "some jobs crashed: ".join(" ",@idx_still_todo)."\n";
-#	 kill_all_and_quit();
-#     }     
-# }
+	 print STDERR "everything crashed, not trying to resubmit jobs\n";
+         $robust = 0;
+	 kill_all_and_quit();
+     }
+     @idx_todo = @idx_still_todo;
+ }
+ else {
+     if (scalar (@idx_still_todo)) {
+	 print STDERR "some jobs crashed: ".join(" ",@idx_still_todo)."\n";
+	 kill_all_and_quit();
+     }     
+ }
 }
 
 #concatenating translations and removing temporary files
