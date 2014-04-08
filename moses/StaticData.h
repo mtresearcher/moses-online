@@ -72,6 +72,7 @@ class TargetBigramFeature;
 class TargetNgramFeature;
 class CacheBasedLanguageModel;
 class SingleTriggerModel;
+class MultiTaskLearning;
 #ifdef HAVE_SYNLM
 class SyntacticLanguageModel;
 #endif
@@ -108,6 +109,7 @@ protected:
 #endif
   CacheBasedLanguageModel* m_CacheBasedLanguageModel;
   OnlineLearner* m_onlinelearner;
+  MultiTaskLearning* m_multitasklearner;
   SingleTriggerModel* m_singletriggermodel;
   HyperParameterAsWeight* m_hyperparameterasweight;
   std::vector<DecodeGraph*> m_decodeGraphs;
@@ -131,7 +133,7 @@ protected:
   float m_C,
 		  m_flr,
 		  m_wlr;
-  
+  bool m_multitask;
   // PhraseTrans, Generation & LanguageModelScore has multiple weights.
   int				m_maxDistortion;
   // do it differently from old pharaoh
@@ -305,6 +307,7 @@ public:
 
   std::string m_postedited;
   bool LoadOnlineLearningModel();
+  bool LoadMultiTaskLearning();
   void SetSourceOnlineLearning(std::string);
   bool LoadHyperParameters();
   void SetSourceSentenceforSTM(std::string);

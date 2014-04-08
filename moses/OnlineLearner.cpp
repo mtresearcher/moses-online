@@ -314,54 +314,60 @@ OnlineLearner::~OnlineLearner() {
 void OnlineLearner::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const
 {
 	float score=0.0;
-	std::string s="",t="";
-	size_t endpos = tp.GetSize();
-	for (size_t pos = 0 ; pos < endpos ; ++pos) {
-		if (pos > 0){ t += " "; }
-		t += tp.GetWord(pos).GetFactor(0)->GetString();
-	}
-	endpos = tp.GetSourcePhrase().GetSize();
-	for (size_t pos = 0 ; pos < endpos ; ++pos) {
-		if (pos > 0){ s += " "; }
-		s += tp.GetSourcePhrase().GetWord(pos).GetFactor(0)->GetString();
-	}
-	pp_feature::const_iterator it;
-	it=m_feature.find(s);
-	if(it!=m_feature.end())
+	if(implementation==Mira)
 	{
-		std::map<std::string, float>::const_iterator it2;
-		it2=it->second.find(t);
-		if(it2!=it->second.end())
-		{
-			score=it2->second;
-		}
+		out->PlusEquals(this, score);
 	}
-	if(implementation == FSparsePercepWSparseMira){
-		pp_list::const_iterator it;
-		it=m_featureIdx.find(s);
-		if(it!=m_featureIdx.end())
+	else{
+		std::string s="",t="";
+		size_t endpos = tp.GetSize();
+		for (size_t pos = 0 ; pos < endpos ; ++pos) {
+			if (pos > 0){ t += " "; }
+			t += tp.GetWord(pos).GetFactor(0)->GetString();
+		}
+		endpos = tp.GetSourcePhrase().GetSize();
+		for (size_t pos = 0 ; pos < endpos ; ++pos) {
+			if (pos > 0){ s += " "; }
+			s += tp.GetSourcePhrase().GetWord(pos).GetFactor(0)->GetString();
+		}
+		pp_feature::const_iterator it;
+		it=m_feature.find(s);
+		if(it!=m_feature.end())
 		{
-			std::map<std::string, int>::const_iterator it2;
+			std::map<std::string, float>::const_iterator it2;
 			it2=it->second.find(t);
 			if(it2!=it->second.end())
 			{
-//				float actual_weight=sparseweightvector.getElement(it2->second);
-//				cerr<<"Score : "<<score<<"\tWeight : "<<m_weight<<"\tActual Weight"<<actual_weight<<endl;
-//				score*=actual_weight;
-//				score/=m_weight;
-				score=sparseweightvector.getElement(it2->second);
-			}
-			else
-			{
-				score = 0;
+				score=it2->second;
 			}
 		}
-		else{ score = 0; }
+		if(implementation == FSparsePercepWSparseMira){
+			pp_list::const_iterator it;
+			it=m_featureIdx.find(s);
+			if(it!=m_featureIdx.end())
+			{
+				std::map<std::string, int>::const_iterator it2;
+				it2=it->second.find(t);
+				if(it2!=it->second.end())
+				{
+//					float actual_weight=sparseweightvector.getElement(it2->second);
+//					cerr<<"Score : "<<score<<"\tWeight : "<<m_weight<<"\tActual Weight"<<actual_weight<<endl;
+//					score*=actual_weight;
+//					score/=m_weight;
+					score=sparseweightvector.getElement(it2->second);
+				}
+				else
+				{
+					score = 0;
+				}
+			}
+			else{ score = 0; }
+		}
+		if(m_normaliseScore)
+			score = (2/(1+exp(-score))) - 1;	// normalising score!
+		//cerr<<"Source : "<<s<<"\tTarget : "<<t<<"\tScore : "<<score<<endl;
+		out->PlusEquals(this, score);
 	}
-	if(m_normaliseScore)
-		score = (2/(1+exp(-score))) - 1;	// normalising score!
-	//cerr<<"Source : "<<s<<"\tTarget : "<<t<<"\tScore : "<<score<<endl;
-	out->PlusEquals(this, score);
 }
 
 
@@ -631,7 +637,6 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 		size_t update_status = optimiser->updateWeights(weightUpdate,sp,featureValues, losses,
 				BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,wlr);
 		StaticData::InstanceNonConst().SetAllWeights(weightUpdate);
-
 		cerr<<"\nWeight : "<<weightUpdate.GetScoreForProducer(sp)<<"\n";
 	}
 	if(implementation == FSparsePercepWSparseMira)

@@ -12,8 +12,9 @@ namespace Moses
   public:
     HyperParameterAsWeight(const std::string);
 
-    void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const {};
-    void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {};
+    void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
+    void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
+    void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
     inline std::string GetScoreProducerWeightShortName(unsigned) const { return "hpw"; };
 
   };

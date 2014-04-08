@@ -8,20 +8,29 @@
 #ifndef MULTITASKLEARNING_H_
 #define MULTITASKLEARNING_H_
 
+#include "UserMessage.h"
+#include "ScoreComponentCollection.h"
+#include <map>
+#include <vector>
+
+using namespace std;
+
 namespace Moses {
 
 class MultiTaskLearning {
 
 // interaction matrix
 
-private:
-	std::map<int, std::map<int, float> > intMatrix;
-	int users;
+	map<int, map<int, float> > m_intMatrix;
+	int m_users;
+	map<int, ScoreComponentCollection> m_user2weightvec;
 
 public:
-	int GetNumberOfTasks(){return users;};
+	int GetNumberOfTasks(){return m_users;};
 	float GetLearningRate(int, int);
-	MultiTaskLearning(std::map<int, std::map<int, float> >, int);
+	ScoreComponentCollection GetWeightsVector(int);
+	void SetWeightsVector(int, ScoreComponentCollection);
+	MultiTaskLearning(map<int, map<int, double> >, int);
 	virtual ~MultiTaskLearning();
 };
 

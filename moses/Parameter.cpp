@@ -219,6 +219,9 @@ Parameter::Parameter()
   AddParam("dump-online-learning-model", "path to write online learning model");
   AddParam("use-hyper-parameters-as-weights", "do you wish to use hyper parameters as normal feature weights ? use me : don't");
   AddParam("weight-hpw", "hpw", "hyper parameters in this order : slack, feature learning rate, weight learning rate");
+
+  AddParam("mtl-on", "turn on multi task learning");
+  AddParam("mtl-matrix", "interaction matrix for multi task learning");
 }
 
 Parameter::~Parameter()

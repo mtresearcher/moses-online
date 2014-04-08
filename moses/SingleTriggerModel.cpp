@@ -99,7 +99,6 @@ namespace Moses {
         m_source = sent;
     }
     void SingleTriggerModel::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
-        
         float score = 0.0;
         std::vector<string> str;
         split_marker_perl(m_source, " ", str);

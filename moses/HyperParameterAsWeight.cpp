@@ -28,4 +28,17 @@ namespace Moses
 
   }
 
+  void HyperParameterAsWeight::Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const {
+	  float score = 0.0;
+	  out->PlusEquals(this, score);
+  }
+  void HyperParameterAsWeight::Evaluate(const PhraseBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {
+	  const TargetPhrase& tp = context.GetTargetPhrase();
+	  Evaluate(tp, accumulator);
+  }
+
+  void HyperParameterAsWeight::EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const {
+	  const TargetPhrase& tp = context.GetTargetPhrase();
+	  Evaluate(tp, accumulator);
+  }
 }

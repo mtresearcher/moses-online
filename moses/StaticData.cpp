@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "DummyScoreProducers.h"
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
+#include "MultiTaskLearning.h"
 #include "SingleTriggerModel.h"
 #include "HyperParameterAsWeight.h"
 #include "StaticData.h"
@@ -64,6 +65,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef WITH_THREADS
 #include <boost/thread.hpp>
 #endif
+
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/vector_proxy.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/triangular.hpp>
+#include <boost/numeric/ublas/lu.hpp>
 
 using namespace std;
 
@@ -555,9 +564,10 @@ namespace Moses {
         if (!LoadGlobalLexicalModelUnlimited()) return false;
         if (!LoadDecodeGraphs()) return false;
         if (!LoadCacheBasedLanguageModel()) return false;
+        if (!LoadHyperParameters()) return false;
         if (!LoadOnlineLearningModel()) return false;
         if (!LoadSingleTriggerModel()) return false;
-        if (!LoadHyperParameters()) return false;
+        if (!LoadMultiTaskLearning()) return false;
         if (!LoadReferences()) return false;
         if (!LoadDiscrimLMFeature()) return false;
         if (!LoadPhrasePairFeature()) return false;
@@ -1501,7 +1511,12 @@ namespace Moses {
             UserMessage::Add("Can only specify one weight for the online learning feature");
             return false;
         } else if (weights.size() == 1 && w_algorithm.compare("NULL") == 0) {
-            m_onlinelearner = new OnlineLearner(FOnlyPerceptron, m_wlr, m_flr, normaliseScore);
+        	if(m_hyperparameterasweight == NULL){
+        		m_onlinelearner = new OnlineLearner(FOnlyPerceptron, w_learningrate, f_learningrate, normaliseScore);
+        	}
+        	else{
+        		m_onlinelearner = new OnlineLearner(FOnlyPerceptron, m_wlr, m_flr, normaliseScore);
+        	}
             SetWeight(m_onlinelearner, weights[0]);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron");
@@ -1542,8 +1557,14 @@ namespace Moses {
             const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
             const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
+            if(m_hyperparameterasweight == NULL){
+            m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
                     scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
+            }
+            else{
+            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
+                                scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
+            }
             //SetWeight(m_onlinelearner, weights[0]);
             SetWeight(m_onlinelearner, 0);
             IFVERBOSE(1)
@@ -1554,6 +1575,60 @@ namespace Moses {
         return true;
     }
 
+//    ------------------- matrix inversion code ---------------------------- //
+    template<class T>
+    bool InvertMatrix (const boost::numeric::ublas::matrix<T>& input, boost::numeric::ublas::matrix<T>& inverse) {
+    typedef boost::numeric::ublas::permutation_matrix<std::size_t> pmatrix;
+
+    	// create a working copy of the input
+    	boost::numeric::ublas::matrix<T> A(input);
+
+    	// create a permutation matrix for the LU-factorization
+    	pmatrix pm(A.size1());
+
+    	// perform LU-factorization
+    	int res = boost::numeric::ublas::lu_factorize(A, pm);
+    	if (res != 0)
+    		return false;
+
+    	// create identity matrix of "inverse"
+    	inverse.assign(boost::numeric::ublas::identity_matrix<T> (A.size1()));
+
+    	// backsubstitute to get the inverse
+    	boost::numeric::ublas::lu_substitute(A, pm, inverse);
+
+    	return true;
+    }
+//    ------------------- ends here ---------------------------- //
+    bool StaticData::LoadMultiTaskLearning() {
+    	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
+    	if(mtl_on==true){
+    		const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
+    		int num_users=int(mtl_matrix[0]);
+    		CHECK(mtl_matrix.size() == num_users*num_users+1); // sanity check for the vector
+    		boost::numeric::ublas::matrix<double> interactionMatrix (num_users, num_users);
+    		boost::numeric::ublas::matrix<double> invertedMatrix (num_users, num_users);
+    		map<int, map<int, double> > interactionMap;
+    		for(int i=0; i<num_users; i++){
+    			for(int j=0; j<num_users; j++){
+    				interactionMatrix (i, j) = mtl_matrix[i*3+j+1];
+    			}
+    		}
+    		InvertMatrix(interactionMatrix, invertedMatrix);	// get A inverse
+    		for(int i=0; i<num_users; i++){
+    			for(int j=0; j<num_users; j++){
+    				interactionMap[i][j]=invertedMatrix(i, j);
+    			}
+    		}
+    		m_multitask=true;
+    		m_multitasklearner = new MultiTaskLearning(interactionMap, num_users);
+    		ScoreComponentCollection weightVec = this->GetAllWeights();
+    		for(int i=0;i<num_users;i++){
+    			m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
+    		}
+    	}
+    	return true;
+    }
 
     bool StaticData::LoadCacheBasedLanguageModel() {
         const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-cblm"));
