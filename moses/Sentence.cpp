@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "TranslationOptionCollectionText.h"
 #include "StaticData.h"
 #include "Util.h"
+#include "ScoreComponentCollection.h"
 #include <boost/algorithm/string.hpp>
 
 using namespace std;

@@ -27,10 +27,11 @@ class MultiTaskLearning {
 
 public:
 	int GetNumberOfTasks(){return m_users;};
+	void SetInteractionMatrix(int x, int y, float value){if(x<m_users && y < m_users) m_intMatrix[x][y]=value;};
 	float GetLearningRate(int, int);
 	ScoreComponentCollection GetWeightsVector(int);
 	void SetWeightsVector(int, ScoreComponentCollection);
-	MultiTaskLearning(map<int, map<int, double> >, int);
+	MultiTaskLearning(int);
 	virtual ~MultiTaskLearning();
 };
 

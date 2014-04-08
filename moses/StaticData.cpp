@@ -1603,25 +1603,27 @@ namespace Moses {
     bool StaticData::LoadMultiTaskLearning() {
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
     	if(mtl_on==true){
+    		VERBOSE(1, "Multitask learner activated\n");
     		const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
     		int num_users=int(mtl_matrix[0]);
+    		m_multitask=true;
+    		m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes
     		CHECK(mtl_matrix.size() == num_users*num_users+1); // sanity check for the vector
     		boost::numeric::ublas::matrix<double> interactionMatrix (num_users, num_users);
     		boost::numeric::ublas::matrix<double> invertedMatrix (num_users, num_users);
     		map<int, map<int, double> > interactionMap;
     		for(int i=0; i<num_users; i++){
     			for(int j=0; j<num_users; j++){
-    				interactionMatrix (i, j) = mtl_matrix[i*3+j+1];
+    				interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
     			}
     		}
     		InvertMatrix(interactionMatrix, invertedMatrix);	// get A inverse
     		for(int i=0; i<num_users; i++){
     			for(int j=0; j<num_users; j++){
-    				interactionMap[i][j]=invertedMatrix(i, j);
+    				m_multitasklearner->SetInteractionMatrix(i, j, invertedMatrix(i, j));
+    				cerr<<"Inverted Interaction Matrix ("<<i<<","<<j<<") = "<<invertedMatrix(i,j)<<endl;
     			}
     		}
-    		m_multitask=true;
-    		m_multitasklearner = new MultiTaskLearning(interactionMap, num_users);
     		ScoreComponentCollection weightVec = this->GetAllWeights();
     		for(int i=0;i<num_users;i++){
     			m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!

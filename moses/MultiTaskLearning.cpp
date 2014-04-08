@@ -34,15 +34,14 @@ ScoreComponentCollection MultiTaskLearning::GetWeightsVector(int user){
 }
 
 void MultiTaskLearning::SetWeightsVector(int user, ScoreComponentCollection weightVec){
-	if(user <= m_users){
+	if(user < m_users){	// < because the indexing starts from 0
 		m_user2weightvec[user] = weightVec;
 	}
 	return;
 }
 
-MultiTaskLearning::MultiTaskLearning(std::map<int, std::map<int, double> > matrix, int tasks) {
+MultiTaskLearning::MultiTaskLearning(int tasks) {
 	m_users=tasks;
-	m_intMatrix=matrix;
 }
 
 MultiTaskLearning::~MultiTaskLearning() {
