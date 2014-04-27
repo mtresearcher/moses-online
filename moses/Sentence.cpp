@@ -72,25 +72,61 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
   if(staticData.GetOnlineLearningModel()!=NULL){
   	  StaticData::InstanceNonConst().SetSourceOnlineLearning(line);
   }
-  if(staticData.GetOnlineLearningModel()!=NULL)
+  if(staticData.GetOnlineLearningModel()!=NULL && !staticData.MultiTaskingOn())
   {
 	  std::vector<string> strs;
 	  int splits=split_marker_perl(line, "_#_", strs);
 	  OnlineLearner* ol=StaticData::InstanceNonConst().GetOnlineLearningModel();
 	  if(splits>1){
 		  ol->SetOnlineLearningTrue();
-		  if(ol!=NULL)
-		  {
+		  if(ol!=NULL){
 			  if(!ol->SetPostEditedSentence(strs[1])) return 0;
 		  }
-		  else
-		  {
+		  else{
 			  VERBOSE(1, "online learning module not activated!!");
 			  return 0;
 		  }
 	  }
 	  else{
 		  ol->SetOnlineLearningFalse();
+	  }
+	  line=strs[0];
+  }
+
+  if(staticData.GetOnlineLearningModel()!=NULL && staticData.MultiTaskingOn())
+  {
+	  std::vector<string> strs;
+	  int splits=split_marker_perl(line, "_#_", strs);
+	  OnlineLearner* ol=StaticData::InstanceNonConst().GetOnlineLearningModel();
+	  if(splits>2){
+		  ol->SetOnlineLearningTrue();
+		  if(ol!=NULL){
+			  if(!ol->SetPostEditedSentence(strs[1])) return 0;
+			  int task = atoi(strs[2].c_str());
+			  StaticData::InstanceNonConst().GetMultiTaskLearner()->SetCurrentTask(task);
+			  StaticData::InstanceNonConst().SetAllWeights(StaticData::InstanceNonConst().GetMultiTaskLearner()->GetWeightsVector(task));
+			  cerr<<"Using weights for task id "<<task<<"\t";
+			  ScoreComponentCollection weightUpdate = staticData.GetAllWeights();
+			  weightUpdate.PrintCoreFeatures();
+			  cerr<<endl;
+		  }
+		  else{
+			  VERBOSE(1, "online learning module not activated!!");
+			  return 0;
+		  }
+	  }
+	  else if(splits==2){	// even while decoding normal sentence we need task id
+		  ol->SetOnlineLearningFalse();
+		  int task = atoi(strs[1].c_str());
+		  StaticData::InstanceNonConst().GetMultiTaskLearner()->SetCurrentTask(task);
+		  StaticData::InstanceNonConst().SetAllWeights(StaticData::InstanceNonConst().GetMultiTaskLearner()->GetWeightsVector(task));
+		  cerr<<"Using weights for task id "<<task<<"\t";\
+		  ScoreComponentCollection weightUpdate = staticData.GetAllWeights();
+		  weightUpdate.PrintCoreFeatures();
+		  cerr<<endl;
+	  }
+	  else {
+		  UserMessage::Add("Multi tasking is on : you did not provide the task id. FAILED\n");
 	  }
 	  line=strs[0];
   }
@@ -106,6 +142,7 @@ int Sentence::Read(std::istream& in,const std::vector<FactorType>& factorOrder)
 		  }
 		  line=strs[0];
 	  }
+
 
   //get covered words - if continual-partial-translation is switched on, parse input
   

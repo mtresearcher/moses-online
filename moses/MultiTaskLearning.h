@@ -10,6 +10,7 @@
 
 #include "UserMessage.h"
 #include "ScoreComponentCollection.h"
+#include "Util.h"
 #include <map>
 #include <vector>
 
@@ -21,14 +22,17 @@ class MultiTaskLearning {
 
 // interaction matrix
 
-	map<int, map<int, float> > m_intMatrix;
+	map<int, vector<float> > m_intMatrix;
 	int m_users;
 	map<int, ScoreComponentCollection> m_user2weightvec;
+	int m_currtask;
 
 public:
-	int GetNumberOfTasks(){return m_users;};
-	void SetInteractionMatrix(int x, int y, float value){if(x<m_users && y < m_users) m_intMatrix[x][y]=value;};
-	float GetLearningRate(int, int);
+	const int GetNumberOfTasks() const {return m_users;};
+	void SetCurrentTask(int taskid){m_currtask=taskid;};
+	int GetCurrentTask() const {return m_currtask;};
+	void SetInteractionMatrix(int x, vector<float>& values);
+	vector<float> GetLearningRate(int);
 	ScoreComponentCollection GetWeightsVector(int);
 	void SetWeightsVector(int, ScoreComponentCollection);
 	MultiTaskLearning(int);

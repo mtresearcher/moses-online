@@ -35,6 +35,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "util/check.hh"
 #include "TypeDef.h"
 
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/vector_proxy.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/triangular.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+
 namespace Moses
 {
 
@@ -70,6 +78,7 @@ inline std::string SPrint(const T &input)
   stream << input;
   return stream.str();
 }
+
 
 //! convert string to variable of type T. Used to reading floats, int etc from files
 template<typename T>

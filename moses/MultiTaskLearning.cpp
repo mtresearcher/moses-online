@@ -7,24 +7,28 @@
 
 #include "MultiTaskLearning.h"
 
+
 namespace Moses {
 
-float MultiTaskLearning::GetLearningRate(int x, int y){
-	if(m_intMatrix.find(x) != m_intMatrix.end()){
-		if(m_intMatrix[x].find(y) != m_intMatrix[x].end()){
-			return m_intMatrix[x][y];
-		}
-		else{
-			UserMessage::Add("false value passed to find the learning rate");
-		}
+vector<float> MultiTaskLearning::GetLearningRate(int task){
+	if(m_intMatrix.find(task) != m_intMatrix.end()){
+		return m_intMatrix[task];
 	}
 	else{
 		UserMessage::Add("false value passed to find the learning rate");
 	}
-	return 0;
 }
 
-ScoreComponentCollection MultiTaskLearning::GetWeightsVector(int user){
+void MultiTaskLearning::SetInteractionMatrix(int user, vector<float>& values){
+	if(user<m_users && values.size() == m_users){
+		for(int i=0; i<values.size(); i++){
+			cerr<<"Learning Rates : "<<values[i]<<endl;
+			m_intMatrix[user].push_back(values[i]);
+		}
+	}
+}
+
+ScoreComponentCollection MultiTaskLearning::GetWeightsVector(int user) {
 	if(m_user2weightvec.find(user) != m_user2weightvec.end()){
 		return m_user2weightvec[user];
 	}

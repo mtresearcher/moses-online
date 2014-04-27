@@ -158,8 +158,7 @@ OnlineLearner::OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, fl
 }
 
 
-void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin)
-{
+void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin){
 //	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
 //			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
 //		return;
@@ -183,8 +182,7 @@ void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin)
 	}
 	//if(m_feature[sp][tp]>1){m_feature[sp][tp]==1;}
 }
-void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin)
-{
+void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin){
 //	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
 //			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
 //		return;
@@ -445,15 +443,6 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 	int nBestSize = 100;
 	manager.CalcNBest(nBestSize, nBestList, true);
 
-	//------setting the hyperparameters online-----
-	if(staticData.GetHyperParameterAsWeight()){
-			wlr=staticData.m_wlr;
-			flr=staticData.m_flr;
-			optimiser->setSlack(staticData.m_C);
-	}
-	//----------------------------------------------
-
-
 	std::string bestOracle;
 	std::vector<string> HypothesisList, HypothesisHope, HypothesisFear;
 	std::vector<float> loss, BleuScore, BleuScoreHope, BleuScoreFear, oracleBleuScores, lossHope, lossFear, modelScore, oracleModelScores;
@@ -534,7 +523,7 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 			oraclefeatureScore.push_back(path.GetScoreBreakdown());
 		}
 // ------------------------trial--------------------------------//
-		if(implementation==FSparsePercepWSparseMira || implementation==FPercepWMira)
+		if(implementation==FPercepWMira)
 		{
 			if(oraclebleu > bestbleu)
 			{
@@ -595,30 +584,7 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 		}
 // ------------------------trial--------------------------------//
 	}
-	cerr<<"Read all the oracles in the list!\n";
-
-	//	Update the features
-	if(implementation==FSparsePercepWSparseMira)
-	{
-		pp_list::const_iterator it1;
-		for(it1=ShootemUp.begin(); it1!=ShootemUp.end(); it1++)
-		{
-			std::map<std::string, int>::const_iterator itr1;
-			for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-			{
-				ShootUp(it1->first, itr1->first, abs(maxScore-bestScore));
-			}
-		}
-		for(it1=ShootemDown.begin(); it1!=ShootemDown.end(); it1++)
-		{
-			std::map<std::string, int>::const_iterator itr1;
-			for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-			{
-				ShootDown(it1->first, itr1->first, abs(maxScore-bestScore));
-			}
-		}
-	}
-	//	---------------------------------------------------------------------------------- //
+	VERBOSE(1, "Read all the oracles in the list!\n");
 
 	//	Update the weights
 	if(implementation == FPercepWMira || implementation == Mira)
@@ -639,57 +605,216 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 		StaticData::InstanceNonConst().SetAllWeights(weightUpdate);
 		cerr<<"\nWeight : "<<weightUpdate.GetScoreForProducer(sp)<<"\n";
 	}
-	if(implementation == FSparsePercepWSparseMira)
+	return;
+}
+
+void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
+{
+	const TranslationSystem &trans_sys = StaticData::Instance().GetTranslationSystem(TranslationSystem::DEFAULT);
+	const StaticData& staticData = StaticData::Instance();
+	const std::vector<Moses::FactorType>& outputFactorOrder=staticData.GetOutputFactorOrder();
+	vector<float> learningrates = StaticData::Instance().GetMultiTaskLearner()->GetLearningRate(task);
+	ScoreComponentCollection weightUpdate = staticData.GetAllWeights();
+	std::vector<const ScoreProducer*> sps = trans_sys.GetFeatureFunctions();
+	ScoreProducer* sp = const_cast<ScoreProducer*>(sps[0]);
+	for(int i=0;i<sps.size();i++)
 	{
-		cerr<<"sparse weights is activated\n";
+		if(sps[i]->GetScoreProducerDescription().compare("OnlineLearner")==0)
+		{
+			sp=const_cast<ScoreProducer*>(sps[i]);
+			break;
+		}
+	}
+	m_weight=weightUpdate.GetScoreForProducer(sp);	// permanent weight stored in decoder
+
+	const Hypothesis* hypo = manager.GetBestHypothesis();
+	//	Decay(manager.m_lineNumber);
+	stringstream bestHypothesis;
+	PP_BEST.clear();
+	PrintHypo(hypo, bestHypothesis);
+	float bestbleu = GetBleu(bestHypothesis.str(), m_postedited);
+	float bestScore=hypo->GetScore();
+	cerr<<"Best Hypothesis : "<<bestHypothesis.str()<<endl;
+	cerr<<"Post Edit       : "<<m_postedited<<endl;
+	TrellisPathList nBestList;
+	int nBestSize = 100;
+	manager.CalcNBest(nBestSize, nBestList, true);
+
+	//------setting the hyperparameters online-----
+	if(staticData.GetHyperParameterAsWeight()){
+		wlr=staticData.m_wlr;
+		flr=staticData.m_flr;
+		optimiser->setSlack(staticData.m_C);
+	}
+	//----------------------------------------------
+
+
+	std::string bestOracle;
+	std::vector<string> HypothesisList, HypothesisHope, HypothesisFear;
+	std::vector<float> loss, BleuScore, BleuScoreHope, BleuScoreFear, oracleBleuScores, lossHope, lossFear, modelScore, oracleModelScores;
+	std::vector<std::vector<float> > losses, BleuScores, BleuScoresHope, BleuScoresFear, lossesHope, lossesFear, modelScores;
+	std::vector<ScoreComponentCollection> featureValue,featureValueHope, featureValueFear, oraclefeatureScore;
+	std::vector<std::vector<ScoreComponentCollection> > featureValues, featureValuesHope, featureValuesFear;
+	std::map<int, map<string, map<string, int> > > OracleList;
+	TrellisPathList::const_iterator iter;
+	pp_list BestOracle,ShootemUp, ShootemDown,Visited;
+	float maxBleu=0.0, maxScore=0.0,oracleScore=0.0;
+	int whichoracle=-1;
+	for (iter = nBestList.begin(); iter != nBestList.end(); ++iter) {
+		whichoracle++;
+		const TrellisPath &path = **iter;
+		PP_ORACLE.clear();
+		const std::vector<const Hypothesis *> &edges = path.GetEdges();
+		stringstream oracle;
+		for (int currEdge = (int) edges.size() - 1; currEdge >= 0; currEdge--) {
+			const Hypothesis &edge = *edges[currEdge];
+			CHECK(outputFactorOrder.size() > 0);
+			size_t size = edge.GetCurrTargetPhrase().GetSize();
+			for (size_t pos = 0; pos < size; pos++) {
+				const Factor *factor = edge.GetCurrTargetPhrase().GetFactor(pos, outputFactorOrder[0]);
+				oracle << *factor;
+				oracle << " ";
+			}
+			std::string sourceP = edge.GetSourcePhraseStringRep();  // Source Phrase
+			std::string targetP = edge.GetTargetPhraseStringRep();  // Target Phrase
+			if(!has_only_spaces(sourceP) && !has_only_spaces(targetP) )
+			{
+				PP_ORACLE[sourceP][targetP]=1;	// phrase pairs in the current nbest_i
+				OracleList[whichoracle][sourceP][targetP]=1;	// list of all phrase pairs given the nbest_i
+				//				Insert(sourceP, targetP);	// I insert all the phrase pairs that I see in NBEST list
+			}
+		}
+		oracleScore=path.GetTotalScore();
+		float oraclebleu = GetBleu(oracle.str(), m_postedited);
+		if(implementation != FOnlyPerceptron){
+			HypothesisList.push_back(oracle.str());
+			BleuScore.push_back(oraclebleu);
+			featureValue.push_back(path.GetScoreBreakdown());
+			modelScore.push_back(oracleScore);
+		}
+		if(oraclebleu > maxBleu)
+		{
+			cerr<<"NBEST : "<<oracle.str()<<"\t|||\tBLEU : "<<oraclebleu<<endl;
+			maxBleu=oraclebleu;
+			maxScore=oracleScore;
+			bestOracle = oracle.str();
+			pp_list::const_iterator it1;
+			ShootemUp.clear();ShootemDown.clear();
+			for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
+			{
+				std::map<std::string, int>::const_iterator itr1;
+				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+				{
+					if(PP_BEST[it1->first][itr1->first]!=1)
+					{
+						ShootemUp[it1->first][itr1->first]=1;
+					}
+				}
+			}
+			for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
+			{
+				std::map<std::string, int>::const_iterator itr1;
+				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+				{
+					if(PP_ORACLE[it1->first][itr1->first]!=1)
+					{
+						ShootemDown[it1->first][itr1->first]=1;
+					}
+				}
+			}
+			oracleBleuScores.clear();
+			oraclefeatureScore.clear();
+			BestOracle=PP_ORACLE;
+			oracleBleuScores.push_back(oraclebleu);
+			oraclefeatureScore.push_back(path.GetScoreBreakdown());
+		}
+		// ------------------------trial--------------------------------//
+		if(implementation==FSparsePercepWSparseMira || implementation==FPercepWMira)
+		{
+			if(oraclebleu > bestbleu)
+			{
+				pp_list::const_iterator it1;
+				for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
+				{
+					std::map<std::string, int>::const_iterator itr1;
+					for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+					{
+						if(PP_BEST[it1->first][itr1->first]!=1 && Visited[it1->first][itr1->first]!=1)
+						{
+							ShootUp(it1->first, itr1->first, abs(oracleScore-bestScore));
+							Visited[it1->first][itr1->first]=1;
+						}
+					}
+				}
+				for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
+				{
+					std::map<std::string, int>::const_iterator itr1;
+					for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+					{
+						if(PP_ORACLE[it1->first][itr1->first]!=1 && Visited[it1->first][itr1->first]!=1)
+						{
+							ShootDown(it1->first, itr1->first, abs(oracleScore-bestScore));
+							Visited[it1->first][itr1->first]=1;
+						}
+					}
+				}
+			}
+			if(oraclebleu < bestbleu)
+			{
+				pp_list::const_iterator it1;
+				for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
+				{
+					std::map<std::string, int>::const_iterator itr1;
+					for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+					{
+						if(PP_BEST[it1->first][itr1->first]!=1 && Visited[it1->first][itr1->first]!=1)
+						{
+							ShootDown(it1->first, itr1->first, abs(oracleScore-bestScore));
+							Visited[it1->first][itr1->first]=1;
+						}
+					}
+				}
+				for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
+				{
+					std::map<std::string, int>::const_iterator itr1;
+					for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+					{
+						if(PP_ORACLE[it1->first][itr1->first]!=1 && Visited[it1->first][itr1->first]!=1)
+						{
+							ShootUp(it1->first, itr1->first, abs(oracleScore-bestScore));
+							Visited[it1->first][itr1->first]=1;
+						}
+					}
+				}
+			}
+		}
+		// ------------------------trial--------------------------------//
+	}
+
+	//	Update the weights
+	if(implementation == FPercepWMira || implementation == Mira)
+	{
 		for (int i=0;i<HypothesisList.size();i++) // same loop used for feature values, modelscores
 		{
 			float bleuscore = BleuScore[i];
 			loss.push_back(maxBleu-bleuscore);
 		}
-		vector<vector<int> > WeightIdxVec, oracleWeightIdxVec;
-		pp_list::iterator it, it1;
-		for(int i=0;i<OracleList.size();i++)
-		{
-			vector<int> WeightVec;
-			for(it=OracleList[i].begin();it!=OracleList[i].end(); it++)
-			{
-				if(!(it->first.empty()))
-				{
-					map<string, int>::iterator itr;
-					for(itr=it->second.begin();itr!=it->second.end(); itr++)
-					{
-						if(!(itr->first.empty()))
-						{
-							int idx=RetrieveIdx(it->first, itr->first);
-							if(idx!=m_PPindex){
-								WeightVec.push_back(idx);
-							}
-						}
-					}
-				}
-			}
-			WeightIdxVec.push_back(WeightVec);
+		modelScores.push_back(modelScore);
+		featureValues.push_back(featureValue);
+		BleuScores.push_back(BleuScore);
+		losses.push_back(loss);
+		oracleModelScores.push_back(maxScore);
+		cerr<<"Updating the Weights\n";
+		// update the weights for ith task with ith learningrate
+		for (int i=0; i<staticData.GetMultiTaskLearner()->GetNumberOfTasks(); i++){
+			size_t update_status = optimiser->updateWeights(weightUpdate,sp,featureValues, losses,
+					BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,learningrates[i]);
+			// set the weights in the memory for ith task
+			VERBOSE(1,"Learning rate : "<<learningrates[i]<<endl);
+			weightUpdate.PrintCoreFeatures();
+			cerr<<endl;
+			StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(i, weightUpdate);
 		}
-		vector<int> oracleWeightVec;
-		for(it1=BestOracle.begin(); it1!=BestOracle.end(); it1++)
-		{
-			std::map<std::string, int>::const_iterator itr1;
-			for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-			{
-				int idx=RetrieveIdx(it1->first, itr1->first);
-				if(idx!=m_PPindex){
-					oracleWeightVec.push_back(idx);
-				}
-			}
-		}
-		oracleWeightIdxVec.push_back(oracleWeightVec);
-//		std::valarray<float> coreFeatures = weightUpdate.getCoreFeatures();
-//		sparseweightvector.coreAssign(coreFeatures);
-//		std::cerr<<"Everything is alright till here\n";
-
-		size_t update_status=optimiser->updateSparseWeights(sparseweightvector, WeightIdxVec, loss, BleuScore,
-				modelScore, oracleWeightIdxVec, oracleBleuScores[0], maxScore, wlr);
 	}
 	return;
 }

@@ -79,6 +79,7 @@ public:
 	void SetSourceSentence(std::string line){m_source=line;};
 	std::string GetSourceSentence(){return m_source;};
 	void RunOnlineLearning(Manager& manager);
+	void RunOnlineMultiTaskLearning(Manager& manager, int task);
 	void RemoveJunk();
 	virtual ~OnlineLearner();
 

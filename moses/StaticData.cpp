@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "DummyScoreProducers.h"
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
-#include "MultiTaskLearning.h"
 #include "SingleTriggerModel.h"
 #include "HyperParameterAsWeight.h"
 #include "StaticData.h"
@@ -1575,10 +1574,10 @@ namespace Moses {
         return true;
     }
 
-//    ------------------- matrix inversion code ---------------------------- //
+    //    ------------------- matrix inversion code ---------------------------- //
     template<class T>
     bool InvertMatrix (const boost::numeric::ublas::matrix<T>& input, boost::numeric::ublas::matrix<T>& inverse) {
-    typedef boost::numeric::ublas::permutation_matrix<std::size_t> pmatrix;
+    	typedef boost::numeric::ublas::permutation_matrix<std::size_t> pmatrix;
 
     	// create a working copy of the input
     	boost::numeric::ublas::matrix<T> A(input);
@@ -1599,8 +1598,28 @@ namespace Moses {
 
     	return true;
     }
-//    ------------------- ends here ---------------------------- //
+    //    ------------------- Kronecker Product code ---------------------------- //
+    template<class T>
+    bool KroneckerProduct (const boost::numeric::ublas::matrix<T>& A, const boost::numeric::ublas::matrix<T>& B, boost::numeric::ublas::matrix<T>& C) {
+    	int rowA=-1,colA=-1,rowB=0,colB=0,prowB=1,pcolB=1;
+    	for(int i=0; i<C.size1(); i++){
+    		for(int j=0; j<C.size2(); j++){
+    			rowB=i%B.size1();
+    			colB=j%B.size2();
+    			if(pcolB!=0 && colB == 0) colA++;
+    			if(prowB!=0 && rowB==0) rowA++;
+    			prowB=rowB;
+    			pcolB=colB;
+    			if(colA >= A.size2()){colA=0; colB=0;pcolB=1;}
+    			C(i, j) = A(rowA, colA) * B(rowB, colB) ;
+    		}
+    	}
+    	return true;
+    }
+    //    ------------------------------- ends here ---------------------------- //
+
     bool StaticData::LoadMultiTaskLearning() {
+    	m_multitask=false;
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
     	if(mtl_on==true){
     		VERBOSE(1, "Multitask learner activated\n");
@@ -1617,12 +1636,14 @@ namespace Moses {
     				interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
     			}
     		}
-    		InvertMatrix(interactionMatrix, invertedMatrix);	// get A inverse
+//    		InvertMatrix(interactionMatrix, invertedMatrix);	// get A inverse
     		for(int i=0; i<num_users; i++){
+    			vector<float> temp;
     			for(int j=0; j<num_users; j++){
-    				m_multitasklearner->SetInteractionMatrix(i, j, invertedMatrix(i, j));
-    				cerr<<"Inverted Interaction Matrix ("<<i<<","<<j<<") = "<<invertedMatrix(i,j)<<endl;
+    				temp.push_back(interactionMatrix(i, j));
+    				cerr<<"Inverted Interaction Matrix ("<<i<<","<<j<<") = "<<interactionMatrix(i,j)<<endl;
     			}
+    			m_multitasklearner->SetInteractionMatrix(i, temp);
     		}
     		ScoreComponentCollection weightVec = this->GetAllWeights();
     		for(int i=0;i<num_users;i++){
