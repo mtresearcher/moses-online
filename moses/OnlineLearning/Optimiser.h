@@ -45,6 +45,18 @@ namespace Optimizer {
       m_sigmoidParam(sigmoidParam),
       m_onlyOnlineScoreProducerUpdate(onlyOnlineScoreProducerUpdate) { }
 
+  	  size_t updateMultiTaskLearningWeights(
+  	   Moses::ScoreComponentCollection& weightUpdate,
+  	   const Moses::ScoreProducer* sp,
+  	   const std::vector<std::vector<Moses::ScoreComponentCollection> >& featureValues,
+  	   const std::vector<std::vector<float> >& losses,
+  	   const std::vector<std::vector<float> >& bleuScores,
+  	   const std::vector<std::vector<float> >& modelScores,
+  	   const std::vector< Moses::ScoreComponentCollection>& oracleFeatureValues,
+  	   const std::vector<float> oracleBleuScores,
+  	   const std::vector<float> oracleModelScores,
+  	   float learning_rate);
+
       size_t updateWeights(
 	   Moses::ScoreComponentCollection& weightUpdate,
 	   const Moses::ScoreProducer* sp,
