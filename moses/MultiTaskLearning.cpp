@@ -27,6 +27,9 @@ void MultiTaskLearning::SetInteractionMatrix(int user, vector<float>& values){
 		}
 	}
 }
+void MultiTaskLearning::SetKdKdMatrix(boost::numeric::ublas::matrix<double>& kdkdmatrix){
+	m_kdkdmatrix=kdkdmatrix;
+}
 
 ScoreComponentCollection MultiTaskLearning::GetWeightsVector(int user) {
 	if(m_user2weightvec.find(user) != m_user2weightvec.end()){
