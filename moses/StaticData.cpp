@@ -566,7 +566,6 @@ namespace Moses {
         if (!LoadHyperParameters()) return false;
         if (!LoadOnlineLearningModel()) return false;
         if (!LoadSingleTriggerModel()) return false;
-        if (!LoadMultiTaskLearning()) return false;
         if (!LoadReferences()) return false;
         if (!LoadDiscrimLMFeature()) return false;
         if (!LoadPhrasePairFeature()) return false;
@@ -575,6 +574,7 @@ namespace Moses {
         if (!LoadTargetWordInsertionFeature()) return false;
         if (!LoadSourceWordDeletionFeature()) return false;
         if (!LoadWordTranslationFeature()) return false;
+        if (!LoadMultiTaskLearning()) return false;
 
         // report individual sparse features in n-best list
         if (m_parameter->GetParam("report-sparse-features").size() > 0) {
@@ -1599,8 +1599,8 @@ namespace Moses {
     	return true;
     }
     //    ------------------- Kronecker Product code ---------------------------- //
-    template<class T>
-    bool KroneckerProduct (const boost::numeric::ublas::matrix<T>& A, const boost::numeric::ublas::matrix<T>& B, boost::numeric::ublas::matrix<T>& C) {
+
+    bool KroneckerProduct (const boost::numeric::ublas::matrix<double>& A, const boost::numeric::ublas::matrix<double>& B, boost::numeric::ublas::matrix<double>& C) {
     	int rowA=-1,colA=-1,rowB=0,colB=0,prowB=1,pcolB=1;
     	for(int i=0; i<C.size1(); i++){
     		for(int j=0; j<C.size2(); j++){
@@ -1617,6 +1617,7 @@ namespace Moses {
     	return true;
     }
     //    ------------------------------- ends here ---------------------------- //
+
 
     bool StaticData::LoadMultiTaskLearning() {
     	m_multitask=false;
@@ -1636,7 +1637,13 @@ namespace Moses {
     				interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
     			}
     		}
-//    		InvertMatrix(interactionMatrix, invertedMatrix);	// get A inverse
+
+//    		InvertMatrix(interactionMatrix, invertedMatrix);	// I don't perform this step for now, maybe later
+    		int size = this->GetAllWeights().Size();
+    		boost::numeric::ublas::matrix<double> kdkdmatrix (num_users*size, num_users*size);
+    		boost::numeric::ublas::identity_matrix<double> m (size);
+    		KroneckerProduct(interactionMatrix, m, kdkdmatrix);
+    		m_multitasklearner->SetKdKdMatrix(kdkdmatrix);
     		for(int i=0; i<num_users; i++){
     			vector<float> temp;
     			for(int j=0; j<num_users; j++){

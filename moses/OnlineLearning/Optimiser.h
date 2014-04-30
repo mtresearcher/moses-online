@@ -55,7 +55,9 @@ namespace Optimizer {
   	   const std::vector< Moses::ScoreComponentCollection>& oracleFeatureValues,
   	   const std::vector<float> oracleBleuScores,
   	   const std::vector<float> oracleModelScores,
-  	   float learning_rate);
+  	   const boost::numeric::ublas::matrix<double>& regularizer,
+  	   const int task,
+  	   const int task_id);
 
       size_t updateWeights(
 	   Moses::ScoreComponentCollection& weightUpdate,

@@ -2,10 +2,20 @@
 #include "Hildreth.h"
 #include "../StaticData.h"
 
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/vector_proxy.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/triangular.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+
 using namespace Moses;
 using namespace std;
 
 namespace Optimizer {
+
+
 
 size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	ScoreComponentCollection& weightUpdate,
@@ -17,8 +27,10 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
     const vector<ScoreComponentCollection>& oracleFeatureValues,
     const vector<float> oracleBleuScores,
     const vector<float> oracleModelScores,
-    ScoreComponentCollection& regularizer) {
-
+    const boost::numeric::ublas::matrix<double>& regularizer,
+    const int task,
+    const int task_id) {
+	cerr<<"Dimensions of regularizer : "<<regularizer.size1()<<" x "<<regularizer.size2()<<endl;
 	// vector of feature values differences for all created constraints
 	vector<ScoreComponentCollection> featureValueDiffs;
 	vector<float> lossMinusModelScoreDiffs;
@@ -28,6 +40,7 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	float epsilon = 0.0001;
 	int violatedConstraintsBefore = 0;
 	float oldDistanceFromOptimum = 0;
+
 	// iterate over input sentences (1 (online) or more (batch))
 	for (size_t i = 0; i < featureValues.size(); ++i) {
 		//size_t sentenceId = sentenceIds[i];
@@ -97,8 +110,38 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 
 	    update.MultiplyEquals(alpha);
 
-	    // here we also multiply with A^{-1} \otimes I_{d}
-	    update.MultiplyEquals(regularizer);
+	    // build the feature matrix
+	    boost::numeric::ublas::matrix<double> featureMatrix(update.Size()*task,1);
+	    for(size_t i=0; i<task; i++){
+	    	if(i == task_id){
+	    		const Moses::FVector x = update.GetScoresVector();
+	    		for(int j=0;j<x.size(); j++){
+	    			featureMatrix (i*update.Size()+j,0) = x[j];
+	    			cerr<<i*update.Size()+j<<", 0 : "<<x[j]<<endl;
+	    		}
+	    	}
+	    	else{
+	    		for(int j=0;j<update.Size(); j++){
+	    			featureMatrix (i*update.Size()+j,0) = 0;
+	    			cerr<<i*update.Size()+j<<", 0 : "<<0<<endl;
+	    		}
+	    	}
+	    }
+	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
+	    // take dot prod. of kdkd matrix and feature matrix
+	    boost::numeric::ublas::matrix<double> C = boost::numeric::ublas::prod(regularizer, featureMatrix);
+	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
+	    // make a ScoreComponentCollection that can be multiplied with the update ScoreComponentCollection
+	    ScoreComponentCollection temp(update);
+	    cerr<<"Temp Size : "<<temp.Size()<<endl;
+	    for(size_t i=0;i<update.Size();i++){
+	    	cerr<<"Assigning : "<<i<<"th SP : "<<task_id*update.Size()+i<<" : "<<C(task_id*update.Size()+i, 1)<<endl;
+	    	temp.Assign(i, C(task_id*update.Size()+i, 1));
+	    }
+	    exit(0);
+//	    const ScoreComponentCollection learningrates(temp);
+	    // here we also multiply with the co-regularization vector
+	    update.MultiplyEquals(temp);
 
 	    // sum updates
 	    summedUpdate.PlusEquals(update);

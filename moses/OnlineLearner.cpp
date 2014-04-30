@@ -613,7 +613,6 @@ void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
 	const TranslationSystem &trans_sys = StaticData::Instance().GetTranslationSystem(TranslationSystem::DEFAULT);
 	const StaticData& staticData = StaticData::Instance();
 	const std::vector<Moses::FactorType>& outputFactorOrder=staticData.GetOutputFactorOrder();
-	vector<float> learningrates = StaticData::Instance().GetMultiTaskLearner()->GetLearningRate(task);
 	ScoreComponentCollection weightUpdate = staticData.GetAllWeights();
 	std::vector<const ScoreProducer*> sps = trans_sys.GetFeatureFunctions();
 	ScoreProducer* sp = const_cast<ScoreProducer*>(sps[0]);
@@ -806,15 +805,14 @@ void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
 		oracleModelScores.push_back(maxScore);
 		cerr<<"Updating the Weights\n";
 		// update the weights for ith task with ith learningrate
-		for (int i=0; i<staticData.GetMultiTaskLearner()->GetNumberOfTasks(); i++){
-			size_t update_status = optimiser->updateWeights(weightUpdate,sp,featureValues, losses,
-					BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,learningrates[i]);
-			// set the weights in the memory for ith task
-			VERBOSE(1,"Learning rate : "<<learningrates[i]<<endl);
-			weightUpdate.PrintCoreFeatures();
-			cerr<<endl;
-			StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(i, weightUpdate);
-		}
+
+		size_t update_status = optimiser->updateMultiTaskLearningWeights(weightUpdate,sp,featureValues, losses,
+				BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,
+				staticData.GetMultiTaskLearner()->GetKdKdMatrix(), staticData.GetMultiTaskLearner()->GetNumberOfTasks(),task);
+		// set the weights in the memory for ith task
+		weightUpdate.PrintCoreFeatures();
+		cerr<<endl;
+		StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(task, weightUpdate);
 	}
 	return;
 }
