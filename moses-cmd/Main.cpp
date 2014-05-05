@@ -120,8 +120,13 @@ public:
 		StaticData &SD = StaticData::InstanceNonConst();
 
 		manager.ProcessSentence();
-		if(SD.GetOnlineLearningModel()!=NULL && SD.GetOnlineLearningModel()->GetOnlineLearning()){
+		if(SD.GetOnlineLearningModel()!=NULL && SD.GetOnlineLearningModel()->GetOnlineLearning() && !staticData.MultiTaskingOn()){
 			SD.GetOnlineLearningModel()->RunOnlineLearning(manager);
+			SD.GetOnlineLearningModel()->RemoveJunk();
+		}
+
+		if(SD.GetOnlineLearningModel()!=NULL && SD.GetOnlineLearningModel()->GetOnlineLearning() && staticData.MultiTaskingOn()){
+			SD.GetOnlineLearningModel()->RunOnlineMultiTaskLearning(manager, SD.GetMultiTaskLearner()->GetCurrentTask());
 			SD.GetOnlineLearningModel()->RemoveJunk();
 		}
 
@@ -269,13 +274,26 @@ public:
 					ShowWeightsforOnlineLearning(weights_file);
 				}
 			}
+			else{
+				cout<<out.str();
+			}
 		}
 
 		// output n-best list
 		if (m_nbestCollector && !staticData.UseLatticeMBR()) {
-			std::string src = staticData.GetOnlineLearningModel()->GetSourceSentence();
-			vector<string> vecstr = TokenizeMultiCharSeparator(src, "_#_");
-			if(vecstr.size()==1){ // if sentence is translatable! yeah thats a word!
+			if(staticData.GetOnlineLearningModel()!=NULL){
+				std::string src = staticData.GetOnlineLearningModel()->GetSourceSentence();
+				vector<string> vecstr = TokenizeMultiCharSeparator(src, "_#_");
+				if(vecstr.size()==1){ // if sentence is translatable! yeah thats a word!
+					TrellisPathList nBestList;
+					ostringstream out;
+					manager.CalcNBest(staticData.GetNBestSize(), nBestList,staticData.GetDistinctNBest());
+					OutputNBest(out, nBestList, staticData.GetOutputFactorOrder(), manager.GetTranslationSystem(), m_lineNumber,
+							staticData.GetReportSegmentation());
+					m_nbestCollector->Write(m_lineNumber, out.str());
+				}
+			}
+			else{
 				TrellisPathList nBestList;
 				ostringstream out;
 				manager.CalcNBest(staticData.GetNBestSize(), nBestList,staticData.GetDistinctNBest());
@@ -643,7 +661,10 @@ int main(int argc, char** argv)
 			task->Run();
 			delete task;
 			//#endif
-			if(vecstr.size()==1){	// if the sentence is supposed to be translated then lineCount ++ else nothing
+			if(vecstr.size()==1 && !staticData.MultiTaskingOn()){	// if the sentence is supposed to be translated then lineCount ++ else nothing
+				++lineCount;
+			}
+			else if(vecstr.size()==2 && staticData.MultiTaskingOn()){	// if the sentence is supposed to be translated then lineCount ++ else nothing
 				++lineCount;
 			}
 			source = NULL; //make sure it doesn't get deleted
