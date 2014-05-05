@@ -1,6 +1,7 @@
 #include "Optimiser.h"
 #include "Hildreth.h"
 #include "../StaticData.h"
+#include <iomanip>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>
@@ -117,28 +118,29 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	    		const Moses::FVector x = update.GetScoresVector();
 	    		for(int j=0;j<x.size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = x[j];
-	    			cerr<<i*update.Size()+j<<", 0 : "<<x[j]<<endl;
+//	    			if(x[j]!=0)
+//	    				cerr<<std::setprecision(9)<<i*update.Size()+j<<", 0 : "<<x[j]<<endl;
 	    		}
 	    	}
 	    	else{
 	    		for(int j=0;j<update.Size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = 0;
-	    			cerr<<i*update.Size()+j<<", 0 : "<<0<<endl;
+//	    			cerr<<i*update.Size()+j<<", 0 : "<<0<<endl;
 	    		}
 	    	}
 	    }
-	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
+//	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
 	    // take dot prod. of kdkd matrix and feature matrix
 	    boost::numeric::ublas::matrix<double> C = boost::numeric::ublas::prod(regularizer, featureMatrix);
-	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
+//	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
 	    // make a ScoreComponentCollection that can be multiplied with the update ScoreComponentCollection
 	    ScoreComponentCollection temp(update);
-	    cerr<<"Temp Size : "<<temp.Size()<<endl;
+//	    cerr<<"Temp Size : "<<temp.Size()<<endl;
 	    for(size_t i=0;i<update.Size();i++){
-	    	cerr<<"Assigning : "<<i<<"th SP : "<<task_id*update.Size()+i<<" : "<<C(task_id*update.Size()+i, 1)<<endl;
+//	    	if(C(task_id*update.Size()+i, 1)!=0)
+//	    		cerr<<"Assigning : "<<i<<"th SP : "<<task_id*update.Size()+i<<" : "<<C(task_id*update.Size()+i, 1)<<endl;
 	    	temp.Assign(i, C(task_id*update.Size()+i, 1));
 	    }
-	    exit(0);
 //	    const ScoreComponentCollection learningrates(temp);
 	    // here we also multiply with the co-regularization vector
 	    update.MultiplyEquals(temp);
