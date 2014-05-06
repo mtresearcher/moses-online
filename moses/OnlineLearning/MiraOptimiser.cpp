@@ -136,17 +136,28 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	    // make a ScoreComponentCollection that can be multiplied with the update ScoreComponentCollection
 	    ScoreComponentCollection temp(update);
 //	    cerr<<"Temp Size : "<<temp.Size()<<endl;
+//	    cerr<<"multitask=(";
 	    for(size_t i=0;i<update.Size();i++){
-//	    	if(C(task_id*update.Size()+i, 1)!=0)
-//	    		cerr<<"Assigning : "<<i<<"th SP : "<<task_id*update.Size()+i<<" : "<<C(task_id*update.Size()+i, 1)<<endl;
+//    		cerr<<C(task_id*update.Size()+i, 1)<<", ";
+    		if(C(task_id*update.Size()+i, 1) > m_slack) C(task_id*update.Size()+i, 1)=m_slack;
+    		if(C(task_id*update.Size()+i, 1) < -1*m_slack) C(task_id*update.Size()+i, 1)=-1*m_slack;
 	    	temp.Assign(i, C(task_id*update.Size()+i, 1));
 	    }
+//	    cerr<<")\n";
 //	    const ScoreComponentCollection learningrates(temp);
 	    // here we also multiply with the co-regularization vector
-	    update.MultiplyEquals(temp);
+
+	    update.PlusEquals(temp);
+//	    cerr<<"------update Values : ";
+//	    update.PrintCoreFeatures();
+//	    cerr<<endl;
 
 	    // sum updates
 	    summedUpdate.PlusEquals(update);
+
+//	    cerr<<"summedUpdate Values : ";
+//	    summedUpdate.PrintCoreFeatures();
+//	    cerr<<endl;
 	  }
 	}
 	else {
@@ -163,6 +174,10 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 		weightUpdate.PlusEquals(sp,summedUpdate);
 	else
 		weightUpdate.PlusEquals(summedUpdate);
+
+//	cerr<<"weightUpdate Values : ";
+//	weightUpdate.PrintCoreFeatures();
+//	cerr<<endl;
 
 	return 0;
 }

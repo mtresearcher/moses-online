@@ -603,7 +603,8 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 		size_t update_status = optimiser->updateWeights(weightUpdate,sp,featureValues, losses,
 				BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,wlr);
 		StaticData::InstanceNonConst().SetAllWeights(weightUpdate);
-		cerr<<"\nWeight : "<<weightUpdate.GetScoreForProducer(sp)<<"\n";
+		weightUpdate.PrintCoreFeatures();
+		cerr<<endl;
 	}
 	return;
 }
