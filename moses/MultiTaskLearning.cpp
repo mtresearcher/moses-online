@@ -6,27 +6,24 @@
  */
 
 #include "MultiTaskLearning.h"
-
+#include "StaticData.h"
 
 namespace Moses {
 
-vector<float> MultiTaskLearning::GetLearningRate(int task){
-	if(m_intMatrix.find(task) != m_intMatrix.end()){
-		return m_intMatrix[task];
-	}
-	else{
-		UserMessage::Add("false value passed to find the learning rate");
-	}
+void MultiTaskLearning::Evaluate(const PhraseBasedFeatureContext& context, ScoreComponentCollection* accumulator) const
+{
+	accumulator->Assign(this, 1);
 }
 
-void MultiTaskLearning::SetInteractionMatrix(int user, vector<float>& values){
-	if(user<m_users && values.size() == m_users){
-		for(int i=0; i<values.size(); i++){
-			cerr<<"Learning Rates : "<<values[i]<<endl;
-			m_intMatrix[user].push_back(values[i]);
-		}
-	}
+void MultiTaskLearning::EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const
+{
+	accumulator->Assign(this, 1);
 }
+
+void MultiTaskLearning::SetInteractionMatrix(boost::numeric::ublas::matrix<double>& interactionMatrix){
+	m_intMatrix = interactionMatrix;
+}
+
 void MultiTaskLearning::SetKdKdMatrix(boost::numeric::ublas::matrix<double>& kdkdmatrix){
 	m_kdkdmatrix=kdkdmatrix;
 }
@@ -47,7 +44,7 @@ void MultiTaskLearning::SetWeightsVector(int user, ScoreComponentCollection weig
 	return;
 }
 
-MultiTaskLearning::MultiTaskLearning(int tasks) {
+MultiTaskLearning::MultiTaskLearning(int tasks):StatelessFeatureFunction("MultiTaskLearning",1) {
 	m_users=tasks;
 }
 

@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "GlobalLexicalModelUnlimited.h"
 #include "CacheBasedLanguageModel.h"
 #include "OnlineLearner.h"
+#include "MultiTaskLearning.h"
 #include "HyperParameterAsWeight.h"
 #include "WordTranslationFeature.h"
 #include "PhrasePairFeature.h"
@@ -85,6 +86,11 @@ namespace Moses {
     void TranslationSystem::AddOnlineLearningModel(OnlineLearner* ol) {
     	m_onlinelearner = ol;
     	AddFeatureFunction(ol);
+    }
+
+    void TranslationSystem::AddMultiTaskLearningModel(MultiTaskLearning* mtl) {
+    	m_multitasklearner = mtl;
+    	AddFeatureFunction(mtl);
     }
 
     void TranslationSystem::AddHyperParameterAsWeights(HyperParameterAsWeight* hpw) {

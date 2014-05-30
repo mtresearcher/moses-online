@@ -107,58 +107,54 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	  // * w' = w' + SUM alpha_i * (h_i(oracle) - h_i(hypothesis))
 	  for (size_t k = 0; k < featureValueDiffs.size(); ++k) {
 	  	float alpha = alphas[k];
+		if(alpha != 0){
 	  	ScoreComponentCollection update(featureValueDiffs[k]);
 
-	    update.MultiplyEquals(alpha);
 
-	    // build the feature matrix
+	    // build the feature matrix \phi_t
 	    boost::numeric::ublas::matrix<double> featureMatrix(update.Size()*task,1);
+	    const Moses::FVector x = update.GetScoresVector();
 	    for(size_t i=0; i<task; i++){
 	    	if(i == task_id){
-	    		const Moses::FVector x = update.GetScoresVector();
 	    		for(int j=0;j<x.size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = x[j];
-//	    			if(x[j]!=0)
-//	    				cerr<<std::setprecision(9)<<i*update.Size()+j<<", 0 : "<<x[j]<<endl;
 	    		}
+//	    		featureMatrix (i*(update.Size()+1)+x.size(),0) = 1;
 	    	}
 	    	else{
 	    		for(int j=0;j<update.Size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = 0;
-//	    			cerr<<i*update.Size()+j<<", 0 : "<<0<<endl;
 	    		}
+//	    		featureMatrix (i*(update.Size()+1)+update.Size(),0) = 1;
 	    	}
 	    }
-//	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
+	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
 	    // take dot prod. of kdkd matrix and feature matrix
 	    boost::numeric::ublas::matrix<double> C = boost::numeric::ublas::prod(regularizer, featureMatrix);
-//	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
+	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
 	    // make a ScoreComponentCollection that can be multiplied with the update ScoreComponentCollection
 	    ScoreComponentCollection temp(update);
 //	    cerr<<"Temp Size : "<<temp.Size()<<endl;
-//	    cerr<<"multitask=(";
 	    for(size_t i=0;i<update.Size();i++){
-//    		cerr<<C(task_id*update.Size()+i, 1)<<", ";
-    		if(C(task_id*update.Size()+i, 1) > m_slack) C(task_id*update.Size()+i, 1)=m_slack;
-    		if(C(task_id*update.Size()+i, 1) < -1*m_slack) C(task_id*update.Size()+i, 1)=-1*m_slack;
-	    	temp.Assign(i, C(task_id*update.Size()+i, 1));
+		float x = C(task_id*update.Size()+i, 0);
+//		Clipping updates
+// 		if(x < 0.000001 && x > 0) x = 0;
+//  		if(x > 5) x = 5;
+//    		if(x > -0.000001 && x < 0 && ) x = 0;
+//   		if(x < -5) x = -5;
+		cerr<<"("<<i<<" , "<<x<<")\t";
+	    	temp.Assign(i, x);
 	    }
-//	    cerr<<")\n";
-//	    const ScoreComponentCollection learningrates(temp);
 	    // here we also multiply with the co-regularization vector
-
-	    update.PlusEquals(temp);
-//	    cerr<<"------update Values : ";
-//	    update.PrintCoreFeatures();
-//	    cerr<<endl;
-
+	    temp.MultiplyEquals(alpha); 
 	    // sum updates
-	    summedUpdate.PlusEquals(update);
-
+	    summedUpdate.PlusEquals(temp);
 //	    cerr<<"summedUpdate Values : ";
 //	    summedUpdate.PrintCoreFeatures();
-//	    cerr<<endl;
+	    cerr<<endl;
+	    }
 	  }
+
 	}
 	else {
 		return 1;

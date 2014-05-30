@@ -43,6 +43,7 @@ class MetaFeatureProducer;
 class GlobalLexicalModel;
 class CacheBasedLanguageModel;
 class OnlineLearner;
+class MultiTaskLearning;
 class SingleTriggerModel;
 class HyperParameterAsWeight;
 
@@ -65,6 +66,7 @@ class TranslationSystem {
       void AddGlobalLexicalModel(GlobalLexicalModel* globalLexicalModel);
       void AddCacheBasedLanguageModel(CacheBasedLanguageModel* CacheBasedLanguageModel);
       void AddOnlineLearningModel(OnlineLearner* ol);
+      void AddMultiTaskLearningModel(MultiTaskLearning* mtl);
       void AddHyperParameterAsWeights(HyperParameterAsWeight* hpw);
       
       //Insert non-core feature function
@@ -100,6 +102,9 @@ class TranslationSystem {
       
       OnlineLearner* GetOnlineLearningModel() const {return m_onlinelearner;}
       void SetOnlineLearningModel(OnlineLearner* ol){m_onlinelearner = ol;}
+
+      MultiTaskLearning* GetMultiTaskLearningModel() const { return m_multitasklearner; }
+      void SetMultiTaskLearningModel(MultiTaskLearning* mtl) { m_multitasklearner = mtl; }
 
       SingleTriggerModel* GetSingleTriggerModel() const {return m_singletriggermodel;}
       void SetSingleTriggerModel(SingleTriggerModel* ol){m_singletriggermodel = ol;}
@@ -146,6 +151,7 @@ class TranslationSystem {
         const DistortionScoreProducer* m_distortionScoreProducer;
 	
         CacheBasedLanguageModel* m_CacheBasedLanguageModel;
+        MultiTaskLearning* m_multitasklearner;
         OnlineLearner* m_onlinelearner;
         HyperParameterAsWeight* m_hyperparameterasweight;
         SingleTriggerModel* m_singletriggermodel;

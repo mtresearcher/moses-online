@@ -77,6 +77,28 @@ using namespace std;
 
 namespace Moses {
 
+
+	//    ------------------- Kronecker Product code ---------------------------- //
+
+	bool KroneckerProduct (const boost::numeric::ublas::matrix<double>& A, const boost::numeric::ublas::matrix<double>& B, boost::numeric::ublas::matrix<double>& C) {
+		int rowA=-1,colA=-1,rowB=0,colB=0,prowB=1,pcolB=1;
+		for(int i=0; i<C.size1(); i++){
+			for(int j=0; j<C.size2(); j++){
+				rowB=i%B.size1();
+				colB=j%B.size2();
+				if(pcolB!=0 && colB == 0) colA++;
+				if(prowB!=0 && rowB==0) rowA++;
+				prowB=rowB;
+				pcolB=colB;
+				if(colA >= A.size2()){colA=0; colB=0;pcolB=1;}
+				C(i, j) = A(rowA, colA) * B(rowB, colB) ;
+			}
+		}
+		return true;
+	}
+	//    ------------------------------- ends here ---------------------------- //
+
+
     static size_t CalcMax(size_t x, const vector<size_t>& y) {
         size_t max = x;
         for (vector<size_t>::const_iterator i = y.begin(); i != y.end(); ++i)
@@ -734,6 +756,11 @@ namespace Moses {
                 m_translationSystems.find(config[0])->second.AddFeatureFunction(m_onlinelearner);
                 m_translationSystems.find(config[0])->second.SetOnlineLearningModel(m_onlinelearner);
             }
+            if (m_multitasklearner != NULL) {
+            	cerr << "Adding Multi task learning Model from StaticData::LoadData\n";
+            	m_translationSystems.find(config[0])->second.AddFeatureFunction(m_multitasklearner);
+            	m_translationSystems.find(config[0])->second.SetMultiTaskLearningModel(m_multitasklearner);
+            }
             if (m_singletriggermodel != NULL) {
                 cerr << "Adding Single Trigger Model from StaticData::LoadData\n";
                 m_translationSystems.find(config[0])->second.AddFeatureFunction(m_singletriggermodel);
@@ -821,8 +848,21 @@ namespace Moses {
 
             m_allWeights.PlusEquals(extraWeights);
         }
-
-        return true;
+				if(m_multitasklearner!=NULL){
+						int size = this->GetAllWeights().Size();	// add 1 for the bias feature
+						int tasks=m_multitasklearner->GetNumberOfTasks();
+						boost::numeric::ublas::matrix<double> kdkdmatrix (tasks*size, tasks*size);
+						boost::numeric::ublas::identity_matrix<double> m (size);
+						boost::numeric::ublas::matrix<double>& interactionMatrix = m_multitasklearner->GetInteractionMatrix();
+						cerr<<"Interaction Matrix size 1 : "<<interactionMatrix.size1()<<" size 2 : "<<interactionMatrix.size2()<<endl;
+						KroneckerProduct(interactionMatrix, m, kdkdmatrix);
+						m_multitasklearner->SetKdKdMatrix(kdkdmatrix);
+						ScoreComponentCollection weightVec = this->GetAllWeights();
+						for(int i=0;i<tasks;i++){
+							m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
+						}
+				}
+				return true;
     }
 
     void StaticData::SetBooleanParameter(bool *parameter, string parameterName, bool defaultValue) {
@@ -1598,63 +1638,29 @@ namespace Moses {
 
     	return true;
     }
-    //    ------------------- Kronecker Product code ---------------------------- //
-
-    bool KroneckerProduct (const boost::numeric::ublas::matrix<double>& A, const boost::numeric::ublas::matrix<double>& B, boost::numeric::ublas::matrix<double>& C) {
-    	int rowA=-1,colA=-1,rowB=0,colB=0,prowB=1,pcolB=1;
-    	for(int i=0; i<C.size1(); i++){
-    		for(int j=0; j<C.size2(); j++){
-    			rowB=i%B.size1();
-    			colB=j%B.size2();
-    			if(pcolB!=0 && colB == 0) colA++;
-    			if(prowB!=0 && rowB==0) rowA++;
-    			prowB=rowB;
-    			pcolB=colB;
-    			if(colA >= A.size2()){colA=0; colB=0;pcolB=1;}
-    			C(i, j) = A(rowA, colA) * B(rowB, colB) ;
-    		}
-    	}
-    	return true;
-    }
-    //    ------------------------------- ends here ---------------------------- //
-
 
     bool StaticData::LoadMultiTaskLearning() {
     	m_multitask=false;
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
     	if(mtl_on==true){
-    		VERBOSE(1, "Multitask learner activated\n");
-    		const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
-    		int num_users=int(mtl_matrix[0]);
-    		m_multitask=true;
-    		m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes
-    		CHECK(mtl_matrix.size() == num_users*num_users+1); // sanity check for the vector
-    		boost::numeric::ublas::matrix<double> interactionMatrix (num_users, num_users);
-    		boost::numeric::ublas::matrix<double> invertedMatrix (num_users, num_users);
-    		map<int, map<int, double> > interactionMap;
-    		for(int i=0; i<num_users; i++){
-    			for(int j=0; j<num_users; j++){
-    				interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
+    		const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-mtl"));
+    		if(weights.size()>0){
+    			const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
+    			int num_users=int(mtl_matrix[0]);
+    			m_multitask=true;
+    			CHECK(mtl_matrix.size() == num_users*num_users+1); // sanity check for the vector
+    			boost::numeric::ublas::matrix<double> interactionMatrix (num_users, num_users);
+    			map<int, map<int, double> > interactionMap;
+    			for(int i=0; i<num_users; i++){
+    				for(int j=0; j<num_users; j++){
+    					interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
+    				}
     			}
-    		}
 
-//    		InvertMatrix(interactionMatrix, invertedMatrix);	// I don't perform this step for now, maybe later
-    		int size = this->GetAllWeights().Size();
-    		boost::numeric::ublas::matrix<double> kdkdmatrix (num_users*size, num_users*size);
-    		boost::numeric::ublas::identity_matrix<double> m (size);
-    		KroneckerProduct(interactionMatrix, m, kdkdmatrix);
-    		m_multitasklearner->SetKdKdMatrix(kdkdmatrix);
-    		for(int i=0; i<num_users; i++){
-    			vector<float> temp;
-    			for(int j=0; j<num_users; j++){
-    				temp.push_back(interactionMatrix(i, j));
-    				cerr<<"Inverted Interaction Matrix ("<<i<<","<<j<<") = "<<interactionMatrix(i,j)<<endl;
-    			}
-    			m_multitasklearner->SetInteractionMatrix(i, temp);
-    		}
-    		ScoreComponentCollection weightVec = this->GetAllWeights();
-    		for(int i=0;i<num_users;i++){
-    			m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
+    			m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes
+    			m_multitasklearner->SetInteractionMatrix(interactionMatrix);
+    			SetWeight(m_multitasklearner, weights[0]);
+    			VERBOSE(1, "Multitask learner activated\n");
     		}
     	}
     	return true;

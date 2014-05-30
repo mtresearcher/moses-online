@@ -220,6 +220,7 @@ Parameter::Parameter()
   AddParam("use-hyper-parameters-as-weights", "do you wish to use hyper parameters as normal feature weights ? use me : don't");
   AddParam("weight-hpw", "hpw", "hyper parameters in this order : slack, feature learning rate, weight learning rate");
 
+  AddParam("weight-mtl", "mtl", "weight for additional bias feature (value=1) in multi task learning");
   AddParam("mtl-on", "turn on multi task learning");
   AddParam("mtl-matrix", "interaction matrix for multi task learning");
 }
