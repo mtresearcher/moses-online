@@ -807,13 +807,17 @@ void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
 		cerr<<"Updating the Weights\n";
 		// update the weights for ith task with ith learningrate
 
-		size_t update_status = optimiser->updateMultiTaskLearningWeights(weightUpdate,sp,featureValues, losses,
-				BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,
-				staticData.GetMultiTaskLearner()->GetKdKdMatrix(), staticData.GetMultiTaskLearner()->GetNumberOfTasks(),task);
-		// set the weights in the memory for ith task
-		weightUpdate.PrintCoreFeatures();
-		cerr<<endl;
-		StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(task, weightUpdate);
+		for(int z=0; z<StaticData::InstanceNonConst().GetMultiTaskLearner()->GetNumberOfTasks(); z++){
+			weightUpdate = StaticData::InstanceNonConst().GetMultiTaskLearner()->GetWeightsVector(z);
+			size_t update_status = optimiser->updateMultiTaskLearningWeights(weightUpdate,sp,featureValues, losses,
+					BleuScores, modelScores, oraclefeatureScore,oracleBleuScores, oracleModelScores,
+					staticData.GetMultiTaskLearner()->GetKdKdMatrix(),
+					staticData.GetMultiTaskLearner()->GetNumberOfTasks(),task);
+			// set the weights in the memory for ith task
+			weightUpdate.PrintCoreFeatures();
+			cerr<<endl;
+			StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(task, weightUpdate);
+		}
 	}
 	return;
 }
