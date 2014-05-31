@@ -32,11 +32,13 @@ Multi-Task Learning
 In computer assisted translation, a single document is post-edited by a group of translators while a single SMT system is being run in backend. This version of moses allows to capture the bias between the translators and learn from the corrections of all the translators collectively. Note that Multi-task learning adds a bias feature in the model. 
 
 Parameters:
+
 	1. "weight-mtl <weight>" : weight for the bias feature
 	2. "mtl-on" : a boolean which switches multi-tasking on.
 	3. "mtl-matrix k <k*k matrix in a row>" : k is the total number of translators working on the document, k*k is the interaction matrix.
 
 Usage: 
+
 	1. A source sentence one wants to translate.
 		<source_segment>_#_<userid>
 	2. Send the feedback to the SMT system
