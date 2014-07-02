@@ -223,6 +223,7 @@ Parameter::Parameter()
   AddParam("weight-mtl", "mtl", "weight for additional bias feature (value=1) in multi task learning");
   AddParam("mtl-on", "turn on multi task learning");
   AddParam("mtl-matrix", "interaction matrix for multi task learning");
+  AddParam("learn-matrix", "online learning of interaction matrix for multi task learning (default learning rate 0.01)");
 }
 
 Parameter::~Parameter()

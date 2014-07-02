@@ -316,7 +316,7 @@ namespace Moses {
   void FVector::set(const FName& name, const FValue& value) {
     m_features[name] = value;
   }
-  
+
   void FVector::printCoreFeatures() {
     cerr << "core=(";
     for (size_t i = 0; i < m_coreFeatures.size(); ++i) {

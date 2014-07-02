@@ -36,7 +36,6 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	vector<ScoreComponentCollection> featureValueDiffs;
 	vector<float> lossMinusModelScoreDiffs;
 	vector<float> all_losses;
-
 	// Make constraints for new hypothesis translations
 	float epsilon = 0.0001;
 	int violatedConstraintsBefore = 0;
@@ -110,38 +109,29 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 		if(alpha != 0){
 	  	ScoreComponentCollection update(featureValueDiffs[k]);
 
-
 	    // build the feature matrix \phi_t
 	    boost::numeric::ublas::matrix<double> featureMatrix(update.Size()*task,1);
+	    boost::numeric::ublas::matrix<double> W(task,update.Size());
 	    const Moses::FVector x = update.GetScoresVector();
 	    for(size_t i=0; i<task; i++){
 	    	if(i == task_id){
 	    		for(int j=0;j<x.size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = x[j];
 	    		}
-//	    		featureMatrix (i*(update.Size()+1)+x.size(),0) = 1;
 	    	}
 	    	else{
 	    		for(int j=0;j<update.Size(); j++){
 	    			featureMatrix (i*update.Size()+j,0) = 0;
 	    		}
-//	    		featureMatrix (i*(update.Size()+1)+update.Size(),0) = 1;
 	    	}
 	    }
 	    cerr<<"Dimensions of feature matrix : "<<featureMatrix.size1()<<" x "<<featureMatrix.size2()<<endl;
 	    // take dot prod. of kdkd matrix and feature matrix
 	    boost::numeric::ublas::matrix<double> C = boost::numeric::ublas::prod(regularizer, featureMatrix);
 	    cerr<<"Dimensions of product : "<<C.size1()<<" x "<<C.size2()<<endl;
-	    // make a ScoreComponentCollection that can be multiplied with the update ScoreComponentCollection
 	    ScoreComponentCollection temp(update);
-//	    cerr<<"Temp Size : "<<temp.Size()<<endl;
 	    for(size_t i=0;i<update.Size();i++){
 		float x = C(task_id*update.Size()+i, 0);
-//		Clipping updates
-// 		if(x < 0.000001 && x > 0) x = 0;
-//  		if(x > 5) x = 5;
-//    		if(x > -0.000001 && x < 0 && ) x = 0;
-//   		if(x < -5) x = -5;
 		cerr<<"("<<i<<" , "<<x<<")\t";
 	    	temp.Assign(i, x);
 	    }
@@ -149,9 +139,8 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 	    temp.MultiplyEquals(alpha); 
 	    // sum updates
 	    summedUpdate.PlusEquals(temp);
-//	    cerr<<"summedUpdate Values : ";
-//	    summedUpdate.PrintCoreFeatures();
 	    cerr<<endl;
+
 	    }
 	  }
 

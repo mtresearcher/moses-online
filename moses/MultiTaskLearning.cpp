@@ -37,6 +37,19 @@ ScoreComponentCollection MultiTaskLearning::GetWeightsVector(int user) {
 	}
 }
 
+boost::numeric::ublas::matrix<double> MultiTaskLearning::GetWeightsMatrix() {
+	boost::numeric::ublas::matrix<double> A(m_user2weightvec.begin()->second.Size(), m_users);
+	for(int i=0;i<m_users;i++){
+		FVector weightVector = m_user2weightvec[i].GetScoresVector();
+		weightVector.printCoreFeatures();
+		const std::valarray<float>& scoreVector = m_user2weightvec[i].GetScoresVector().getCoreFeatures();
+		for(size_t j=0; j<scoreVector.size(); j++){
+			A(j,i) = scoreVector[j];
+		}
+	}
+	return A;
+}
+
 void MultiTaskLearning::SetWeightsVector(int user, ScoreComponentCollection weightVec){
 	if(user < m_users){	// < because the indexing starts from 0
 		m_user2weightvec[user] = weightVec;
@@ -44,8 +57,15 @@ void MultiTaskLearning::SetWeightsVector(int user, ScoreComponentCollection weig
 	return;
 }
 
+MultiTaskLearning::MultiTaskLearning(int tasks, float learningrate):StatelessFeatureFunction("MultiTaskLearning",1) {
+	m_users=tasks;
+	m_learningrate=learningrate;
+	m_learnmatrix=true;
+}
+
 MultiTaskLearning::MultiTaskLearning(int tasks):StatelessFeatureFunction("MultiTaskLearning",1) {
 	m_users=tasks;
+	m_learnmatrix=false;
 }
 
 MultiTaskLearning::~MultiTaskLearning() {

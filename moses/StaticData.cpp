@@ -75,9 +75,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 using namespace std;
 
-namespace Moses {
-
-
+namespace TempUtil{
 	//    ------------------- Kronecker Product code ---------------------------- //
 
 	bool KroneckerProduct (const boost::numeric::ublas::matrix<double>& A, const boost::numeric::ublas::matrix<double>& B, boost::numeric::ublas::matrix<double>& C) {
@@ -97,6 +95,9 @@ namespace Moses {
 		return true;
 	}
 	//    ------------------------------- ends here ---------------------------- //
+}
+
+namespace Moses {
 
 
     static size_t CalcMax(size_t x, const vector<size_t>& y) {
@@ -848,21 +849,20 @@ namespace Moses {
 
             m_allWeights.PlusEquals(extraWeights);
         }
-				if(m_multitasklearner!=NULL){
-						int size = this->GetAllWeights().Size();	// add 1 for the bias feature
-						int tasks=m_multitasklearner->GetNumberOfTasks();
-						boost::numeric::ublas::matrix<double> kdkdmatrix (tasks*size, tasks*size);
-						boost::numeric::ublas::identity_matrix<double> m (size);
-						boost::numeric::ublas::matrix<double>& interactionMatrix = m_multitasklearner->GetInteractionMatrix();
-						cerr<<"Interaction Matrix size 1 : "<<interactionMatrix.size1()<<" size 2 : "<<interactionMatrix.size2()<<endl;
-						KroneckerProduct(interactionMatrix, m, kdkdmatrix);
-						m_multitasklearner->SetKdKdMatrix(kdkdmatrix);
-						ScoreComponentCollection weightVec = this->GetAllWeights();
-						for(int i=0;i<tasks;i++){
-							m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
-						}
-				}
-				return true;
+        if(m_multitasklearner!=NULL){
+        	int size = this->GetAllWeights().Size();	// add 1 for the bias feature
+        	int tasks=m_multitasklearner->GetNumberOfTasks();
+        	boost::numeric::ublas::matrix<double> kdkdmatrix (tasks*size, tasks*size);
+        	boost::numeric::ublas::identity_matrix<double> m (size);
+        	boost::numeric::ublas::matrix<double>& interactionMatrix = m_multitasklearner->GetInteractionMatrix();
+        	TempUtil::KroneckerProduct(interactionMatrix, m, kdkdmatrix);
+        	m_multitasklearner->SetKdKdMatrix(kdkdmatrix);
+        	ScoreComponentCollection weightVec = this->GetAllWeights();
+        	for(int i=0;i<tasks;i++){
+        		m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
+        	}
+        }
+        return true;
     }
 
     void StaticData::SetBooleanParameter(bool *parameter, string parameterName, bool defaultValue) {
@@ -1644,6 +1644,7 @@ namespace Moses {
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
     	if(mtl_on==true){
     		const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-mtl"));
+    		const float learningrate = (m_parameter->GetParam("learn-matrix").size() > 0) ? Scan<float>(m_parameter->GetParam("learn-matrix")[0]) : 0.01;
     		if(weights.size()>0){
     			const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
     			int num_users=int(mtl_matrix[0]);
@@ -1656,8 +1657,12 @@ namespace Moses {
     					interactionMatrix (i, j) = mtl_matrix[i*num_users+j+1];
     				}
     			}
-
-    			m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes
+    			if(m_parameter->GetParam("learn-matrix").size() > 0){
+    				m_multitasklearner = new MultiTaskLearning(num_users, learningrate);	//initiate the object with number of classes
+    			}
+    			else{
+    				m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes
+    			}
     			m_multitasklearner->SetInteractionMatrix(interactionMatrix);
     			SetWeight(m_multitasklearner, weights[0]);
     			VERBOSE(1, "Multitask learner activated\n");

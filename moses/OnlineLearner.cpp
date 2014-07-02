@@ -6,11 +6,43 @@
 #include "OnlineLearner.h"
 #include "StaticData.h"
 #include "math.h"
+#include "Util.h"
+
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/vector_proxy.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/triangular.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+
 
 using namespace Optimizer;
 
+namespace MatrixOps{
+	//    ------------------- Kronecker Product code ---------------------------- //
+
+	bool KroneckerProduct (const boost::numeric::ublas::matrix<double>& A, const boost::numeric::ublas::matrix<double>& B, boost::numeric::ublas::matrix<double>& C) {
+		int rowA=-1,colA=-1,rowB=0,colB=0,prowB=1,pcolB=1;
+		for(int i=0; i<C.size1(); i++){
+			for(int j=0; j<C.size2(); j++){
+				rowB=i%B.size1();
+				colB=j%B.size2();
+				if(pcolB!=0 && colB == 0) colA++;
+				if(prowB!=0 && rowB==0) rowA++;
+				prowB=rowB;
+				pcolB=colB;
+				if(colA >= A.size2()){colA=0; colB=0;pcolB=1;}
+				C(i, j) = A(rowA, colA) * B(rowB, colB) ;
+			}
+		}
+		return true;
+	}
+	//    ------------------------------- ends here ---------------------------- //
+}
+
 namespace Moses {
-    
+
 void OnlineLearner::chop(string &str) {
 	int i = 0;
 	while (isspace(str[i]) != 0) {
@@ -818,6 +850,34 @@ void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
 			cerr<<endl;
 			StaticData::InstanceNonConst().GetMultiTaskLearner()->SetWeightsVector(task, weightUpdate);
 		}
+
+		// update the interaction matrix
+		bool miraUpdateIntMatrix = StaticData::InstanceNonConst().GetMultiTaskLearner()->IfUpdateIntMatrix();
+	    if(miraUpdateIntMatrix){
+	    	boost::numeric::ublas::matrix<double> W = StaticData::InstanceNonConst().GetMultiTaskLearner()->GetWeightsMatrix();
+	    	std::cerr << "\n\nWeight Matrix = ";
+	    	std::cerr << W << endl;
+	    	boost::numeric::ublas::matrix<double> updated = StaticData::InstanceNonConst().GetMultiTaskLearner()->GetInteractionMatrix();
+	    	std::cerr << "Interaction Matrix = ";
+	    	std::cerr << updated << endl;
+	    	// A^{-1}_t = A^{-1}_{t-1} + \frac{\eta}{2} * (W^T_{t-1} \times W_{t-1} + W_{t-1} \times W^T_{t-1})
+	    	float eta = StaticData::Instance().GetMultiTaskLearner()->GetLearningRateIntMatrix();
+	    	boost::numeric::ublas::matrix<double> adding = prod(trans(W), W) + trans(prod(trans(W), W)) ;
+			std::cerr << "Added = " << adding << endl;
+	    	updated += 0.5 * eta * adding;
+	    	StaticData::InstanceNonConst().GetMultiTaskLearner()->SetInteractionMatrix(updated);
+	    	std::cerr << "Updated = ";
+	    	std::cerr << updated << endl;
+
+	    	// update kdxkd matrix because it is used in weight update not the interaction matrix
+	    	int size = staticData.GetAllWeights().Size();
+	    	int tasks= StaticData::InstanceNonConst().GetMultiTaskLearner()->GetNumberOfTasks();
+	    	boost::numeric::ublas::matrix<double> kdkdmatrix (tasks*size, tasks*size);
+	    	boost::numeric::ublas::identity_matrix<double> m (size);
+	    	MatrixOps::KroneckerProduct(updated, m, kdkdmatrix);
+	    	StaticData::InstanceNonConst().GetMultiTaskLearner()->SetKdKdMatrix(kdkdmatrix);
+	    }
+
 	}
 	return;
 }

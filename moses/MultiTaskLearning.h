@@ -30,6 +30,8 @@ class MultiTaskLearning : public StatelessFeatureFunction {
 	int m_users;
 	map<int, ScoreComponentCollection> m_user2weightvec;
 	int m_currtask;
+	float m_learningrate;
+	bool m_learnmatrix;
 	boost::numeric::ublas::matrix<double> m_kdkdmatrix;
 	boost::numeric::ublas::matrix<double> m_intMatrix;
 
@@ -43,11 +45,16 @@ public:
 	boost::numeric::ublas::matrix<double>& GetKdKdMatrix(){return m_kdkdmatrix;};
 	ScoreComponentCollection GetWeightsVector(int);
 	void SetWeightsVector(int, ScoreComponentCollection);
+	MultiTaskLearning(int, float);
 	MultiTaskLearning(int);
 	inline std::string GetScoreProducerWeightShortName(unsigned) const { return "mtl"; };
 	void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
 	void EvaluateChart(const ChartBasedFeatureContext& context, ScoreComponentCollection* accumulator) const;
 	virtual ~MultiTaskLearning();
+
+	bool IfUpdateIntMatrix(){return m_learnmatrix;};
+	float GetLearningRateIntMatrix(){return m_learningrate;};
+	boost::numeric::ublas::matrix<double> GetWeightsMatrix();
 };
 
 } /* namespace Moses */
