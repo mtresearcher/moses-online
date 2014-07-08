@@ -862,6 +862,7 @@ namespace Moses {
         		m_multitasklearner->SetWeightsVector(i, weightVec);	// initialization complete.. I believe so!
         	}
         }
+
         return true;
     }
 
@@ -1483,11 +1484,10 @@ namespace Moses {
         bool stm_normalizeScore = (m_parameter->isParamSpecified("stm-normalize")) ? true : false;
         if(files.size()>0){
         	m_singletriggermodel = new SingleTriggerModel(files[0], stm_normalizeScore);
-        }
-        if(weights.size()>0)
-        {
-        	m_singletriggermodel = new SingleTriggerModel(stm_normalizeScore);
-        	SetWeight(m_singletriggermodel, weights[0]);
+        	if(weights.size()>0)
+        	{
+        		SetWeight(m_singletriggermodel, weights[0]);
+        	}
         }
         return true;
     }
@@ -1502,14 +1502,6 @@ namespace Moses {
     	if(useParameters){
     		m_hyperparameterasweight = new HyperParameterAsWeight("hpw");
     		const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-hpw"));
-//    		vector<float> weights;
-//    		const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0.01;
-//    		weights.push_back(slack);
-//    		const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
-//    				Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0.8;
-//    		weights.push_back(f_learningrate);
-//    		const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 1;
-//    		weights.push_back(w_learningrate);
     		SetWeights(m_hyperparameterasweight, weights);
     	}
     	return true;

@@ -35,7 +35,9 @@ namespace Moses {
     }
 
     void SingleTriggerModel::RemoveJunk(){return;}
-    void SingleTriggerModel::RunInstance(Manager& manager){return;}
+
+    void SingleTriggerModel::RunInstance(Manager& manager){return;}	// future work on online STM goes here
+
     bool SingleTriggerModel::SetPostEditedSentence(std::string& sent){
     	m_postedited=sent;
     	return true;
@@ -46,7 +48,7 @@ namespace Moses {
         m_source.resize(0);
         m_postedited.resize(0);
         m_stm.empty();
-        m_sigmoidParam=true;
+        m_sigmoidParam=sigmoidParam;
         m_active=true;
     }
 
@@ -54,7 +56,7 @@ namespace Moses {
     	m_source.resize(0);
     	m_postedited.resize(0);
     	m_stm.empty();
-    	m_sigmoidParam=true;
+    	m_sigmoidParam=sigmoidParam;
     	m_active=true;
     }
 
@@ -66,7 +68,7 @@ namespace Moses {
 
     float SingleTriggerModel::getScore(std::string& s, std::string& t)
     {
-        return m_stm[s][t];
+        return m_stm[s][t].second;
     }
     void SingleTriggerModel::Read(const std::string& filePath) {
         // read the trigger model
@@ -88,7 +90,9 @@ namespace Moses {
             float score;
             stringstream(blocks[2])>>score; // this is an interesting way to change data type!
             // Insertion in memory
-            m_stm[blocks[0]][blocks[1]]=score;
+            std::pair <bool, float> t;
+            t = std::make_pair(true, score);
+            m_stm[blocks[0]][blocks[1]]=t;
         }
         PrintUserTime("Loaded Interlingual Single Trigger Model...");
     }
@@ -107,13 +111,9 @@ namespace Moses {
         for (size_t pos = 0; pos < endpos; ++pos) {
             t = tp.GetWord(pos).GetFactor(0)->GetString();
             for (int i = 0; i < str.size(); i++) {
-                std::map<std::string, map<std::string, float> >::const_iterator it = m_stm.find(str[i]);
-                if (it != m_stm.end()) {
-                    map<std::string, float>::const_iterator itr = m_stm.at(str[i]).find(t);
-                    if (itr != it->second.end()) {
-                        score += m_stm.at(str[i]).at(t);
-                    }
-                }
+            	if(m_stm.at(str[i]).at(t).first==true){
+            		score += m_stm.at(str[i]).at(t).second;
+            	}
             }
         }
         if(m_sigmoidParam || true)

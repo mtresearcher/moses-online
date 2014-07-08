@@ -43,11 +43,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "moses/Manager.h"
 #include "moses/StaticData.h"
 #include "moses/OnlineLearner.h"
-#include "moses/SingleTriggerModel.h"
 #include "moses/Util.h"
 #include "moses/Timer.h"
 #include "moses/ThreadPool.h"
 #include "moses/OutputCollector.h"
+
+// #include "moses/SingleTriggerModel.h"
 
 #ifdef HAVE_PROTOBUF
 #include "hypergraph.pb.h"
@@ -130,10 +131,10 @@ public:
 			SD.GetOnlineLearningModel()->RemoveJunk();
 		}
 
-		if(SD.GetSingleTriggerModel()!=NULL && SD.GetSingleTriggerModel()->IfActive()){
-			SD.GetSingleTriggerModel()->RunInstance(manager);
-			SD.GetSingleTriggerModel()->RemoveJunk();
-		}
+//		if(SD.GetSingleTriggerModel()!=NULL && SD.GetSingleTriggerModel()->IfActive()){
+//			SD.GetSingleTriggerModel()->RunInstance(manager);
+//			SD.GetSingleTriggerModel()->RemoveJunk();
+//		}
 		// output word graph
 		if (m_wordGraphCollector) {
 			ostringstream out;
@@ -638,11 +639,12 @@ int main(int argc, char** argv)
 			IFVERBOSE(1) {
 				ResetUserTime();
 			}
+
 			std::string src;
 			if(staticData.GetOnlineLearningModel()!=NULL){
 				src=staticData.GetOnlineLearningModel()->GetSourceSentence();
+				VERBOSE(1, "Src : "<< src << endl);
 			}
-			VERBOSE(1, "Src : "<< src << endl);
 			vector<string> vecstr=TokenizeMultiCharSeparator(src, "_#_");
 			// set up task of translating one sentence
 			TranslationTask* task =

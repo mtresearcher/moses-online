@@ -40,10 +40,11 @@ class SingleTriggerModel : public StatelessFeatureFunction {
         bool IfActive(){return m_active;}
         void RemoveJunk();
         void RunInstance(Manager& manager);
+        int SizeofSTM() const {return m_stm.size();};
     private:
         void Evaluate(const TargetPhrase& tp, ScoreComponentCollection* out) const;
         std::string m_source, m_postedited;
-        std::map<std::string, std::map<std::string, float> > m_stm;
+        std::map<std::string, std::map<std::string, std::pair<bool, float> > > m_stm;
         bool m_sigmoidParam, m_active;
 };
 }
