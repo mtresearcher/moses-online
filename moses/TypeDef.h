@@ -190,6 +190,11 @@ enum OnlineAlgorithm {
 	, Mira = 4
 };
 
+enum UpdateInteractionMatrixType {
+	vonNeumann = 0
+	, logDet = 1 
+};
+
 enum WordAlignmentSort {
   NoSort = 0
   ,TargetOrder = 1

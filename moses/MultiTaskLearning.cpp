@@ -57,14 +57,16 @@ void MultiTaskLearning::SetWeightsVector(int user, ScoreComponentCollection weig
 	return;
 }
 
-MultiTaskLearning::MultiTaskLearning(int tasks, float learningrate):StatelessFeatureFunction("MultiTaskLearning",1) {
+MultiTaskLearning::MultiTaskLearning(int tasks, float learningrate, UpdateInteractionMatrixType updatetype):StatelessFeatureFunction("MultiTaskLearning",1) {
 	m_users=tasks;
 	m_learningrate=learningrate;
+	m_implementation = updatetype;
 	m_learnmatrix=true;
 }
 
 MultiTaskLearning::MultiTaskLearning(int tasks):StatelessFeatureFunction("MultiTaskLearning",1) {
 	m_users=tasks;
+	m_learningrate=0.1;
 	m_learnmatrix=false;
 }
 

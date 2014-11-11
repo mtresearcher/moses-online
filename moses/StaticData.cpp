@@ -1629,14 +1629,17 @@ namespace Moses {
     	boost::numeric::ublas::lu_substitute(A, pm, inverse);
 
     	return true;
-    }
-
+		}
     bool StaticData::LoadMultiTaskLearning() {
     	m_multitask=false;
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;
     	if(mtl_on==true){
+
     		const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-mtl"));
-    		const float learningrate = (m_parameter->GetParam("learn-matrix").size() > 0) ? Scan<float>(m_parameter->GetParam("learn-matrix")[0]) : 0.01;
+    		const float learningrate = (m_parameter->GetParam("learn-matrix").size() > 0) ? Scan<float>(m_parameter->GetParam("learn-matrix")[0]) : 0.005;
+    		const int learnMat = (m_parameter->GetParam("learn-matrix").size() > 1) ?
+    				Scan<int>(m_parameter->GetParam("learn-matrix")[1]) : 1;
+    		UpdateInteractionMatrixType learnMatrix = (learnMat == 0) ? vonNeumann : logDet;
     		if(weights.size()>0){
     			const vector<float> &mtl_matrix = Scan<float>(m_parameter->GetParam("mtl-matrix")); // first number represents number of users(K) followed K*K values : A
     			int num_users=int(mtl_matrix[0]);
@@ -1650,7 +1653,7 @@ namespace Moses {
     				}
     			}
     			if(m_parameter->GetParam("learn-matrix").size() > 0){
-    				m_multitasklearner = new MultiTaskLearning(num_users, learningrate);	//initiate the object with number of classes
+    				m_multitasklearner = new MultiTaskLearning(num_users, learningrate, learnMatrix);	//initiate the object with number of classes
     			}
     			else{
     				m_multitasklearner = new MultiTaskLearning(num_users);	//initiate the object with number of classes

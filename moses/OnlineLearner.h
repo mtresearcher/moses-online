@@ -43,6 +43,7 @@ class Search;
 class OnlineLearner : public StatelessFeatureFunction {
 
 private:
+	UpdateInteractionMatrixType updateType;
 	OnlineAlgorithm implementation;
 	pp_feature m_feature;
 	pp_list m_featureIdx;
@@ -69,7 +70,7 @@ private:
 	void chop(string &str);
 	void Decay(int);
 	void Insert(std::string sp, std::string tp);
-
+	void updateIntMatrix();
 public:
 	SparseVec sparsefeaturevector, sparseweightvector;
 	OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, float f_learningrate, bool normaliseScore);
@@ -96,7 +97,6 @@ public:
 	void DumpFeatures(std::string filename);
 
 	int RetrieveIdx(std::string sp, std::string tp);
-
 };
 }
 #endif /* ONLINELEARNER_H_ */

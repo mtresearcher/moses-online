@@ -32,6 +32,7 @@ class MultiTaskLearning : public StatelessFeatureFunction {
 	int m_currtask;
 	float m_learningrate;
 	bool m_learnmatrix;
+	UpdateInteractionMatrixType m_implementation;
 	boost::numeric::ublas::matrix<double> m_kdkdmatrix;
 	boost::numeric::ublas::matrix<double> m_intMatrix;
 
@@ -45,7 +46,7 @@ public:
 	boost::numeric::ublas::matrix<double>& GetKdKdMatrix(){return m_kdkdmatrix;};
 	ScoreComponentCollection GetWeightsVector(int);
 	void SetWeightsVector(int, ScoreComponentCollection);
-	MultiTaskLearning(int, float);
+	MultiTaskLearning(int, float, UpdateInteractionMatrixType);
 	MultiTaskLearning(int);
 	inline std::string GetScoreProducerWeightShortName(unsigned) const { return "mtl"; };
 	void Evaluate(const PhraseBasedFeatureContext& context,	ScoreComponentCollection* accumulator) const;
