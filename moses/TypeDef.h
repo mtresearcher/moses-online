@@ -188,6 +188,7 @@ enum OnlineAlgorithm {
 	, FPercepWMira = 1
 	, FSparsePercepWSparseMira = 2
 	, Mira = 4
+	, SparseOnlineLearning = 5
 };
 
 enum UpdateInteractionMatrixType {

@@ -110,6 +110,7 @@ protected:
 #endif
   CacheBasedLanguageModel* m_CacheBasedLanguageModel;
   OnlineLearner* m_onlinelearner;
+  std::vector<OnlineLearner*> m_sparseonlinelearner;
   MultiTaskLearning* m_multitasklearner;
   SingleTriggerModel* m_singletriggermodel;
   HyperParameterAsWeight* m_hyperparameterasweight;

@@ -1527,33 +1527,17 @@ namespace Moses {
     }
     bool StaticData::LoadOnlineLearningModel() { // optional model ... returns true
         const std::string w_algorithm = (m_parameter->GetParam("w_algorithm").size() > 0) ? Scan<std::string>(m_parameter->GetParam("w_algorithm")[0]) : "NULL";
-        bool sparse_feature = (m_parameter->isParamSpecified("use_sparse_features")) ? true : false;
         bool normaliseScore = (m_parameter->isParamSpecified("normaliseScore")) ? true : false;
-        const vector<float> &weights = Scan<float>(m_parameter->GetParam("weight-ol"));
         const float f_learningrate = (m_parameter->GetParam("f_learningrate").size() > 0) ?
                 Scan<float>(m_parameter->GetParam("f_learningrate")[0]) : 0;
-
         const float w_learningrate = (m_parameter->GetParam("w_learningrate").size() > 0) ? Scan<float>(m_parameter->GetParam("w_learningrate")[0]) : 0;
-
         OnlineAlgorithm setAlgo = FOnlyPerceptron;
-        if (!sparse_feature && m_wlr > 0) setAlgo = FPercepWMira;
-        if (sparse_feature) setAlgo = FSparsePercepWSparseMira;
-        if (weights.size() > 1) {
-            UserMessage::Add("Can only specify one weight for the online learning feature");
-            return false;
-        } else if (weights.size() == 1 && w_algorithm.compare("NULL") == 0) {
-        	if(m_hyperparameterasweight == NULL){
-        		m_onlinelearner = new OnlineLearner(FOnlyPerceptron, w_learningrate, f_learningrate, normaliseScore);
-        	}
-        	else{
-        		m_onlinelearner = new OnlineLearner(FOnlyPerceptron, m_wlr, m_flr, normaliseScore);
-        	}
-            SetWeight(m_onlinelearner, weights[0]);
+        if (w_algorithm.compare("perceptron") == 0) {
+       		m_onlinelearner = new OnlineLearner(FOnlyPerceptron, w_learningrate, f_learningrate, normaliseScore);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron");
-
             return true;
-        } else if (weights.size() == 1 && w_algorithm.compare("alsoMira") == 0) {
+        } else if (w_algorithm.compare("alsoMira") == 0) {
         	setAlgo = FPercepWMira;
         	const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0;
             const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
@@ -1564,72 +1548,15 @@ namespace Moses {
             const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
             const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
             const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            if(m_hyperparameterasweight == NULL){
-            	m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
+            m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
             	                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            }
-            else{
-            	m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
-            	                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            }
-            SetWeight(m_onlinelearner, weights[0]);
             IFVERBOSE(1)
             PrintUserTime("Online Learning : Perceptron\tWeights : MIRA");
-
-            return true;
-        } else if (w_algorithm.compare("onlyMira") == 0) {
-            setAlgo = Mira;
-            const float slack = (m_parameter->GetParam("slack").size() > 0) ? Scan<float>(m_parameter->GetParam("slack")[0]) : 0;
-            const float scale_margin = (m_parameter->GetParam("scale_margin").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin")[0]) : 0.0;
-            const float scale_margin_precision = (m_parameter->GetParam("scale_margin_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_margin_precision")[0]) : 0.0;
-            const float scale_update = (m_parameter->GetParam("scale_update").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update")[0]) : 0.0;
-            const float scale_update_precision = (m_parameter->GetParam("scale_update_precision").size() > 0) ? Scan<float>(m_parameter->GetParam("scale_update_precision")[0]) : 0.0;
-            const bool onlyOnlineScoreProducerUpdate = (m_parameter->isParamSpecified("onlyOnlineScoreProducerUpdate")) ? true : false;
-            const bool boost = (m_parameter->isParamSpecified("boost")) ? true : false;
-            const bool normaliseMargin = (m_parameter->isParamSpecified("normaliseMargin")) ? true : false;
-            const int sigmoidparam = (m_parameter->GetParam("sigmoidParam").size() > 0) ? Scan<int>(m_parameter->GetParam("sigmoidParam")[0]) : 1;
-            if(m_hyperparameterasweight == NULL){
-            m_onlinelearner = new OnlineLearner(setAlgo, w_learningrate, f_learningrate, slack, scale_margin,
-                    scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            }
-            else{
-            m_onlinelearner = new OnlineLearner(setAlgo, m_wlr, m_flr, m_C, scale_margin,
-                                scale_margin_precision, scale_update, scale_update_precision, boost, normaliseMargin, normaliseScore, sigmoidparam, onlyOnlineScoreProducerUpdate);
-            }
-            //SetWeight(m_onlinelearner, weights[0]);
-            SetWeight(m_onlinelearner, 0);
-            IFVERBOSE(1)
-            PrintUserTime("Weights : MIRA");
             return true;
         }
-
         return true;
     }
 
-    //    ------------------- matrix inversion code ---------------------------- //
-    template<class T>
-    bool InvertMatrix (const boost::numeric::ublas::matrix<T>& input, boost::numeric::ublas::matrix<T>& inverse) {
-    	typedef boost::numeric::ublas::permutation_matrix<std::size_t> pmatrix;
-
-    	// create a working copy of the input
-    	boost::numeric::ublas::matrix<T> A(input);
-
-    	// create a permutation matrix for the LU-factorization
-    	pmatrix pm(A.size1());
-
-    	// perform LU-factorization
-    	int res = boost::numeric::ublas::lu_factorize(A, pm);
-    	if (res != 0)
-    		return false;
-
-    	// create identity matrix of "inverse"
-    	inverse.assign(boost::numeric::ublas::identity_matrix<T> (A.size1()));
-
-    	// backsubstitute to get the inverse
-    	boost::numeric::ublas::lu_substitute(A, pm, inverse);
-
-    	return true;
-		}
     bool StaticData::LoadMultiTaskLearning() {
     	m_multitask=false;
     	const bool mtl_on = (m_parameter->isParamSpecified("mtl-on")) ? true : false;

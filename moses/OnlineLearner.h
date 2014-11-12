@@ -43,13 +43,13 @@ class Search;
 class OnlineLearner : public StatelessFeatureFunction {
 
 private:
+	float m_sparseProducerWeight;
 	UpdateInteractionMatrixType updateType;
 	OnlineAlgorithm implementation;
 	pp_feature m_feature;
 	pp_list m_featureIdx;
 	pp_list PP_ORACLE, PP_BEST;
 	learningrate flr, wlr;
-	float m_weight;
 	int m_PPindex;
 	std::string m_postedited, m_source;
 	bool m_learn, m_normaliseScore;
@@ -84,7 +84,7 @@ public:
 	void RemoveJunk();
 	virtual ~OnlineLearner();
 
-	inline size_t GetNumScoreComponents() const { return 1; };
+	inline size_t GetNumScoreComponents() const { return 0; };
 	void SetOnlineLearningTrue() { m_learn=true;};
 	void SetOnlineLearningFalse() { m_learn=false;};
 	bool GetOnlineLearning() const { return m_learn; };
@@ -97,6 +97,10 @@ public:
 	void DumpFeatures(std::string filename);
 
 	int RetrieveIdx(std::string sp, std::string tp);
+
+	void SetSparseProducerWeight(float weight) { m_sparseProducerWeight = weight; }
+	float GetSparseProducerWeight() const { return m_sparseProducerWeight; }
+
 };
 }
 #endif /* ONLINELEARNER_H_ */

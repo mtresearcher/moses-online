@@ -169,7 +169,6 @@ size_t MiraOptimiser::updateMultiTaskLearningWeights(
 
 size_t MiraOptimiser::updateWeights(
 	ScoreComponentCollection& weightUpdate,
-	const ScoreProducer* sp,
     const vector<vector<ScoreComponentCollection> >& featureValues,
     const vector<vector<float> >& losses,
     const vector<vector<float> >& bleuScores,
@@ -275,10 +274,8 @@ size_t MiraOptimiser::updateWeights(
 			summedUpdate.MultiplyEquals(oracleBleuScores[0]);
 		}
 	}
-	if(m_onlyOnlineScoreProducerUpdate)
-		weightUpdate.PlusEquals(sp,summedUpdate);
-	else
-		weightUpdate.PlusEquals(summedUpdate);
+
+	weightUpdate.PlusEquals(summedUpdate);
 
 	return 0;
 }

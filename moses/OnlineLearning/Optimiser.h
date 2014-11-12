@@ -68,7 +68,6 @@ namespace Optimizer {
 
       size_t updateWeights(
 	   Moses::ScoreComponentCollection& weightUpdate,
-	   const Moses::ScoreProducer* sp,
 	   const std::vector<std::vector<Moses::ScoreComponentCollection> >& featureValues,
 	   const std::vector<std::vector<float> >& losses,
 	   const std::vector<std::vector<float> >& bleuScores,
