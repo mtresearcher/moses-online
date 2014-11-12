@@ -191,10 +191,6 @@ OnlineLearner::OnlineLearner(OnlineAlgorithm algorithm, float w_learningrate, fl
 
 
 void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin){
-//	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
-//			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
-//		return;
-//	}
 	if(m_feature.find(sp)!=m_feature.end())
 	{
 		if(m_feature[sp].find(tp)!=m_feature[sp].end())
@@ -215,10 +211,6 @@ void OnlineLearner::ShootUp(std::string sp, std::string tp, float margin){
 	//if(m_feature[sp][tp]>1){m_feature[sp][tp]==1;}
 }
 void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin){
-//	if (binary_search(function_words_italian.begin(),function_words_italian.end(), sp) ||
-//			binary_search(function_words_english.begin(),function_words_english.end(), tp)) {
-//		return;
-//	}
 	if(m_feature.find(sp)!=m_feature.end())
 	{
 		if(m_feature[sp].find(tp)!=m_feature[sp].end())
@@ -229,14 +221,14 @@ void OnlineLearner::ShootDown(std::string sp, std::string tp, float margin){
 		}
 		else
 		{
-			m_feature[sp][tp]=0;
+			m_feature[sp][tp]= 0;
 		}
 	}
 	else
 	{
-		m_feature[sp][tp]=0;
+		m_feature[sp][tp]= 0;
 	}
-	//if(m_feature[sp][tp]<0){m_feature[sp][tp]==0;}
+	if(m_feature[sp][tp]<0){m_feature[sp][tp]==0;}
 }
 
 void OnlineLearner::DumpFeatures(std::string filename)
@@ -525,29 +517,29 @@ void OnlineLearner::RunOnlineLearning(Manager& manager)
 			maxScore=oracleScore;
 			bestOracle = oracle.str();
 			pp_list::const_iterator it1;
-			ShootemUp.clear();ShootemDown.clear();
-			for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
-			{
-				std::map<std::string, int>::const_iterator itr1;
-				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-				{
-					if(PP_BEST[it1->first][itr1->first]!=1)
-					{
-						ShootemUp[it1->first][itr1->first]=1;
-					}
-				}
-			}
-			for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
-			{
-				std::map<std::string, int>::const_iterator itr1;
-				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-				{
-					if(PP_ORACLE[it1->first][itr1->first]!=1)
-					{
-						ShootemDown[it1->first][itr1->first]=1;
-					}
-				}
-			}
+//			ShootemUp.clear();ShootemDown.clear();
+//			for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
+//			{
+//				std::map<std::string, int>::const_iterator itr1;
+//				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+//				{
+//					if(PP_BEST[it1->first][itr1->first]!=1)
+//					{
+//						ShootemUp[it1->first][itr1->first]=1;
+//					}
+//				}
+//			}
+//			for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
+//			{
+//				std::map<std::string, int>::const_iterator itr1;
+//				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+//				{
+//					if(PP_ORACLE[it1->first][itr1->first]!=1)
+//					{
+//						ShootemDown[it1->first][itr1->first]=1;
+//					}
+//				}
+//			}
 			oracleBleuScores.clear();
 			oraclefeatureScore.clear();
 			BestOracle=PP_ORACLE;
@@ -731,29 +723,29 @@ void OnlineLearner::RunOnlineMultiTaskLearning(Manager& manager, int task)
 			maxScore=oracleScore;
 			bestOracle = oracle.str();
 			pp_list::const_iterator it1;
-			ShootemUp.clear();ShootemDown.clear();
-			for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
-			{
-				std::map<std::string, int>::const_iterator itr1;
-				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-				{
-					if(PP_BEST[it1->first][itr1->first]!=1)
-					{
-						ShootemUp[it1->first][itr1->first]=1;
-					}
-				}
-			}
-			for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
-			{
-				std::map<std::string, int>::const_iterator itr1;
-				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
-				{
-					if(PP_ORACLE[it1->first][itr1->first]!=1)
-					{
-						ShootemDown[it1->first][itr1->first]=1;
-					}
-				}
-			}
+//			ShootemUp.clear();ShootemDown.clear();
+//			for(it1=PP_ORACLE.begin(); it1!=PP_ORACLE.end(); it1++)
+//			{
+//				std::map<std::string, int>::const_iterator itr1;
+//				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+//				{
+//					if(PP_BEST[it1->first][itr1->first]!=1)
+//					{
+//						ShootemUp[it1->first][itr1->first]=1;
+//					}
+//				}
+//			}
+//			for(it1=PP_BEST.begin(); it1!=PP_BEST.end(); it1++)
+//			{
+//				std::map<std::string, int>::const_iterator itr1;
+//				for(itr1=(it1->second).begin(); itr1!=(it1->second).end(); itr1++)
+//				{
+//					if(PP_ORACLE[it1->first][itr1->first]!=1)
+//					{
+//						ShootemDown[it1->first][itr1->first]=1;
+//					}
+//				}
+//			}
 			oracleBleuScores.clear();
 			oraclefeatureScore.clear();
 			BestOracle=PP_ORACLE;
